@@ -264,7 +264,7 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
-              transition={{ type: "spring", stiffness: 280, damping: 28 }}
+              transition={{ type: "spring", stiffness: 360, damping: 36 }}
               className="absolute top-0 right-0 h-svh w-[82vw] max-w-95 bg-zinc-950/95 border-l border-white/10 backdrop-blur p-4 z-30"
             >
               <div className="text-sm font-semibold">Quick Actions</div>
