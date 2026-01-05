@@ -6,5 +6,6 @@ export type BlogPost = {
   tag: string;
   readTime: string;
   href: string;
-  cover?: string;
+  imageMobile: string;
+  imageDesktop: string;
 };

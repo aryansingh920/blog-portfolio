@@ -15,8 +15,9 @@ import {
   type MotionValue,
 } from "framer-motion";
 import type { BlogPost } from "../types";
-import { BlogCard } from "./BlogCard";
+
 import { BlogsHeader } from "./BlogsHeader";
+import { BlogCard } from "./BlogCard";
 
 const V_OFFSET = 120;
 const V_VELOCITY = 800;

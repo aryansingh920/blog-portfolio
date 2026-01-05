@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            background-color: #f8f9fa;
+            color: #333;
+
+
+        }
+
+        header {
+            background: rgba(0, 17, 40, 0.86);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5.1px);
+            -webkit-backdrop-filter: blur(5.1px);
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        header p {
+            font-size: 1.2em;
+        }
+
+        section {
+            padding: 20px;
+            margin: 20px 10px;
+
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5.6px);
+            -webkit-backdrop-filter: blur(5.6px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        section h2 {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+
+        section p,
+        ul,
+        ol {
+            margin-bottom: 15px;
+        }
+
+        iframe {
+            display: block;
+            margin: 20px auto;
+            width: 100%;
+            height: 500px;
+            border: none;
+            border-radius: 8px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        footer a {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+        .highlight {
+            background-color: #f0f8ff;
+            border-left: 5px solid #007bff;
+            padding: 10px 15px;
+            margin: 15px 0;
+            font-style: italic;
+        }
+
+        .quote {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #555;
+            margin: 20px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Earth Viewer Data Visualization Project</h1>
+        <p>Exploring the World Through Data-Driven 3D Visualizations</p>
+    </header>
+
+    <section>
+        <h2>Introduction</h2>
+        <p>
+            The <strong>Earth Viewer Data Visualization Project</strong> brings socioeconomic data to life with stunning
+            3D Earth visualizations.
+            Imagine a platform where you can explore global statistics, compare countries' progress, and analyze trends
+            in an engaging manner.
+            Whether it's GDP, population, or gender inequality, this project visualizes it all seamlessly.
+        </p>
+        <p class="highlight">
+            This project combines the power of <em>Flask APIs</em> and <em>React</em> for a robust backend and an
+            immersive frontend.
+        </p>
+        <iframe src="https://www.youtube.com/embed/7_NrSDwLk_M" title="Project Overview"></iframe>
+        <p>
+            Watch this video for a detailed demonstration of the project's features and workflow.
+        </p>
+    </section>
+
+    <section>
+        <h2>The Vision</h2>
+        <p>
+            The project aims to provide an <em>interactive educational tool</em> that transforms static data into
+            actionable insights. With globalization and data-driven decisions at the forefront of modern society,
+            understanding data visually becomes critical.
+            The Earth Viewer allows users to:
+        </p>
+        <ul>
+            <li>Analyze global data in an engaging 3D format.</li>
+            <li>Compare trends across countries for better understanding.</li>
+            <li>Uncover hidden relationships in socioeconomic data.</li>
+        </ul>
+        <p class="quote">
+            "Data visualization is not just a tool; it's a window to understanding the world."
+        </p>
+    </section>
+
+    <section>
+        <h2>Key Features</h2>
+        <p>Here are the features that make the Earth Viewer stand out:</p>
+        <ol>
+            <li>
+                <strong>Immersive 3D Earth Visualization</strong>
+                <p>
+                    Using <em>high-resolution textures</em>, the Earth Viewer renders a realistic 3D globe. Users can
+                    interact with the globe through zooming, panning, and rotating to explore country-specific data.
+                </p>
+            </li>
+            <li>
+                <strong>Real-Time Data Loading</strong>
+                <p>
+                    The backend processes datasets like GDP, life expectancy, and fertility rates. APIs dynamically
+                    fetch the data, ensuring the frontend displays accurate, up-to-date insights.
+                </p>
+            </li>
+            <li>
+                <strong>Country Comparisons</strong>
+                <p>
+                    Compare multiple countries across metrics. The visualization highlights differences, helping users
+                    analyze socioeconomic disparities globally.
+                </p>
+            </li>
+            <li>
+                <strong>User-Friendly Interface</strong>
+                <p>
+                    The project employs React components for a clean, modular design. Controls, sidebars, and tooltips
+                    ensure an intuitive user experience.
+                </p>
+            </li>
+        </ol>
+    </section>
+
+    <section>
+        <h2>Datasets and Processing</h2>
+        <p>
+            This project integrates key socioeconomic datasets sourced from credible organizations. Data preprocessing
+            involves cleaning, formatting, and optimizing the datasets for visualization.
+        </p>
+        <ul>
+            <li>Gender Inequality Index</li>
+            <li>Country-wise GDP (1994-2017)</li>
+            <li>Population and fertility rates</li>
+            <li>Life expectancy statistics</li>
+        </ul>
+        <p>
+            Using these datasets, the backend serves APIs that feed data directly into the frontend, ensuring seamless
+            integration.
+        </p>
+    </section>
+
+    <section>
+        <h2>How It Works</h2>
+        <p>The project follows a streamlined workflow:</p>
+        <ol>
+            <li><strong>Data Collection:</strong> Datasets are collected, cleaned, and stored.</li>
+            <li><strong>Backend Processing:</strong> Flask APIs process and serve the data in real-time.</li>
+            <li><strong>Frontend Visualization:</strong> React and Three.js render the data interactively on a 3D globe.
+            </li>
+            <li><strong>User Interaction:</strong> Users explore countries, compare data, and gain insights
+                effortlessly.</li>
+        </ol>
+    </section>
+
+    <section>
+        <h2>Why This Project Matters</h2>
+        <p>
+            In a world overwhelmed by data, visualization bridges the gap between raw statistics and human
+            understanding. This project is not just a visualization tool but a medium to:
+        </p>
+        <ul>
+            <li>Empower students and researchers with meaningful insights.</li>
+            <li>Enable policymakers to analyze socioeconomic trends quickly.</li>
+            <li>Foster awareness among users about global disparities and growth.</li>
+        </ul>
+        <p class="quote">
+            "Visual data tells stories that numbers alone cannot."
+        </p>
+    </section>
+
+    <section>
+        <p>Developed with passion. Explore the full project on <a
+                href="https://github.com/aryansingh920/earth-viewer-data-viz-project" target="_blank">GitHub</a>.
+            For more updates, subscribe to our <a href="#">newsletter</a>.</p>
+    </section>
+</body>
+
+
+
+</html>

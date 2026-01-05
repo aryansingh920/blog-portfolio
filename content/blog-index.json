@@ -1,0 +1,15 @@
+[
+  {
+    "id": 1,
+    "slug": "post1",
+    "title": "Title",
+    "section": "Mind-Scapes",
+    "date": "2025-01-04",
+    "author": "Aryan Singh",
+    "dir": "posts/post1",
+    "html": "posts/post1/index.html",
+    "imageMobile": "/posts/post1/mobile.png",
+    "imageDesktop": "/posts/post1/desktop.png",
+    "excerpt": ""
+  }
+]
