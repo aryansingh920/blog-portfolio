@@ -12,6 +12,7 @@ import {
   type PanInfo,
   useMotionValue,
   useTransform,
+  type MotionValue,
 } from "framer-motion";
 import type { BlogPost } from "../types";
 import { BlogCard } from "./BlogCard";
@@ -20,7 +21,7 @@ import { BlogsHeader } from "./BlogsHeader";
 const V_OFFSET = 120;
 const V_VELOCITY = 800;
 
-const H_OFFSET = 120; // harder to trigger than before
+const H_OFFSET = 120;
 const H_VELOCITY = 800;
 
 // Wheel/trackpad tuning
@@ -32,12 +33,82 @@ const DRAG_LOCK_MS = 220;
 const ONBOARDING_KEY = "blogs_swipe_onboarding_v1";
 
 // Gesture tuning
-const H_DOMINANCE_RATIO = 1.6; // horizontal must clearly dominate vertical
-const EDGE_GUARD_PX = 34; // ignore horizontal actions near edges (esp. right edge)
+const H_DOMINANCE_RATIO = 1.6;
+const EDGE_GUARD_PX = 34;
 
 type SwipeFeedProps = {
   posts: BlogPost[];
 };
+
+type StartInfo = { x: number; y: number; w: number; h: number };
+
+function useLocks() {
+  const lockRef = useRef(false);
+  const unlockTimerRef = useRef<number | null>(null);
+
+  const lockFor = useCallback((ms: number) => {
+    lockRef.current = true;
+    if (unlockTimerRef.current !== null)
+      window.clearTimeout(unlockTimerRef.current);
+
+    unlockTimerRef.current = window.setTimeout(() => {
+      lockRef.current = false;
+      unlockTimerRef.current = null;
+    }, ms);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (unlockTimerRef.current !== null)
+        window.clearTimeout(unlockTimerRef.current);
+    };
+  }, []);
+
+  return { lockRef, lockFor };
+}
+
+function useCardMotion() {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const rotateY = useTransform(x, [-260, 0, 260], [-11, 0, 11]);
+  const rotateX = useTransform(y, [-260, 0, 260], [11, 0, -11]);
+  const rotateZ = useTransform(x, [-300, 0, 300], [-3, 0, 3]);
+
+  const liftX = useTransform(x, (v) => Math.abs(v));
+  const liftY = useTransform(y, (v) => Math.abs(v));
+
+  const lift = useTransform([liftX, liftY], (v) => {
+    const [lx, ly] = v as [number, number];
+    return Math.min(1, (lx + ly) / 420);
+  });
+
+
+  const cardScale = useTransform(lift, [0, 1], [1, 0.985]);
+  const shadow = useTransform(
+    lift,
+    [0, 1],
+    ["0px 14px 26px rgba(0,0,0,0.22)", "0px 28px 52px rgba(0,0,0,0.42)"]
+  );
+
+  return {
+    x,
+    y,
+    rotateX,
+    rotateY,
+    rotateZ,
+    cardScale,
+    shadow,
+  };
+}
+
+function resetMotionPair(x: MotionValue<number>, y: MotionValue<number>) {
+  // hard reset in a way that doesn't depend on component remounts
+  x.stop();
+  y.stop();
+  x.set(0);
+  y.set(0);
+}
 
 export function SwipeFeed({ posts }: SwipeFeedProps) {
   const [index, setIndex] = useState(0);
@@ -46,10 +117,13 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
 
   const n = posts.length;
 
-  const mod = useCallback((i: number) => {
-    if (n === 0) return 0;
-    return ((i % n) + n) % n;
-  }, [n]);
+  const mod = useCallback(
+    (i: number) => {
+      if (n === 0) return 0;
+      return ((i % n) + n) % n;
+    },
+    [n]
+  );
 
   const current = n ? posts[mod(index)] : undefined;
 
@@ -71,66 +145,28 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
   );
 
   // ----- locks -----
-  const lockRef = useRef(false);
-  const unlockTimerRef = useRef<number | null>(null);
+  const { lockRef, lockFor } = useLocks();
 
-  const lockFor = (ms: number) => {
-    lockRef.current = true;
-    if (unlockTimerRef.current !== null)
-      window.clearTimeout(unlockTimerRef.current);
-    unlockTimerRef.current = window.setTimeout(() => {
-      lockRef.current = false;
-      unlockTimerRef.current = null;
-    }, ms);
-  };
-
+  // ----- wheel accumulators -----
   const wheelAccumY = useRef(0);
   const wheelAccumX = useRef(0);
 
-  // ----- pointer start tracking (edge-guard for horizontal) -----
-  const cardRef = useRef<HTMLDivElement | null>(null);
-  const startRef = useRef<{ x: number; y: number; w: number; h: number }>({
-    x: 0,
-    y: 0,
-    w: 0,
-    h: 0,
-  });
+  // ----- pointer start tracking (no element.ref usage; no React 19 ref warnings here) -----
+  const startRef = useRef<StartInfo>({ x: 0, y: 0, w: 0, h: 0 });
 
   const captureStart = (e: ReactPointerEvent<HTMLDivElement>) => {
-    const rect = cardRef.current?.getBoundingClientRect();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     startRef.current = {
       x: e.clientX,
       y: e.clientY,
-      w: rect?.width ?? window.innerWidth,
-      h: rect?.height ?? window.innerHeight,
+      w: rect.width || window.innerWidth,
+      h: rect.height || window.innerHeight,
     };
   };
 
-  // ----- motion for realistic card feel -----
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  // Tilts
-  const rotateY = useTransform(x, [-260, 0, 260], [-11, 0, 11]);
-  const rotateX = useTransform(y, [-260, 0, 260], [11, 0, -11]);
-  const rotateZ = useTransform(x, [-300, 0, 300], [-3, 0, 3]);
-
-  // Lift + scale + shadow
-  const liftX = useTransform(x, (v) => Math.abs(v));
-  const liftY = useTransform(y, (v) => Math.abs(v));
-
-  const lift = useTransform([liftX, liftY], (v) => {
-    const [lx, ly] = v as [number, number];
-    return Math.min(1, (lx + ly) / 420);
-  });
-
-
-  const cardScale = useTransform(lift, [0, 1], [1, 0.985]);
-  const shadow = useTransform(
-    lift,
-    [0, 1],
-    ["0px 14px 26px rgba(0,0,0,0.22)", "0px 28px 52px rgba(0,0,0,0.42)"]
-  );
+  // ----- motion for card feel -----
+  const { x, y, rotateX, rotateY, rotateZ, cardScale, shadow } =
+    useCardMotion();
 
   // Under-card reveal linked to y (only one side shows at a time)
   const nextOpacity = useTransform(y, [-280, -60, 0], [1, 0.85, 0]);
@@ -169,7 +205,7 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
     }
   }, []);
 
-  // ----- actions -----
+  // ----- actions (always reset motion so looping never “breaks” drag/pinch/hold) -----
   const goNext = () => {
     if (!n || lockRef.current || showOnboarding) return;
     setIndex((i) => i + 1);
@@ -194,6 +230,14 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
     lockFor(WHEEL_LOCK_MS);
   };
 
+  // Hard reset motion + wheel accumulators whenever card changes or overlay/panel toggles.
+  // This fixes your “after looping I can’t drag/hold/pinch, only scroll” issue.
+  useEffect(() => {
+    resetMotionPair(x, y);
+    wheelAccumX.current = 0;
+    wheelAccumY.current = 0;
+  }, [index, isPeek, showOnboarding, x, y]);
+
   // ----- drag end -----
   const onDragEnd = (
     _: MouseEvent | TouchEvent | PointerEvent,
@@ -207,7 +251,7 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
     const absY = Math.abs(offset.y);
 
     const horizontalDominant = absX > absY * H_DOMINANCE_RATIO;
-    const verticalDominant = absY >= absX; // default to vertical when ambiguous
+    const verticalDominant = absY >= absX;
 
     if (verticalDominant) {
       const swipeDown = offset.y > V_OFFSET || velocity.y > V_VELOCITY;
@@ -231,7 +275,7 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
       const swipeLeft = offset.x < -H_OFFSET || velocity.x < -H_VELOCITY;
       const swipeRight = offset.x > H_OFFSET || velocity.x > H_VELOCITY;
 
-      // Fix: swiping from RIGHT edge to LEFT should NOT open quick panel
+      // Guard the right edge so OS/browser gestures don’t hijack it
       if (swipeLeft) {
         if (nearRightEdge) return;
         if (!nearLeftEdge) {
@@ -239,7 +283,6 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
           lockFor(DRAG_LOCK_MS);
         }
       } else if (swipeRight) {
-        // closing is less dangerous; still guard the extreme edge
         if (!nearRightEdge) {
           closePeek();
           lockFor(DRAG_LOCK_MS);
@@ -252,8 +295,7 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
   const onWheel: WheelEventHandler<HTMLDivElement> = (e) => {
     if (!n || lockRef.current || showOnboarding) return;
 
-    // Fix: on macOS pinch-to-zoom often comes as wheel with ctrlKey.
-    // If we preventDefault those, gestures can break after scrolling.
+    // macOS pinch-to-zoom comes as wheel with ctrlKey -> do not preventDefault
     if (e.ctrlKey) return;
 
     e.preventDefault();
@@ -320,13 +362,6 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [n, showOnboarding]);
 
-  useEffect(() => {
-    return () => {
-      if (unlockTimerRef.current !== null)
-        window.clearTimeout(unlockTimerRef.current);
-    };
-  }, []);
-
   if (!current) {
     return (
       <div className="min-h-screen grid place-items-center p-6">
@@ -352,7 +387,7 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
       />
 
       <main className="min-h-screen relative perspective-distant">
-        {/* Under stack (pointer-events-none so it never steals gestures) */}
+        {/* Under stack */}
         <div className="absolute inset-0 pointer-events-none">
           {prev2Post && (
             <motion.div
@@ -392,8 +427,7 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
         {/* Current card */}
         <AnimatePresence initial={false} mode="popLayout">
           <motion.div
-            ref={cardRef}
-            key={`${current.id}-${mod(index)}`}
+            key={`card-${index}`}
             className="absolute inset-0 h-svh w-full"
             drag
             dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}
@@ -404,8 +438,6 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
             onPointerDown={captureStart}
             onDragEnd={onDragEnd}
             onWheel={onWheel}
-            // IMPORTANT: allow trackpad pinch/zoom to remain sane; don't hard-disable gestures
-            // (overflow-hidden already prevents page scroll)
             style={{
               x,
               y,
@@ -415,7 +447,9 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
               scale: cardScale,
               boxShadow: shadow,
               transformStyle: "preserve-3d",
-              touchAction: "pan-x pan-y",
+              // Keep pinch/zoom + pan working while still allowing drag.
+              // (If you set touchAction: "none", iOS pinch will break.)
+              touchAction: "pan-x pan-y pinch-zoom",
             }}
             initial={{ opacity: 0, scale: 0.99 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -428,7 +462,6 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
             }}
             whileDrag={{ scale: 0.99 }}
           >
-            {/* Card frame so it actually feels like a card */}
             <div className="relative h-full w-full rounded-[28px] overflow-hidden ring-1 ring-white/10 bg-black">
               <BlogCard post={current} />
               <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-white/7 via-transparent to-transparent" />
@@ -478,7 +511,7 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
           )}
         </AnimatePresence>
 
-        {/* Onboarding overlay (kept as-is, just shorter) */}
+        {/* Onboarding overlay */}
         <AnimatePresence>
           {showOnboarding && (
             <motion.div
