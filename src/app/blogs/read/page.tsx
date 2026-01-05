@@ -39,7 +39,7 @@ export default async function ReadPage({ searchParams }: ReadPageProps) {
             />
           </picture>
 
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
 
           <div className="relative z-20 flex h-full flex-col justify-end p-6 md:p-10">
             <span className="mb-2 font-medium text-blue-400">
