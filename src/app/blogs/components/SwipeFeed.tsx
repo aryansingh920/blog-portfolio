@@ -1,8 +1,18 @@
 // app/blogs/components/SwipeFeed.tsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, type PanInfo } from "framer-motion";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type {
+  WheelEventHandler,
+  PointerEvent as ReactPointerEvent,
+} from "react";
+import {
+  AnimatePresence,
+  motion,
+  type PanInfo,
+  useMotionValue,
+  useTransform,
+} from "framer-motion";
 import type { BlogPost } from "../types";
 import { BlogCard } from "./BlogCard";
 import { BlogsHeader } from "./BlogsHeader";
@@ -10,16 +20,20 @@ import { BlogsHeader } from "./BlogsHeader";
 const V_OFFSET = 120;
 const V_VELOCITY = 800;
 
-const H_OFFSET = 90;
-const H_VELOCITY = 650;
+const H_OFFSET = 120; // harder to trigger than before
+const H_VELOCITY = 800;
 
 // Wheel/trackpad tuning
-const WHEEL_THRESHOLD = 42; // lower = more sensitive
-const WHEEL_LOCK_MS = 320; // prevents rapid multi-advance
+const WHEEL_THRESHOLD = 42;
+const WHEEL_LOCK_MS = 320;
 const DRAG_LOCK_MS = 220;
 
 // Onboarding overlay key
 const ONBOARDING_KEY = "blogs_swipe_onboarding_v1";
+
+// Gesture tuning
+const H_DOMINANCE_RATIO = 1.6; // horizontal must clearly dominate vertical
+const EDGE_GUARD_PX = 34; // ignore horizontal actions near edges (esp. right edge)
 
 type SwipeFeedProps = {
   posts: BlogPost[];
@@ -28,17 +42,35 @@ type SwipeFeedProps = {
 export function SwipeFeed({ posts }: SwipeFeedProps) {
   const [index, setIndex] = useState(0);
   const [isPeek, setIsPeek] = useState(false);
-
-  // NEW: onboarding overlay (first load only)
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   const n = posts.length;
 
-  const mod = (i: number) => {
+  const mod = useCallback((i: number) => {
     if (n === 0) return 0;
     return ((i % n) + n) % n;
-  };
+  }, [n]);
 
+  const current = n ? posts[mod(index)] : undefined;
+
+  const prevPost = useMemo(
+    () => (n ? posts[mod(index - 1)] : undefined),
+    [n, posts, mod, index]
+  );
+  const nextPost = useMemo(
+    () => (n ? posts[mod(index + 1)] : undefined),
+    [n, posts, mod, index]
+  );
+  const prev2Post = useMemo(
+    () => (n ? posts[mod(index - 2)] : undefined),
+    [n, posts, mod, index]
+  );
+  const next2Post = useMemo(
+    () => (n ? posts[mod(index + 2)] : undefined),
+    [n, posts, mod, index]
+  );
+
+  // ----- locks -----
   const lockRef = useRef(false);
   const unlockTimerRef = useRef<number | null>(null);
 
@@ -46,7 +78,6 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
     lockRef.current = true;
     if (unlockTimerRef.current !== null)
       window.clearTimeout(unlockTimerRef.current);
-
     unlockTimerRef.current = window.setTimeout(() => {
       lockRef.current = false;
       unlockTimerRef.current = null;
@@ -56,8 +87,89 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
   const wheelAccumY = useRef(0);
   const wheelAccumX = useRef(0);
 
-  const current = n ? posts[mod(index)] : undefined;
+  // ----- pointer start tracking (edge-guard for horizontal) -----
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const startRef = useRef<{ x: number; y: number; w: number; h: number }>({
+    x: 0,
+    y: 0,
+    w: 0,
+    h: 0,
+  });
 
+  const captureStart = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const rect = cardRef.current?.getBoundingClientRect();
+    startRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      w: rect?.width ?? window.innerWidth,
+      h: rect?.height ?? window.innerHeight,
+    };
+  };
+
+  // ----- motion for realistic card feel -----
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  // Tilts
+  const rotateY = useTransform(x, [-260, 0, 260], [-11, 0, 11]);
+  const rotateX = useTransform(y, [-260, 0, 260], [11, 0, -11]);
+  const rotateZ = useTransform(x, [-300, 0, 300], [-3, 0, 3]);
+
+  // Lift + scale + shadow
+  const liftX = useTransform(x, (v) => Math.abs(v));
+  const liftY = useTransform(y, (v) => Math.abs(v));
+
+  const lift = useTransform([liftX, liftY], (v) => {
+    const [lx, ly] = v as [number, number];
+    return Math.min(1, (lx + ly) / 420);
+  });
+
+
+  const cardScale = useTransform(lift, [0, 1], [1, 0.985]);
+  const shadow = useTransform(
+    lift,
+    [0, 1],
+    ["0px 14px 26px rgba(0,0,0,0.22)", "0px 28px 52px rgba(0,0,0,0.42)"]
+  );
+
+  // Under-card reveal linked to y (only one side shows at a time)
+  const nextOpacity = useTransform(y, [-280, -60, 0], [1, 0.85, 0]);
+  const nextScale = useTransform(y, [-280, 0], [1, 0.965]);
+  const nextY = useTransform(y, [-280, 0], [-10, 26]);
+
+  const prevOpacity = useTransform(y, [0, 60, 280], [0, 0.85, 1]);
+  const prevScale = useTransform(y, [0, 280], [0.965, 1]);
+  const prevY = useTransform(y, [0, 280], [26, -10]);
+
+  // Second layer further back
+  const next2Opacity = useTransform(y, [-320, -110, 0], [0.55, 0.3, 0]);
+  const next2Scale = useTransform(y, [-320, 0], [0.985, 0.94]);
+  const next2Y = useTransform(y, [-320, 0], [-4, 44]);
+
+  const prev2Opacity = useTransform(y, [0, 110, 320], [0, 0.3, 0.55]);
+  const prev2Scale = useTransform(y, [0, 320], [0.94, 0.985]);
+  const prev2Y = useTransform(y, [0, 320], [44, -4]);
+
+  // ----- onboarding -----
+  const dismissOnboarding = () => {
+    setShowOnboarding(false);
+    try {
+      localStorage.setItem(ONBOARDING_KEY, "1");
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    try {
+      const seen = localStorage.getItem(ONBOARDING_KEY) === "1";
+      setShowOnboarding(!seen);
+    } catch {
+      setShowOnboarding(true);
+    }
+  }, []);
+
+  // ----- actions -----
   const goNext = () => {
     if (!n || lockRef.current || showOnboarding) return;
     setIndex((i) => i + 1);
@@ -70,38 +182,19 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
     lockFor(WHEEL_LOCK_MS);
   };
 
-  const goRight = () => {
-    if (lockRef.current || showOnboarding) return;
-    setIsPeek(false);
-    lockFor(WHEEL_LOCK_MS);
-  };
-
-  const goLeft = () => {
+  const openPeek = () => {
     if (lockRef.current || showOnboarding) return;
     setIsPeek(true);
     lockFor(WHEEL_LOCK_MS);
   };
 
-  const dismissOnboarding = () => {
-    setShowOnboarding(false);
-    try {
-      localStorage.setItem(ONBOARDING_KEY, "1");
-    } catch {
-      // ignore
-    }
+  const closePeek = () => {
+    if (lockRef.current || showOnboarding) return;
+    setIsPeek(false);
+    lockFor(WHEEL_LOCK_MS);
   };
 
-  // Decide first-load overlay on mount
-  useEffect(() => {
-    try {
-      const seen = localStorage.getItem(ONBOARDING_KEY) === "1";
-      setShowOnboarding(!seen);
-    } catch {
-      // if storage blocked, show once per session
-      setShowOnboarding(true);
-    }
-  }, []);
-
+  // ----- drag end -----
   const onDragEnd = (
     _: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
@@ -113,7 +206,10 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
     const absX = Math.abs(offset.x);
     const absY = Math.abs(offset.y);
 
-    if (absY >= absX) {
+    const horizontalDominant = absX > absY * H_DOMINANCE_RATIO;
+    const verticalDominant = absY >= absX; // default to vertical when ambiguous
+
+    if (verticalDominant) {
       const swipeDown = offset.y > V_OFFSET || velocity.y > V_VELOCITY;
       const swipeUp = offset.y < -V_OFFSET || velocity.y < -V_VELOCITY;
 
@@ -127,37 +223,55 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
       return;
     }
 
-    const swipeRight = offset.x > H_OFFSET || velocity.x > H_VELOCITY;
-    const swipeLeft = offset.x < -H_OFFSET || velocity.x < -H_VELOCITY;
+    if (horizontalDominant) {
+      const { x: sx, w } = startRef.current;
+      const nearLeftEdge = sx <= EDGE_GUARD_PX;
+      const nearRightEdge = sx >= w - EDGE_GUARD_PX;
 
-    if (swipeLeft) {
-      goLeft();
-      lockFor(DRAG_LOCK_MS);
-    } else if (swipeRight) {
-      goRight();
-      lockFor(DRAG_LOCK_MS);
+      const swipeLeft = offset.x < -H_OFFSET || velocity.x < -H_VELOCITY;
+      const swipeRight = offset.x > H_OFFSET || velocity.x > H_VELOCITY;
+
+      // Fix: swiping from RIGHT edge to LEFT should NOT open quick panel
+      if (swipeLeft) {
+        if (nearRightEdge) return;
+        if (!nearLeftEdge) {
+          openPeek();
+          lockFor(DRAG_LOCK_MS);
+        }
+      } else if (swipeRight) {
+        // closing is less dangerous; still guard the extreme edge
+        if (!nearRightEdge) {
+          closePeek();
+          lockFor(DRAG_LOCK_MS);
+        }
+      }
     }
   };
 
-  const onWheel: React.WheelEventHandler<HTMLDivElement> = (e) => {
+  // ----- wheel/trackpad -----
+  const onWheel: WheelEventHandler<HTMLDivElement> = (e) => {
     if (!n || lockRef.current || showOnboarding) return;
+
+    // Fix: on macOS pinch-to-zoom often comes as wheel with ctrlKey.
+    // If we preventDefault those, gestures can break after scrolling.
+    if (e.ctrlKey) return;
 
     e.preventDefault();
 
     const dx = e.deltaX;
     const dy = e.deltaY;
 
-    const horizontalIntent = Math.abs(dx) > Math.abs(dy) || e.shiftKey;
+    const horizontalIntent = Math.abs(dx) > Math.abs(dy) * 1.2 || e.shiftKey;
 
     if (horizontalIntent) {
       wheelAccumX.current += e.shiftKey ? dy : dx;
 
       if (wheelAccumX.current > WHEEL_THRESHOLD) {
         wheelAccumX.current = 0;
-        goRight();
+        closePeek();
       } else if (wheelAccumX.current < -WHEEL_THRESHOLD) {
         wheelAccumX.current = 0;
-        goLeft();
+        openPeek();
       }
       return;
     }
@@ -173,7 +287,7 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
     }
   };
 
-  // Keyboard support (also dismiss onboarding)
+  // ----- keyboard -----
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (showOnboarding) {
@@ -194,10 +308,10 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
         goPrev();
       } else if (e.key === "ArrowLeft") {
         e.preventDefault();
-        goLeft();
+        openPeek();
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
-        goRight();
+        closePeek();
       }
     };
 
@@ -237,40 +351,105 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
         onNext={goNext}
       />
 
-      <main className="min-h-screen relative">
+      <main className="min-h-screen relative perspective-distant">
+        {/* Under stack (pointer-events-none so it never steals gestures) */}
+        <div className="absolute inset-0 pointer-events-none">
+          {prev2Post && (
+            <motion.div
+              className="absolute inset-0"
+              style={{ opacity: prev2Opacity, scale: prev2Scale, y: prev2Y }}
+            >
+              <BlogCard post={prev2Post} />
+            </motion.div>
+          )}
+          {next2Post && (
+            <motion.div
+              className="absolute inset-0"
+              style={{ opacity: next2Opacity, scale: next2Scale, y: next2Y }}
+            >
+              <BlogCard post={next2Post} />
+            </motion.div>
+          )}
+
+          {prevPost && (
+            <motion.div
+              className="absolute inset-0"
+              style={{ opacity: prevOpacity, scale: prevScale, y: prevY }}
+            >
+              <BlogCard post={prevPost} />
+            </motion.div>
+          )}
+          {nextPost && (
+            <motion.div
+              className="absolute inset-0"
+              style={{ opacity: nextOpacity, scale: nextScale, y: nextY }}
+            >
+              <BlogCard post={nextPost} />
+            </motion.div>
+          )}
+        </div>
+
+        {/* Current card */}
         <AnimatePresence initial={false} mode="popLayout">
           <motion.div
+            ref={cardRef}
             key={`${current.id}-${mod(index)}`}
+            className="absolute inset-0 h-svh w-full"
             drag
             dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}
-            dragElastic={0.18}
+            dragElastic={0.45}
+            dragMomentum={false}
+            dragSnapToOrigin
+            dragTransition={{ bounceStiffness: 420, bounceDamping: 26 }}
+            onPointerDown={captureStart}
             onDragEnd={onDragEnd}
             onWheel={onWheel}
-            style={{ touchAction: "none" }}
-            initial={{ opacity: 0, y: 60, scale: 0.985 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -60, scale: 0.985 }}
-            transition={{ type: "spring", stiffness: 320, damping: 30 }}
-            className="h-svh w-full"
+            // IMPORTANT: allow trackpad pinch/zoom to remain sane; don't hard-disable gestures
+            // (overflow-hidden already prevents page scroll)
+            style={{
+              x,
+              y,
+              rotateX,
+              rotateY,
+              rotateZ,
+              scale: cardScale,
+              boxShadow: shadow,
+              transformStyle: "preserve-3d",
+              touchAction: "pan-x pan-y",
+            }}
+            initial={{ opacity: 0, scale: 0.99 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.99 }}
+            transition={{
+              type: "spring",
+              stiffness: 260,
+              damping: 24,
+              mass: 0.9,
+            }}
+            whileDrag={{ scale: 0.99 }}
           >
-            <BlogCard post={current} />
+            {/* Card frame so it actually feels like a card */}
+            <div className="relative h-full w-full rounded-[28px] overflow-hidden ring-1 ring-white/10 bg-black">
+              <BlogCard post={current} />
+              <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-white/7 via-transparent to-transparent" />
+            </div>
           </motion.div>
         </AnimatePresence>
 
-        {/* OPTIONAL: side panel */}
+        {/* Quick panel */}
         <AnimatePresence>
           {isPeek && (
             <motion.aside
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
-              transition={{ type: "spring", stiffness: 360, damping: 36 }}
+              transition={{ type: "spring", stiffness: 280, damping: 28 }}
               className="absolute top-0 right-0 h-svh w-[82vw] max-w-95 bg-zinc-950/95 border-l border-white/10 backdrop-blur p-4 z-30"
             >
               <div className="text-sm font-semibold">Quick Actions</div>
               <div className="mt-2 text-xs opacity-70">
-                Trackpad horizontal scroll or Shift+wheel = left/right. Arrow
-                keys also work.
+                Horizontal trackpad scroll (or Shift+wheel) opens/closes this.
+                Arrow keys too.
               </div>
 
               <div className="mt-4 grid gap-2">
@@ -299,7 +478,7 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
           )}
         </AnimatePresence>
 
-        {/* NEW: first-load onboarding overlay */}
+        {/* Onboarding overlay (kept as-is, just shorter) */}
         <AnimatePresence>
           {showOnboarding && (
             <motion.div
@@ -309,10 +488,7 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
               exit={{ opacity: 0 }}
               onClick={dismissOnboarding}
             >
-              {/* Backdrop */}
               <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
-
-              {/* Content */}
               <motion.div
                 initial={{ opacity: 0, y: 12, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -324,8 +500,8 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
                 <div className="w-full max-w-130 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl">
                   <div className="text-base font-semibold">How to navigate</div>
                   <div className="mt-2 text-sm opacity-80">
-                    Swipe on mobile or use your trackpad/mouse/keyboard on
-                    desktop.
+                    Swipe/drag (mobile). Scroll/trackpad (desktop). Tap anywhere
+                    to dismiss.
                   </div>
 
                   <div className="mt-5 grid gap-3 text-sm">
@@ -333,20 +509,9 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
                       <div className="opacity-80">Next / Previous article</div>
                       <div className="font-semibold">↑ / ↓</div>
                     </div>
-
                     <div className="flex items-center justify-between rounded-2xl bg-white/5 border border-white/10 px-4 py-3">
-                      <div className="opacity-80">Open / Close quick panel</div>
+                      <div className="opacity-80">Quick panel</div>
                       <div className="font-semibold">← / →</div>
-                    </div>
-
-                    <div className="flex items-center justify-between rounded-2xl bg-white/5 border border-white/10 px-4 py-3">
-                      <div className="opacity-80">Desktop scroll controls</div>
-                      <div className="text-right">
-                        <div className="font-semibold">Scroll</div>
-                        <div className="text-xs opacity-70">
-                          Shift+Scroll = horizontal
-                        </div>
-                      </div>
                     </div>
                   </div>
 
@@ -360,15 +525,9 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
                     <button
                       className="px-4 py-3 rounded-2xl bg-white/10 border border-white/10"
                       onClick={dismissOnboarding}
-                      title="Esc"
                     >
                       Close
                     </button>
-                  </div>
-
-                  <div className="mt-4 text-xs opacity-60">
-                    Tip: Press <span className="font-semibold">Esc</span> to
-                    close.
                   </div>
                 </div>
               </motion.div>
