@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { getBlogIndex, getPostHtmlById } from "@/lib/blog";
-import { BackgroundBeamsWithCollision } from "@/components/ui/background-beams-with-collision";
-
+import { ShootingStars } from "@/components/ui/shooting-stars";
+import { StarsBackground } from "@/components/ui/stars-background";
+import styles from "./ReadPage.module.css";
 export const revalidate = 86400;
 
 type ReadPageProps = {
@@ -23,9 +24,15 @@ export default async function ReadPage({ searchParams }: ReadPageProps) {
   if (!html) return notFound();
 
   return (
-    <BackgroundBeamsWithCollision className="relative w-screen h-screen bg-zinc-950 text-white overflow-hidden">
-      {/* Full-viewport scroller */}
-      <div className="absolute inset-0 z-10 overflow-y-auto overflow-x-hidden">
+    <div className={styles.spaceBg}>
+      {/* Stars layer: behind content, above background */}
+      <div className={styles.starsLayer}>
+        <ShootingStars />
+        <StarsBackground />
+      </div>
+
+      {/* Content layer: scrolls, sits on top */}
+      <div className={styles.contentLayer}>
         {/* Hero Section */}
         <div className="relative h-[40vh] w-full overflow-hidden rounded-b-3xl">
           <picture className="absolute inset-0">
@@ -45,9 +52,11 @@ export default async function ReadPage({ searchParams }: ReadPageProps) {
             <span className="mb-2 font-medium text-blue-400">
               {post.section}
             </span>
+
             <h1 className="text-3xl font-bold tracking-tight md:text-5xl">
               {post.title}
             </h1>
+
             <div className="mt-4 flex items-center gap-2 text-sm text-zinc-400">
               <span>{post.author}</span>
               <span>•</span>
@@ -57,13 +66,14 @@ export default async function ReadPage({ searchParams }: ReadPageProps) {
         </div>
 
         {/* Content Section */}
-        <article className="prose prose-invert prose-zinc mx-auto  px-6 py-12">
+        <article className="prose prose-invert prose-zinc mx-auto px-6 py-12">
           <div
+            className={`${styles.articleHtml} [&>p]:mb-6 [&>h2]:mb-4 [&>h2]:mt-10 [&>h2]:text-2xl [&>h2]:font-bold`}
             dangerouslySetInnerHTML={{ __html: html }}
-            className="[&>p]:mb-6 [&>h2]:mb-4 [&>h2]:mt-10 [&>h2]:text-2xl [&>h2]:font-bold"
           />
         </article>
       </div>
-    </BackgroundBeamsWithCollision>
+    </div>
   );
+
 }
