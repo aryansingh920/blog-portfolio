@@ -33,14 +33,14 @@ const DRAG_LOCK_MS = 220;
 
 // Onboarding overlay key
 const ONBOARDING_KEY = "blogs_swipe_onboarding_v1";
+const ONBOARDING_TTL_MS = 15 * 60 * 1000; // 15 minutes
 
 // Gesture tuning
 const H_DOMINANCE_RATIO = 1.6;
-const EDGE_GUARD_PX = 34;
 
 type SwipeFeedProps = {
   posts: BlogPost[];
-  initialIndex?: number; // NEW
+  initialIndex?: number;
 };
 
 type StartInfo = { x: number; y: number; w: number; h: number };
@@ -125,14 +125,12 @@ export function SwipeFeed({ posts, initialIndex = 0 }: SwipeFeedProps) {
     [n]
   );
 
-  // NEW: initialize index from prop (URL-derived)
   const [index, setIndex] = useState(() => {
     if (!n) return 0;
     const safe = Number.isFinite(initialIndex) ? initialIndex : 0;
     return mod(Math.max(0, safe));
   });
 
-  const [isPeek, setIsPeek] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   const current = n ? posts[mod(index)] : undefined;
@@ -200,20 +198,32 @@ export function SwipeFeed({ posts, initialIndex = 0 }: SwipeFeedProps) {
   const dismissOnboarding = () => {
     setShowOnboarding(false);
     try {
-      localStorage.setItem(ONBOARDING_KEY, "1");
-    } catch {
-      // ignore
-    }
+      localStorage.setItem(ONBOARDING_KEY, String(Date.now()));
+    } catch {}
   };
 
+
+  // 1-hour expiry onboarding (as you asked earlier)
   useEffect(() => {
     try {
-      const seen = localStorage.getItem(ONBOARDING_KEY) === "1";
-      setShowOnboarding(!seen);
+      const raw = localStorage.getItem(ONBOARDING_KEY);
+
+      // never seen before → show
+      if (!raw) {
+        setShowOnboarding(true);
+        return;
+      }
+
+      const lastSeen = Number(raw);
+      const expired =
+        !Number.isFinite(lastSeen) || Date.now() - lastSeen > ONBOARDING_TTL_MS;
+
+      setShowOnboarding(expired);
     } catch {
       setShowOnboarding(true);
     }
   }, []);
+
 
   // ----- actions -----
   const goNext = () => {
@@ -228,42 +238,26 @@ export function SwipeFeed({ posts, initialIndex = 0 }: SwipeFeedProps) {
     lockFor(WHEEL_LOCK_MS);
   };
 
-  const openPeek = () => {
-    if (lockRef.current || showOnboarding) return;
-    setIsPeek(true);
-    lockFor(WHEEL_LOCK_MS);
-  };
-
-  const closePeek = () => {
-    if (lockRef.current || showOnboarding) return;
-    setIsPeek(false);
-    lockFor(WHEEL_LOCK_MS);
-  };
-
-  // Hard reset motion + wheel accumulators whenever card changes or overlay/panel toggles.
+  // Hard reset motion + wheel accumulators whenever card changes or overlay toggles.
   useEffect(() => {
     resetMotionPair(x, y);
     wheelAccumX.current = 0;
     wheelAccumY.current = 0;
-  }, [index, isPeek, showOnboarding, x, y]);
+  }, [index, showOnboarding, x, y]);
 
-  // NEW: keep URL in sync with current index: /blogs?i=...
-  // replace() avoids polluting browser history on every swipe.
-useEffect(() => {
-  if (!n) return;
+  // keep URL in sync with current index: /blogs?i=...
+  useEffect(() => {
+    if (!n) return;
 
-  const nextI = String(mod(index));
-  const currentI = searchParams?.get("i") ?? null;
+    const nextI = String(mod(index));
+    const currentI = searchParams?.get("i") ?? null;
+    if (currentI === nextI) return;
 
-  // IMPORTANT: prevents infinite replace loop
-  if (currentI === nextI) return;
+    const sp = new URLSearchParams(searchParams?.toString());
+    sp.set("i", nextI);
 
-  const sp = new URLSearchParams(searchParams?.toString());
-  sp.set("i", nextI);
-
-  router.replace(`/blogs?${sp.toString()}`, { scroll: false });
-}, [index, n, mod, router, searchParams]);
-
+    router.replace(`/blogs?${sp.toString()}`, { scroll: false });
+  }, [index, n, mod, router, searchParams]);
 
   // ----- drag end -----
   const onDragEnd = (
@@ -295,24 +289,16 @@ useEffect(() => {
     }
 
     if (horizontalDominant) {
-      const { x: sx, w } = startRef.current;
-      const nearLeftEdge = sx <= EDGE_GUARD_PX;
-      const nearRightEdge = sx >= w - EDGE_GUARD_PX;
-
       const swipeLeft = offset.x < -H_OFFSET || velocity.x < -H_VELOCITY;
       const swipeRight = offset.x > H_OFFSET || velocity.x > H_VELOCITY;
 
+      // swipe left -> next, swipe right -> prev
       if (swipeLeft) {
-        if (nearRightEdge) return;
-        if (!nearLeftEdge) {
-          openPeek();
-          lockFor(DRAG_LOCK_MS);
-        }
+        goNext();
+        lockFor(DRAG_LOCK_MS);
       } else if (swipeRight) {
-        if (!nearRightEdge) {
-          closePeek();
-          lockFor(DRAG_LOCK_MS);
-        }
+        goPrev();
+        lockFor(DRAG_LOCK_MS);
       }
     }
   };
@@ -334,12 +320,13 @@ useEffect(() => {
     if (horizontalIntent) {
       wheelAccumX.current += e.shiftKey ? dy : dx;
 
+      // trackpad right -> prev, left -> next (matches drag mapping)
       if (wheelAccumX.current > WHEEL_THRESHOLD) {
         wheelAccumX.current = 0;
-        closePeek();
+        goPrev();
       } else if (wheelAccumX.current < -WHEEL_THRESHOLD) {
         wheelAccumX.current = 0;
-        openPeek();
+        goNext();
       }
       return;
     }
@@ -376,10 +363,10 @@ useEffect(() => {
         goPrev();
       } else if (e.key === "ArrowLeft") {
         e.preventDefault();
-        openPeek();
+        goPrev();
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
-        closePeek();
+        goNext();
       }
     };
 
@@ -493,48 +480,6 @@ useEffect(() => {
           </motion.div>
         </AnimatePresence>
 
-        {/* Quick panel */}
-        {/* <AnimatePresence>
-          {isPeek && (
-            <motion.aside
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", stiffness: 280, damping: 28 }}
-              className="absolute top-0 right-0 h-svh w-[82vw] max-w-95 bg-zinc-950/95 border-l border-white/10 backdrop-blur p-4 z-30"
-            >
-              <div className="text-sm font-semibold">Quick Actions</div>
-              <div className="mt-2 text-xs opacity-70">
-                Horizontal trackpad scroll (or Shift+wheel) opens/closes this.
-                Arrow keys too.
-              </div>
-
-              <div className="mt-4 grid gap-2">
-                <button className="w-full px-4 py-3 rounded-2xl bg-white/10 text-left">
-                  Save
-                </button>
-                <button className="w-full px-4 py-3 rounded-2xl bg-white/10 text-left">
-                  Share
-                </button>
-                <button
-                  className="w-full px-4 py-3 rounded-2xl bg-white text-black text-left font-semibold"
-                  onClick={() => {
-                    window.location.href = current.href;
-                  }}
-                >
-                  Open (Read)
-                </button>
-                <button
-                  className="w-full px-4 py-3 rounded-2xl bg-white/10 text-left"
-                  onClick={() => setIsPeek(false)}
-                >
-                  Close
-                </button>
-              </div>
-            </motion.aside>
-          )}
-        </AnimatePresence> */}
-
         {/* Onboarding overlay */}
         <AnimatePresence>
           {showOnboarding && (
@@ -564,11 +509,7 @@ useEffect(() => {
                   <div className="mt-5 grid gap-3 text-sm">
                     <div className="flex items-center justify-between rounded-2xl bg-white/5 border border-white/10 px-4 py-3">
                       <div className="opacity-80">Next / Previous article</div>
-                      <div className="font-semibold">↑ / ↓</div>
-                    </div>
-                    <div className="flex items-center justify-between rounded-2xl bg-white/5 border border-white/10 px-4 py-3">
-                      <div className="opacity-80">Quick panel</div>
-                      <div className="font-semibold">← / →</div>
+                      <div className="font-semibold">↑ ↓ or ← →</div>
                     </div>
                   </div>
 
