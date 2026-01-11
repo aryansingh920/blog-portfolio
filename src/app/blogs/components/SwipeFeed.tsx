@@ -494,7 +494,7 @@ useEffect(() => {
         </AnimatePresence>
 
         {/* Quick panel */}
-        <AnimatePresence>
+        {/* <AnimatePresence>
           {isPeek && (
             <motion.aside
               initial={{ x: "100%" }}
@@ -533,7 +533,7 @@ useEffect(() => {
               </div>
             </motion.aside>
           )}
-        </AnimatePresence>
+        </AnimatePresence> */}
 
         {/* Onboarding overlay */}
         <AnimatePresence>
