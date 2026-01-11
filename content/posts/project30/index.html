@@ -1,0 +1,229 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Copula Analysis of Risk: A Multivariate Risk Analysis for VaR and CoVaR using Copulas and DCC-GARCH</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            background-color: #f8f9fa;
+            color: #333;
+
+
+        }
+
+        header {
+            background: rgba(0, 17, 40, 0.86);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5.1px);
+            -webkit-backdrop-filter: blur(5.1px);
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        header p {
+            font-size: 1.2em;
+        }
+
+        section {
+            padding: 20px;
+            margin: 20px 10px;
+
+            background: rgba(255, 255, 255, 0.35);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5.6px);
+            -webkit-backdrop-filter: blur(5.6px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        section h2 {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+
+        section p,
+        ul,
+        ol {
+            margin-bottom: 15px;
+        }
+
+        iframe {
+            display: block;
+            margin: 20px auto;
+            width: 100%;
+            height: 500px;
+            border: none;
+            border-radius: 8px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        footer a {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+        .highlight {
+            background-color: #f0f8ff;
+            border-left: 5px solid #007bff;
+            padding: 10px 15px;
+            margin: 15px 0;
+            font-style: italic;
+        }
+
+        .quote {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #555;
+            margin: 20px 0;
+            text-align: center;
+        }
+    </style>
+    </head>
+
+    <body>
+        <header>
+            <h1>Copula Analysis of Risk: A Multivariate Risk Analysis for VaR and CoVaR using Copulas and DCC-GARCH</h1>
+            <!-- <p>Unraveling Theories, Quantum Possibilities, and the Multiverse</p> -->
+        </header>
+        <section>
+            <h2>Introduction</h2>
+            <p>
+                In modern financial markets, risk management is more critical than ever due to the complex interdependencies
+                among assets and sectors. Traditional models like Value-at-Risk (VaR) offer a univariate perspective on tail
+                risks, which often misses how crises propagate across interconnected assets. To address this limitation,
+                this study employs a multivariate approach using copulas and DCC-GARCH models. The research specifically
+                focuses on estimating Conditional Value-at-Risk (CoVaR), which captures systemic risk by assessing the
+                conditional distribution of one asset given distress in another.
+            </p>
+        </section>
+    
+        <section>
+            <h2>Background Theory</h2>
+            <p>
+                This work builds upon foundational statistical concepts like probability distributions and joint modeling.
+                Central to this is the use of copulas—a method to model and understand dependencies between multiple
+                financial variables, irrespective of their marginal distributions. Sklar’s Theorem provides the theoretical
+                underpinning, allowing the separation of marginal behavior from dependence structure. The study explores
+                various families of copulas, including elliptical (Gaussian and Student-t) and Archimedean (Clayton and
+                Gumbel), each offering unique properties for capturing tail behavior and asymmetric risk.
+            </p>
+        </section>
+    
+        <section>
+            <h2>Modeling Framework</h2>
+            <p>
+                The study leverages a hybrid modeling framework combining:
+            <ul>
+                <li><strong>GARCH models</strong> to capture time-varying volatility in individual asset returns.</li>
+                <li><strong>Dynamic Conditional Correlation (DCC)</strong> to allow the correlations among assets to evolve
+                    over time.</li>
+                <li><strong>Copula functions</strong> to model the dependency structure across multiple assets based on the
+                    filtered residuals from GARCH.</li>
+            </ul>
+            This modular setup allows precise modeling of financial time series while decoupling the marginal and joint
+            dynamics, essential for robust risk quantification.
+            </p>
+        </section>
+    
+        <section>
+            <h2>Data and Preprocessing</h2>
+            <p>
+                The dataset comprises 5 years of daily stock prices from six multinational companies across three sectors:
+                Energy (Chevron, Exxon), Consumer Staples (Coca-Cola, PepsiCo), and Financial Services (Mastercard, Visa).
+                Preprocessing includes computing daily log returns, aligning data across a common timeline, removing any
+                incomplete records, and validating basic statistical assumptions. The resulting dataset is robust and ready
+                for high-fidelity modeling, consisting of over 1,250 aligned observations.
+            </p>
+        </section>
+    
+        <section>
+            <h2>Model Results and Insights</h2>
+            <p>
+                The model outputs offer granular insights into both individual and systemic risk. DCC-GARCH estimates of VaR
+                and CVaR show that the diversified High-Corr portfolio reduces overall risk exposure. CoVaR analysis reveals
+                significant systemic influence from high-capitalization assets like Visa and Mastercard. Risk metrics such
+                as Pearson correlation and Energy Score are used to validate the quality of each copula family’s fit. The
+                research highlights how copula selection dramatically impacts perceived risk in tail events, supporting
+                tailored modeling strategies for portfolio risk managers.
+            </p>
+        </section>
+    
+        <section>
+            <h2>Stress Testing and Portfolio Analysis</h2>
+            <p>
+                Stress testing is used to simulate extreme scenarios where a particular asset is under financial distress.
+                The study evaluates how shocks in one asset—e.g., Exxon Mobil—propagate throughout the portfolio. The
+                resulting Delta-CoVaR values quantify the systemic impact and reveal how risk amplifies through asset
+                interconnections. Comparisons between individual assets and the High-Corr portfolio further illustrate the
+                effectiveness of diversification in absorbing shocks and reducing overall exposure.
+            </p>
+        </section>
+    
+        <section>
+            <h2>Copula Selection and Goodness-of-Fit</h2>
+            <p>
+                Each copula family is assessed for its ability to model real-world financial dependencies. The Gaussian
+                copula exhibits the lowest AIC/BIC and is optimal for symmetric, low-tail risk environments. The Student-t
+                copula performs better in capturing heavy tails, while the Clayton and Gumbel copulas specialize in lower-
+                and upper-tail dependencies respectively. Fit metrics such as Energy Score and Kendall’s Tau ensure the
+                chosen copula reflects the actual behavior of financial assets, enabling more accurate forecasting and
+                stress scenario analysis.
+            </p>
+        </section>
+    
+        <section>
+            <h2>Conclusion</h2>
+            <p>
+                This study concludes that copula-based multivariate modeling provides superior insights into financial risk
+                compared to traditional approaches. By integrating GARCH for volatility modeling, DCC for evolving
+                correlations, and copulas for dependency structures, it presents a comprehensive risk framework. The results
+                underscore the importance of copula selection, asset correlation analysis, and diversification in designing
+                resilient investment strategies. Overall, this research equips financial analysts and risk managers with a
+                robust methodology for navigating systemic risks.
+            </p>
+        </section>
+    
+        <section>
+            <h2>Research Paper</h2>
+            <p>
+                Explore the full academic paper <a href="https://arxiv.org/abs/2505.06950">"Copula Analysis of Risk: A Multivariate Risk Analysis for VaR and
+                CoVaR using Copulas and DCC-GARCH"</a>  directly below. This embedded PDF viewer is mobile
+                responsive for easy access across devices.
+            </p>
+            <div style="position: relative; padding-bottom: 75%; height: 0; overflow: hidden;">
+                <iframe src="https://arxiv.org/pdf/2505.06950"
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allowfullscreen>
+                </iframe>
+            </div>
+        </section>
+    
+        <section>
+            <p>Developed by Aryan Singh. Explore the full implementation on <a
+                    href="https://github.com/aryansingh920/copulas-in-time-series-financial-modelling"
+                    target="_blank">GitHub</a>.</p>
+        </section>
+    </body>
+    
+    </html>
+    

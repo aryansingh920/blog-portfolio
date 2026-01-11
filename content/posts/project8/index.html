@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>MarketPulse: Sentiment-Driven Market Movement Predictor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                line-height: 1.6;
+                background-color: #f8f9fa;
+                color: #333;
+        
+        
+            }
+        
+            header {
+                background: rgba(0, 17, 40, 0.86);
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(5.1px);
+                -webkit-backdrop-filter: blur(5.1px);
+                color: #fff;
+                padding: 10px 0;
+                text-align: center;
+            }
+        
+            header h1 {
+                margin: 0;
+                font-size: 2.5em;
+            }
+        
+            header p {
+                font-size: 1.2em;
+            }
+        
+            section {
+                padding: 20px;
+                margin: 20px 10px;
+        
+                background: rgba(255, 255, 255, 0.35);
+                border-radius: 16px;
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(5.6px);
+                -webkit-backdrop-filter: blur(5.6px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+            }
+        
+            section h2 {
+                color: #007bff;
+                border-bottom: 2px solid #007bff;
+                padding-bottom: 10px;
+            }
+        
+            section p,
+            ul,
+            ol {
+                margin-bottom: 15px;
+            }
+        
+            iframe {
+                display: block;
+                margin: 20px auto;
+                width: 100%;
+                height: 500px;
+                border: none;
+                border-radius: 8px;
+            }
+        
+            footer {
+                text-align: center;
+                padding: 10px;
+                background-color: #007bff;
+                color: #fff;
+            }
+        
+            footer a {
+                color: #fff;
+                text-decoration: underline;
+            }
+        
+            .highlight {
+                background-color: #f0f8ff;
+                border-left: 5px solid #007bff;
+                padding: 10px 15px;
+                margin: 15px 0;
+                font-style: italic;
+            }
+        
+            .quote {
+                font-size: 1.2em;
+                font-weight: bold;
+                color: #555;
+                margin: 20px 0;
+                text-align: center;
+            }
+        </style>
+</head>
+
+
+
+
+<body>
+    <header>
+        <h1>MarketPulse: Sentiment-Driven Market Movement Predictor</h1>
+        <p>Harnessing Transformer Models for Sentiment Analysis and Market Prediction</p>
+    </header>
+
+    <section>
+        <h2>Introduction</h2>
+        <p>
+            MarketPulse is a sophisticated tool for predicting market movements based on sentiment analysis. This
+            project integrates data collection from social media, news, and stock data with transformer-based models,
+            such as FinBERT, to analyze market sentiment. The ultimate goal is to forecast stock price movements using
+            both sentiment analysis and ensemble predictive models.
+        </p>
+        <ul>
+            <li>Core Models: Sentiment Analysis (FinBERT) and Price Prediction (Ensemble Learning)</li>
+            <li>Data Sources: Twitter, Reddit, News APIs, and Stock Price APIs</li>
+            <li>Libraries: Transformers, PyTorch, Pandas, Scikit-Learn, Plotly</li>
+            <li>Visualization: Interactive dashboards with sentiment trends and price forecasts</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Technical Workflow</h2>
+
+        <h3>1. Data Collection</h3>
+        <p>
+            The project collects real-time and historical data from multiple sources. Each source has its dedicated data
+            collector:
+        </p>
+        <ul>
+            <li><strong>Twitter Collector:</strong> Scrapes tweets using hashtags like $TSLA, $AAPL, and other stock
+                mentions.</li>
+            <li><strong>Reddit Collector:</strong> Fetches data from r/WallStreetBets and other finance-related
+                subreddits.</li>
+            <li><strong>News Collector:</strong> Collects headlines and articles from major financial news APIs.</li>
+            <li><strong>Stock Data Collector:</strong> Pulls OHLCV (Open, High, Low, Close, Volume) data from stock
+                market APIs.</li>
+        </ul>
+        <p>
+            <code>Example code snippet from Reddit Collector:</code>
+        </p>
+        <code>
+            subreddit = reddit.subreddit('wallstreetbets')<br>
+            posts = subreddit.top(limit=100)<br>
+            for post in posts: print(post.title, post.selftext)
+        </code>
+    </section>
+
+    <section>
+        <h3>2. Data Processing</h3>
+        <p>
+            Raw data from various sources undergoes preprocessing to ensure clean and uniform inputs:
+        </p>
+        <ul>
+            <li><strong>Text Cleaning:</strong> Removes special characters, URLs, and stopwords using the
+                <code>text_cleaner.py</code>.
+            </li>
+            <li><strong>Tokenization:</strong> Converts text into tokens using the BERT tokenizer.</li>
+            <li><strong>Stock Data Preparation:</strong> Aggregates stock OHLC data into 1-hour or daily intervals.</li>
+        </ul>
+        <p>
+            <code>Snippet for text preprocessing:</code>
+        </p>
+        <code>
+            def clean_text(text):<br>
+                text = re.sub(r'http\S+', '', text) # Remove URLs<br>
+                text = re.sub(r'[^a-zA-Z0-9 ]', '', text) # Remove special characters<br>
+                return text.lower()
+        </code>
+    </section>
+
+    <section>
+        <h3>3. Sentiment Analysis</h3>
+        <p>
+            The <strong>FinBERT</strong> model is used to analyze sentiment in tweets, Reddit posts, and news headlines.
+            FinBERT is a fine-tuned BERT model specifically for financial sentiment classification.
+        </p>
+        <ul>
+            <li>Labels: Positive, Neutral, Negative</li>
+            <li>Integration: The model takes cleaned text as input and outputs sentiment scores.</li>
+        </ul>
+        <p>
+            <code>Example usage of FinBERT:</code>
+        </p>
+        <code>
+            from transformers import pipeline<br>
+            finbert = pipeline("sentiment-analysis", model="ProsusAI/finbert")<br>
+            sentiment = finbert("Stock prices are looking bullish for Tesla!")<br>
+            print(sentiment)
+        </code>
+        <p>
+            Sentiment scores are aggregated hourly/daily to detect trends across social media and news sources.
+        </p>
+    </section>
+
+    <section>
+        <h3>4. Price Prediction Using Ensemble Models</h3>
+        <p>
+            The prediction model uses an ensemble approach combining:
+        </p>
+        <ul>
+            <li><strong>Random Forest:</strong> For general price trend prediction.</li>
+            <li><strong>XGBoost:</strong> Handles feature importance and non-linear relationships.</li>
+            <li><strong>Linear Regression:</strong> Provides baseline performance for trend analysis.</li>
+        </ul>
+        <p>
+            The sentiment scores are integrated as features alongside OHLCV data for a comprehensive prediction
+            pipeline.
+        </p>
+        <code>
+            # Example ensemble pipeline:<br>
+            from sklearn.ensemble import RandomForestRegressor<br>
+            model = RandomForestRegressor()<br>
+            X = df[['sentiment_score', 'Close', 'Volume']].values<br>
+            y = df['NextDayClose'].values<br>
+            model.fit(X, y)
+        </code>
+        <p>
+            Predictions are compared to actual values to evaluate accuracy metrics like RMSE and MAE.
+        </p>
+    </section>
+
+    <section>
+        <h3>5. Visualization and Dashboard</h3>
+        <p>
+            An interactive dashboard built with Plotly and Dash displays the following insights:
+        </p>
+        <ul>
+            <li>Sentiment trends over time for specific stocks.</li>
+            <li>Actual vs Predicted stock prices.</li>
+            <li>Market volatility and trading volume visualization.</li>
+        </ul>
+        <p>
+            <code>Example for visualizing sentiment:</code>
+        </p>
+        <code>
+            fig = px.line(df, x="timestamp", y="sentiment_score", title="Sentiment Over Time")<br>
+            fig.show()
+        </code>
+        <!-- <img src="https://example.com/sentiment_dashboard.png" alt="Sentiment Dashboard Visualization"> -->
+    </section>
+
+    <section>
+        <h2>Results and Key Insights</h2>
+        <ul>
+            <li>Sentiment analysis identifies significant positive or negative trends influencing price movements.</li>
+            <li>Ensemble prediction models improve accuracy by integrating sentiment features.</li>
+            <li>Visualization provides actionable insights for traders and analysts.</li>
+        </ul>
+        <p>
+            The combined approach highlights how market sentiment significantly correlates with stock price movement
+            during high volatility periods.
+        </p>
+    </section>
+
+    <section>
+        <h2>Key Highlights</h2>
+        <ul>
+            <li>Seamless integration of FinBERT for sentiment classification.</li>
+            <li>Ensemble predictive models for stock price forecasting.</li>
+            <li>Interactive dashboards for visual analysis.</li>
+            <li>Data collection pipelines from multiple real-time sources.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>GitHub Repository</h2>
+        <p>
+            Access the complete project and codebase here:
+            <a href="https://github.com/aryansingh920/MarketPulse-Sentiment-Driven-Market-Movement-Predictor-Using-Transformers"
+                target="_blank">GitHub Repository</a>
+        </p>
+    </section>
+
+    <section>
+        <p>Built with passion for financial technology and machine learning. Explore more projects on
+            <a href="https://github.com/aryansingh920" target="_blank">GitHub</a>.
+        </p>
+    </section>
+</body>
+
+
+
+
+
+</html>

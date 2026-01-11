@@ -1,0 +1,229 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Companion Tuning</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            background-color: #f8f9fa;
+            color: #333;
+
+
+        }
+
+        header {
+            background: rgba(0, 17, 40, 0.86);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5.1px);
+            -webkit-backdrop-filter: blur(5.1px);
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        header p {
+            font-size: 1.2em;
+        }
+
+        section {
+            padding: 20px;
+            margin: 20px 10px;
+
+            background: rgba(255, 255, 255, 0.35);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5.6px);
+            -webkit-backdrop-filter: blur(5.6px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        section h2 {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+
+        section p,
+        ul,
+        ol {
+            margin-bottom: 15px;
+        }
+
+        iframe {
+            display: block;
+            margin: 20px auto;
+            width: 100%;
+            height: 500px;
+            border: none;
+            border-radius: 8px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        footer a {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+        .highlight {
+            background-color: #f0f8ff;
+            border-left: 5px solid #007bff;
+            padding: 10px 15px;
+            margin: 15px 0;
+            font-style: italic;
+        }
+
+        .quote {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #555;
+            margin: 20px 0;
+            text-align: center;
+        }
+    </style>
+    </head>
+
+    <body>
+        <header>
+            <h1>Companion Tuning</h1>
+            <p>A Voice-Driven Virtual Companion in VR and AR</p>
+            <!-- <p class="quote">"Enhancing social presence through AI-powered dialogue"</p> -->
+        </header>
+        <!-- <body> -->
+            <section>
+                <h2>Introduction</h2>
+                <p>
+                    This project explores a voice-driven virtual companion powered by GPT-Neo and deployed within VR and AR
+                    environments.
+                    Users interact naturally with a digital entity through voice, enabled by real-time speech-to-text, natural
+                    language
+                    response, and text-to-speech systems. The goal is to deliver emotionally balanced conversations within
+                    immersive
+                    scenarios, showcasing how lightweight generative AI can enhance social presence in virtual reality.
+                </p>
+            </section>
+        
+            <section>
+                <h2>System Architecture</h2>
+                <p>
+                    The solution integrates a Unity-based frontend for 3D environment management with a Python backend pipeline.
+                    Unity handles
+                    audio input, character animation, and scene rendering, while Python processes the audio using Whisper,
+                    generates responses
+                    using GPT-Neo 125M, and synthesizes replies using Google TTS. Communication between Unity and the backend is
+                    maintained
+                    through WebSocket, ensuring seamless real-time interaction.
+                </p>
+            </section>
+        
+            <section>
+                <h2>Model Training and Data</h2>
+                <p>
+                    GPT-Neo was fine-tuned using LoRA for efficient memory usage and rapid training on an Apple M3 system.
+                    Training spanned
+                    five epochs and employed custom datasets categorized into therapeutic, balanced, and casual dialogue.
+                    Tokenization and
+                    data formatting ensured tone adherence through prompt markers like <code>Assistant (therapeutic):</code>.
+                    The result is a
+                    multi-tone dialogue system capable of generating responses tailored to different interaction contexts.
+                </p>
+            </section>
+        
+            <section>
+                <h2>Immersive Scene Design</h2>
+                <p>
+                    The Unity platform hosts three distinct interaction scenarios: a seated VR chat, a walk-and-talk simulation
+                    with NavMeshAgent
+                    navigation, and an ARKit-driven real-world overlay experience on iOS. These scenes feature synchronized lip
+                    movement,
+                    gesture animation, and environmental interaction, driven by Unity’s Animator and Timeline tools. Each scene
+                    aims to elevate
+                    realism and user immersion through natural behavior and spatial awareness.
+                </p>
+            </section>
+        
+            <section>
+                <h2>Real-Time Audio Pipeline</h2>
+                <p>
+                    Users initiate conversations via voice input, which is transcribed using Whisper, processed by GPT-Neo, and
+                    transformed
+                    into speech via gTTS. The response is then streamed back and animated in Unity in under 5 seconds. This
+                    low-latency
+                    pipeline ensures conversational fluidity and includes fallback mechanisms for robustness under suboptimal
+                    conditions.
+                </p>
+            </section>
+        
+            <section>
+                <h2>System Performance</h2>
+                <p>
+                    The model’s training loss declined from 3.21 to 2.78, and evaluation loss dropped to 2.58 over five epochs,
+                    confirming
+                    convergence. In practice, all three scenes functioned effectively with minor memory issues observed during
+                    heavy ARKit usage.
+                    Audio synchronization, latency, and fallback mechanisms performed well, validating the system's real-time
+                    viability.
+                </p>
+            </section>
+        
+            <section>
+                <h2>Conclusion and Future Work</h2>
+                <p>
+                    The companion system successfully bridges the gap between AI-powered dialogue and immersive spatial
+                    interaction. Future work
+                    could explore integrating emotion recognition, using expressive TTS systems like ElevenLabs, and expanding
+                    to Android platforms
+                    with ARCore. Enhancing model memory and integrating facial tracking could significantly boost realism and
+                    interactivity.
+                </p>
+            </section>
+        
+            <section>
+                <h2>Project Demo</h2>
+                <p>Watch a full demonstration of the VR/AR GPT companion system below:</p>
+                <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                    <iframe src="https://www.youtube.com/embed/00rst7wYlAM"
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allowfullscreen>
+                    </iframe>
+                </div>
+            </section>
+        
+            <section>
+                <h2>Project Report</h2>
+                <p>
+                    For a deep technical dive, read the full Companion Tuning research paper:
+                </p>
+                <div style="position: relative; padding-bottom: 75%; height: 0; overflow: hidden;">
+                    <iframe src="https://www.dropbox.com/scl/fi/0c04y94jrcd7gx7myxwhs/Companion-Tuning-Project-Report.pdf?rlkey=l7ud9s6itbfvd83xmozrwdt0d&st=579xn2tq&raw=1"
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allowfullscreen>
+                    </iframe>
+                </div>
+            </section>
+        
+    
+
+        
+        <section>
+            <p>Developed by Aryan Singh. Explore the full implementation on <a href="https://github.com/aryansingh920/CompanionTuningUnity/tree/main" target="_blank">GitHub</a>.</p>
+        </section>
+    </body>
+    </html>
+    

@@ -53,7 +53,7 @@ export default async function ReadPage({ searchParams }: ReadPageProps) {
               {post.section}
             </span>
 
-            <h1 className="text-3xl font-bold tracking-tight md:text-5xl">
+            <h1 className="text-3xl text-white font-bold tracking-tight md:text-5xl">
               {post.title}
             </h1>
 
@@ -77,3 +77,7 @@ export default async function ReadPage({ searchParams }: ReadPageProps) {
   );
 
 }
+
+
+
+

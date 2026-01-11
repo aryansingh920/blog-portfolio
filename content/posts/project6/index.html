@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Genetic Sequence Analysis and RNA Codon Visualization</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                line-height: 1.6;
+                background-color: #f8f9fa;
+                color: #333;
+        
+        
+            }
+        
+            header {
+                background: rgba(0, 17, 40, 0.86);
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(5.1px);
+                -webkit-backdrop-filter: blur(5.1px);
+                color: #fff;
+                padding: 10px 0;
+                text-align: center;
+            }
+        
+            header h1 {
+                margin: 0;
+                font-size: 2.5em;
+            }
+        
+            header p {
+                font-size: 1.2em;
+            }
+        
+            section {
+                padding: 20px;
+                margin: 20px 10px;
+        
+                background: rgba(255, 255, 255, 0.35);
+                border-radius: 16px;
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(5.6px);
+                -webkit-backdrop-filter: blur(5.6px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+            }
+        
+            section h2 {
+                color: #007bff;
+                border-bottom: 2px solid #007bff;
+                padding-bottom: 10px;
+            }
+        
+            section p,
+            ul,
+            ol {
+                margin-bottom: 15px;
+            }
+        
+            iframe {
+                display: block;
+                margin: 20px auto;
+                width: 100%;
+                height: 500px;
+                border: none;
+                border-radius: 8px;
+            }
+        
+            footer {
+                text-align: center;
+                padding: 10px;
+                background-color: #007bff;
+                color: #fff;
+            }
+        
+            footer a {
+                color: #fff;
+                text-decoration: underline;
+            }
+        
+            .highlight {
+                background-color: #f0f8ff;
+                border-left: 5px solid #007bff;
+                padding: 10px 15px;
+                margin: 15px 0;
+                font-style: italic;
+            }
+        
+            .quote {
+                font-size: 1.2em;
+                font-weight: bold;
+                color: #555;
+                margin: 20px 0;
+                text-align: center;
+            }
+        </style>
+</head>
+
+
+
+
+<body>
+    <header>
+        <h1>Genetic Sequence Analysis and RNA Codon Visualization</h1>
+        <p>A Bioinformatics Approach to DNA Mutations and RNA Codon Evolution</p>
+    </header>
+
+    <section>
+        <h2>Introduction</h2>
+        <p>
+            This project focuses on two major components in bioinformatics:
+        <ul>
+            <li><strong>DNA Mutation Pattern Analysis:</strong> Simulating mutations and identifying key cancer-related
+                patterns.</li>
+            <li><strong>RNA Codon Visualization:</strong> Generating and organizing codons to explore their evolutionary
+                structure.</li>
+        </ul>
+        These analyses provide a foundation for understanding genetic variations and their possible implications in
+        disease research, particularly in cancer genomics.
+        </p>
+        <p>
+            The project utilizes:
+        <ul>
+            <li><strong>Python:</strong> Main programming language for data simulation and analysis.</li>
+            <li><strong>Numpy:</strong> Numerical array operations for genetic sequence handling.</li>
+            <li><strong>Matplotlib/Seaborn:</strong> Visualizing RNA codons in organized formats.</li>
+        </ul>
+        </p>
+    </section>
+
+    <section>
+        <h2>1. DNA Mutation Pattern Analysis</h2>
+        <p>
+            This part of the project deals with generating random **DNA sequences** and simulating mutations. The code
+            identifies specific mutations that are commonly associated with cancer genes such as <strong>p53</strong>,
+            <strong>BRCA1</strong>, and <strong>RAS</strong>.
+        </p>
+
+        <h3>How It Works</h3>
+        <p>
+            The DNA sequence is represented as a string consisting of four nucleotide bases:
+            <code>'A', 'T', 'G', 'C'</code>.
+        </p>
+        <ul>
+            <li><strong>Random Sequence Generation:</strong> A DNA sequence of a given length is generated using random
+                selections from these bases.</li>
+            <li><strong>Mutation Simulation:</strong> Specific mutations (insertions or changes) are simulated at random
+                positions.</li>
+            <li><strong>Known Mutation Patterns:</strong> The sequence is scanned for predefined mutation patterns
+                associated with cancer-related genes.</li>
+        </ul>
+
+        <p><strong>Key Code Snippets:</strong></p>
+        <p>
+            The following snippet demonstrates random sequence generation:
+        </p>
+        <code>
+            def generate_random_sequence(self):<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;return ''.join(np.random.choice(self.bases) for _ in range(self.sequence_length))
+        </code>
+
+        <h3>Mutation Simulation</h3>
+        <p>
+            Mutations are introduced in the sequence by replacing random sections with predefined patterns:
+        </p>
+        <code>
+            def simulate_mutation(self, sequence):<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;mutation_site = random.randint(0, len(sequence) - 6)<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;sequence = sequence[:mutation_site] + 'ATGCTA' + sequence[mutation_site+6:]<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;return sequence
+        </code>
+
+        <h3>Output Example</h3>
+        <p>
+            - Generated DNA Sequence: <code>AGTCGATGCAGT...</code><br>
+            - Mutated DNA Sequence (p53-like mutation): <code>AGTCTATGCTAAG...</code>
+        </p>
+        <p>
+            This approach helps in identifying critical points where mutations occur, which is essential for cancer
+            pattern research.
+        </p>
+    </section>
+
+    <section>
+        <h2>2. RNA Codon Evolution and Visualization</h2>
+        <p>
+            RNA codons are sequences of three nucleotides (A, U, G, C) that correspond to specific amino acids during
+            protein synthesis. This module generates all possible codons and organizes them systematically.
+        </p>
+
+        <h3>Algorithm</h3>
+        <p>
+            Codons are generated using a combinatorial approach, where every possible combination of three bases is
+            considered. This results in a total of 64 codons (4^3 = 64).
+        </p>
+        <code>
+            from itertools import product<br>
+            bases = ['A', 'U', 'G', 'C']<br>
+            codons = [''.join(p) for p in product(bases, repeat=3)]
+        </code>
+
+        <p>
+            The codons are then arranged in a 4x16 matrix based on their first and second base positions:
+        </p>
+        <ul>
+            <li>Rows represent the first base (A, U, G, C).</li>
+            <li>Columns represent combinations of the second and third bases.</li>
+        </ul>
+
+        <h3>Visualization</h3>
+        <p>
+            Using <strong>Matplotlib</strong> and <strong>Seaborn</strong>, the matrix is visualized to reveal patterns:
+        </p>
+        <code>
+            sns.heatmap(matrix, annot=True, cmap='coolwarm', fmt='.0f')<br>
+            plt.title("RNA Codon Matrix Visualization")<br>
+            plt.show()
+        </code>
+        <p><strong>Output:</strong></p>
+        <!-- <img src="https://dummyimage.com/600x400/007bff/ffffff.png&text=Codon+Matrix+Heatmap"
+            alt="Codon Visualization Placeholder" /> -->
+        <p>
+            The visualization helps researchers understand the distribution and evolutionary structure of RNA codons.
+        </p>
+    </section>
+
+    <section>
+        <h2>Key Insights and Applications</h2>
+        <ul>
+            <li><strong>Cancer Mutation Analysis:</strong> Identifies critical mutations in DNA sequences.</li>
+            <li><strong>Codon Evolution:</strong> Systematically explores RNA combinations and visualizes patterns.</li>
+            <li><strong>Bioinformatics Research:</strong> The algorithms provide a foundational framework for genomic
+                analysis.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Conclusion</h2>
+        <p>
+            This project demonstrates the power of computational biology in analyzing genetic sequences and visualizing
+            codon evolution. By simulating mutations and organizing codons, researchers can gain insights into genetic
+            disorders and evolutionary biology.
+        </p>
+    </section>
+
+    <section>
+        <h2>GitHub Repository</h2>
+        <p>
+            Access the complete codebase and documentation here:
+            <a href="https://github.com/aryansingh920/genetic-sequence-analyzer-rna-codon-evolution-biotech"
+                target="_blank">GitHub Repository</a>
+        </p>
+    </section>
+
+    <section>
+        <p>Developed with passion for bioinformatics and data science. Explore more projects on
+            <a href="https://github.com/your_username" target="_blank">GitHub</a>.
+        </p>
+    </section>
+</body>
+
+
+
+
+
+</html>

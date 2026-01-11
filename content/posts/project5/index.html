@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Portfolio Optimization using Metaheuristic Algorithms</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                line-height: 1.6;
+                background-color: #f8f9fa;
+                color: #333;
+        
+        
+            }
+        
+            header {
+                background: rgba(0, 17, 40, 0.86);
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(5.1px);
+                -webkit-backdrop-filter: blur(5.1px);
+                color: #fff;
+                padding: 10px 0;
+                text-align: center;
+            }
+        
+            header h1 {
+                margin: 0;
+                font-size: 2.5em;
+            }
+        
+            header p {
+                font-size: 1.2em;
+            }
+        
+            section {
+                padding: 20px;
+                margin: 20px 10px;
+        
+                background: rgba(255, 255, 255, 0.35);
+                border-radius: 16px;
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(5.6px);
+                -webkit-backdrop-filter: blur(5.6px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+            }
+        
+            section h2 {
+                color: #007bff;
+                border-bottom: 2px solid #007bff;
+                padding-bottom: 10px;
+            }
+        
+            section p,
+            ul,
+            ol {
+                margin-bottom: 15px;
+            }
+        
+            iframe {
+                display: block;
+                margin: 20px auto;
+                width: 100%;
+                height: 500px;
+                border: none;
+                border-radius: 8px;
+            }
+        
+            footer {
+                text-align: center;
+                padding: 10px;
+                background-color: #007bff;
+                color: #fff;
+            }
+        
+            footer a {
+                color: #fff;
+                text-decoration: underline;
+            }
+        
+            .highlight {
+                background-color: #f0f8ff;
+                border-left: 5px solid #007bff;
+                padding: 10px 15px;
+                margin: 15px 0;
+                font-style: italic;
+            }
+        
+            .quote {
+                font-size: 1.2em;
+                font-weight: bold;
+                color: #555;
+                margin: 20px 0;
+                text-align: center;
+            }
+        </style>
+</head>
+
+<body>
+    <header>
+        <h1>Portfolio Optimization using Metaheuristic Algorithms</h1>
+        <p>A Comparative Analysis of Simulated Annealing, Genetic Algorithm, Monte Carlo, and Particle Swarm
+            Optimization</p>
+    </header>
+
+    <section>
+        <h2>Introduction</h2>
+        <p>
+            This project focuses on implementing and comparing <strong>metaheuristic algorithms</strong> to optimize
+            financial portfolios. The goal is to determine the best allocation of assets to maximize returns while
+            minimizing risk, a core problem in modern portfolio theory.
+        </p>
+        <ul>
+            <li>Objective: Optimize portfolio returns and risk trade-off using advanced algorithms.</li>
+            <li>Algorithms Used:
+                <ul>
+                    <li>Monte Carlo Simulation</li>
+                    <li>Simulated Annealing</li>
+                    <li>Genetic Algorithm</li>
+                    <li>Particle Swarm Optimization</li>
+                </ul>
+            </li>
+            <li>Data Source: Historical financial data</li>
+            <li>Tools and Libraries: Python, Pandas, NumPy, Matplotlib</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Workflow Overview</h2>
+        <p>The following outlines the key steps in implementing portfolio optimization:</p>
+        <h3>1. Data Loading and Preprocessing</h3>
+        <p>
+            The project begins by loading historical financial data using the <code>data_loader.py</code> module. This
+            module reads time-series data containing stock prices and processes it into a usable form.
+        </p>
+        <ul>
+            <li>File Source: CSV files containing adjusted closing prices.</li>
+            <li>Preprocessing Steps:
+                <ul>
+                    <li>Handling missing values using interpolation.</li>
+                    <li>Normalizing data for consistency.</li>
+                    <li>Calculating daily returns to form the basis for risk and return metrics.</li>
+                </ul>
+            </li>
+        </ul>
+        <p>
+            Example snippet for data loading:
+        </p>
+        <code>
+            df = pd.read_csv('portfolio_data.csv')<br>
+            returns = df.pct_change().dropna()
+        </code>
+
+        <h3>2. Optimization Algorithms</h3>
+        <p>
+            This project employs four metaheuristic optimization algorithms to solve the portfolio allocation problem:
+        </p>
+
+        <h4>Monte Carlo Simulation</h4>
+        <p>
+            Monte Carlo generates thousands of random portfolio allocations, calculating the risk and return for each.
+            The optimal portfolio is identified by comparing Sharpe Ratios.
+        </p>
+        <code>
+            for i in range(num_simulations):<br>
+                weights = np.random.random(n_assets)<br>
+                weights /= np.sum(weights)<br>
+                portfolio_return = np.sum(weights * mean_returns)<br>
+                portfolio_volatility = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
+        </code>
+
+        <h4>Simulated Annealing</h4>
+        <p>
+            Simulated Annealing explores the solution space, accepting suboptimal solutions probabilistically to escape
+            local minima. This algorithm mimics a cooling metal's behavior to refine optimal solutions.
+        </p>
+        <ul>
+            <li><strong>Temperature:</strong> Gradually reduced over iterations.</li>
+            <li><strong>Acceptance Probability:</strong> Allows exploration of worse solutions early on.</li>
+        </ul>
+        <code>
+            current_solution = initial_solution<br>
+            for t in range(max_iterations):<br>
+                neighbor = generate_neighbor(current_solution)<br>
+                if accept_solution(neighbor, current_solution, temperature):<br>
+                    current_solution = neighbor<br>
+                temperature *= cooling_rate
+        </code>
+
+        <h4>Genetic Algorithm</h4>
+        <p>
+            The Genetic Algorithm evolves portfolios over generations using crossover, mutation, and selection
+            processes. Each "individual" represents a candidate solution (portfolio weights).
+        </p>
+        <ul>
+            <li><strong>Fitness Function:</strong> Maximizes Sharpe Ratio.</li>
+            <li><strong>Crossover:</strong> Combines parents' weights to produce offspring.</li>
+            <li><strong>Mutation:</strong> Introduces slight random changes to explore new solutions.</li>
+        </ul>
+        <code>
+            population = initialize_population()<br>
+            for generation in range(num_generations):<br>
+                parents = select_parents(population)<br>
+                offspring = crossover(parents)<br>
+                mutate(offspring)<br>
+                population = evaluate_fitness(offspring)
+        </code>
+
+        <h4>Particle Swarm Optimization</h4>
+        <p>
+            PSO treats candidate solutions as particles moving through the solution space, adjusting their position
+            based on personal and group experiences.
+        </p>
+        <ul>
+            <li><strong>Velocity Update:</strong> Adjusted based on inertia, personal best, and global best.</li>
+            <li><strong>Position Update:</strong> Moves the particle to the next location.</li>
+        </ul>
+        <code>
+            for particle in particles:<br>
+                velocity = inertia * velocity + cognitive * (personal_best - position) + social * (global_best - position)<br>
+                position += velocity
+        </code>
+    </section>
+
+    <section>
+        <h2>Comparative Analysis</h2>
+        <p>
+            The algorithms are compared based on their performance in identifying the optimal portfolio. Key metrics
+            include:
+        </p>
+        <ul>
+            <li><strong>Portfolio Return:</strong> The expected return of the optimized portfolio.</li>
+            <li><strong>Portfolio Volatility:</strong> Risk associated with the portfolio.</li>
+            <li><strong>Sharpe Ratio:</strong> A risk-adjusted return metric.</li>
+        </ul>
+        <p>
+            Results are visualized using line charts and scatter plots to display the efficient frontier and the optimal
+            portfolios for each algorithm.
+        </p>
+        <!-- Example visual: -->
+        <!-- <p><img src="https://example.com/portfolio_frontier.png" alt="Efficient Frontier Visualization"></p> -->
+    </section>
+
+    <section>
+        <h2>Key Highlights</h2>
+        <ul>
+            <li>Compared the performance of multiple metaheuristic algorithms for portfolio optimization.</li>
+            <li>Visualized the efficient frontier to identify trade-offs between risk and return.</li>
+            <li>Implemented custom fitness functions to prioritize Sharpe Ratio maximization.</li>
+            <li>Simulated Annealing and Particle Swarm Optimization demonstrated the best results in terms of accuracy
+                and convergence speed.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Conclusion</h2>
+        <p>
+            This project demonstrates the power of metaheuristic algorithms in solving complex optimization problems
+            like portfolio allocation. By comparing Monte Carlo, Simulated Annealing, Genetic Algorithm, and Particle
+            Swarm Optimization, we provide a robust framework for portfolio optimization.
+        </p>
+        <p>
+            The results highlight the importance of balancing risk and return and showcase how advanced algorithms can
+            enhance financial decision-making.
+        </p>
+    </section>
+
+    <section>
+        <h2>GitHub Repository</h2>
+        <p>
+            Access the complete source code and detailed documentation:
+            <a href="https://github.com/aryansingh920/Portfolio-Optimization-Monte-Carlo-Simulated-Annealing-Genetic-Algorithm-Particle-Swarm-Optimization"
+                target="_blank">GitHub Repository</a>
+        </p>
+    </section>
+
+    <section>
+        <p>Created with passion for quantitative finance and algorithmic solutions. Explore more projects at
+            <a href="https://github.com/aryansingh920" target="_blank">GitHub</a>.
+        </p>
+    </section>
+</body>
+
+
+
+
+</html>

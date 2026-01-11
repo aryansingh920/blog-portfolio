@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>CIFAR-10 Image Recognition Using Convolutional Neural Networks</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                line-height: 1.6;
+                background-color: #f8f9fa;
+                color: #333;
+        
+        
+            }
+        
+            header {
+                background: rgba(0, 17, 40, 0.86);
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(5.1px);
+                -webkit-backdrop-filter: blur(5.1px);
+                color: #fff;
+                padding: 10px 0;
+                text-align: center;
+            }
+        
+            header h1 {
+                margin: 0;
+                font-size: 2.5em;
+            }
+        
+            header p {
+                font-size: 1.2em;
+            }
+        
+            section {
+                padding: 20px;
+                margin: 20px 10px;
+        
+                background: rgba(255, 255, 255, 0.35);
+                border-radius: 16px;
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(5.6px);
+                -webkit-backdrop-filter: blur(5.6px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+            }
+        
+            section h2 {
+                color: #007bff;
+                border-bottom: 2px solid #007bff;
+                padding-bottom: 10px;
+            }
+        
+            section p,
+            ul,
+            ol {
+                margin-bottom: 15px;
+            }
+        
+            iframe {
+                display: block;
+                margin: 20px auto;
+                width: 100%;
+                height: 500px;
+                border: none;
+                border-radius: 8px;
+            }
+        
+            footer {
+                text-align: center;
+                padding: 10px;
+                background-color: #007bff;
+                color: #fff;
+            }
+        
+            footer a {
+                color: #fff;
+                text-decoration: underline;
+            }
+        
+            .highlight {
+                background-color: #f0f8ff;
+                border-left: 5px solid #007bff;
+                padding: 10px 15px;
+                margin: 15px 0;
+                font-style: italic;
+            }
+        
+            .quote {
+                font-size: 1.2em;
+                font-weight: bold;
+                color: #555;
+                margin: 20px 0;
+                text-align: center;
+            }
+        </style>
+</head>
+
+
+
+
+<body>
+    <header>
+        <h1>CIFAR-10 Image Recognition Using Convolutional Neural Networks</h1>
+        <p>A Deep Dive into Building and Analyzing CNN Models for Image Classification</p>
+    </header>
+
+    <section>
+        <h2>Introduction</h2>
+        <p>
+            This project aims to build and evaluate an image recognition system using the
+            <strong>CIFAR-10 dataset</strong>. CIFAR-10 is a widely-used benchmark dataset containing
+            60,000 labeled images across 10 classes (e.g., airplanes, cars, birds, cats).
+            We leverage advanced techniques like <strong>Convolutional Neural Networks (CNNs)</strong>,
+            transfer learning, and hyperparameter optimization to achieve accurate image classification.
+        </p>
+        <ul>
+            <li><strong>Core Framework:</strong> PyTorch</li>
+            <li><strong>Model Architectures:</strong> Custom CNNs, Transfer Learning</li>
+            <li><strong>Dataset:</strong> CIFAR-10 (Preprocessed into Train and Test splits)</li>
+            <li><strong>Tools and Libraries:</strong> PyTorch, NumPy, Matplotlib, and Pandas</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Technical Workflow</h2>
+
+        <h3>1. Data Loading and Preprocessing</h3>
+        <p>
+            The dataset is loaded and preprocessed in the <code>dataset.py</code> and
+            <code>preprocessing.py</code> scripts. Preprocessing is essential for enhancing
+            model performance and ensuring a clean pipeline. Key steps include:
+        </p>
+        <ul>
+            <li><strong>Data Augmentation:</strong> Random cropping, flipping, and normalization.</li>
+            <li><strong>Standardization:</strong> Images are normalized to have a mean of 0 and standard deviation of 1.
+            </li>
+        </ul>
+        <p>Example snippet for data preprocessing:</p>
+        <code>
+            transform = transforms.Compose([<br>
+                transforms.RandomHorizontalFlip(),<br>
+                transforms.RandomCrop(32, padding=4),<br>
+                transforms.ToTensor(),<br>
+                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))<br>
+            ])<br>
+            train_dataset = CIFAR10(root='data', train=True, transform=transform, download=True)
+        </code>
+    </section>
+
+    <section>
+        <h3>2. Model Architectures</h3>
+        <p>
+            The project employs two primary approaches for building models:
+        </p>
+
+        <h4>Custom CNN Models</h4>
+        <p>
+            In the <code>model.py</code> file, custom CNNs are designed with multiple convolutional layers,
+            max-pooling, and fully connected layers. The goal is to extract meaningful features from images
+            through hierarchical convolutions.
+        </p>
+        <p>Example architecture of a CNN:</p>
+        <code>
+            class CNN(nn.Module):<br>
+                def __init__(self):<br>
+                    super(CNN, self).__init__()<br>
+                    self.conv1 = nn.Conv2d(3, 32, kernel_size=3, padding=1)<br>
+                    self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)<br>
+                    self.pool = nn.MaxPool2d(kernel_size=2, stride=2)<br>
+                    self.fc1 = nn.Linear(64 * 8 * 8, 256)<br>
+                    self.fc2 = nn.Linear(256, 10)<br>
+                    self.dropout = nn.Dropout(0.5)<br><br>
+                def forward(self, x):<br>
+                    x = self.pool(F.relu(self.conv1(x)))<br>
+                    x = self.pool(F.relu(self.conv2(x)))<br>
+                    x = x.view(-1, 64 * 8 * 8)<br>
+                    x = F.relu(self.fc1(x))<br>
+                    x = self.dropout(x)<br>
+                    x = self.fc2(x)<br>
+                    return x
+        </code>
+        <p>
+            This model uses two convolutional layers with ReLU activation and max-pooling for
+            dimensionality reduction, followed by fully connected layers for final predictions.
+        </p>
+
+        <h4>Transfer Learning</h4>
+        <p>
+            To enhance performance, transfer learning is implemented in the
+            <code>transfer_learning_model.py</code> file. Pre-trained models such as ResNet and VGG are
+            fine-tuned on the CIFAR-10 dataset to speed up training and improve accuracy.
+        </p>
+        <p>Example for using ResNet:</p>
+        <code>
+            model = models.resnet18(pretrained=True)<br>
+            model.fc = nn.Linear(model.fc.in_features, 10)<br>
+            optimizer = optim.Adam(model.parameters(), lr=0.001)
+        </code>
+        <p>
+            By modifying the fully connected layer, the model adapts to CIFAR-10's 10 classes.
+        </p>
+    </section>
+
+    <section>
+        <h3>3. Hyperparameter Optimization</h3>
+        <p>
+            The <code>trainer.py</code> script employs hyperparameter tuning to identify the best model
+            configuration. Parameters tuned include:
+        </p>
+        <ul>
+            <li>Learning Rate</li>
+            <li>Batch Size</li>
+            <li>Number of Layers</li>
+            <li>Dropout Rate</li>
+        </ul>
+        <p>
+            Results are logged and visualized to determine the optimal settings for training.
+        </p>
+    </section>
+
+    <section>
+        <h2>Model Training and Evaluation</h2>
+        <p>
+            The training pipeline involves iterating over the dataset for multiple epochs and minimizing
+            the <strong>cross-entropy loss</strong>. Performance metrics include:
+        </p>
+        <ul>
+            <li>Training and Validation Accuracy</li>
+            <li>Confusion Matrix for Class-Level Analysis</li>
+            <li>Loss Curves for Monitoring Convergence</li>
+        </ul>
+        <p>Training is executed as follows:</p>
+        <code>
+            for epoch in range(epochs):<br>
+                train_loss = train(model, train_loader, optimizer, criterion)<br>
+                val_loss, val_acc = evaluate(model, val_loader, criterion)<br>
+                print(f"Epoch {epoch}: Train Loss={train_loss}, Val Acc={val_acc}")
+        </code>
+        <p>
+            <strong>Training History:</strong> The <code>training_history.png</code> shows how accuracy
+            improves over epochs, while the <code>validation_confusion_matrix.png</code> highlights
+            classification performance across classes.
+        </p>
+        <!-- <img src="models/training_history.png" alt="Training Accuracy History"> -->
+        <!-- <img src="models/validation_confusion_matrix.png" alt="Validation Confusion Matrix"> -->
+    </section>
+
+    <section>
+        <h2>Key Highlights</h2>
+        <ul>
+            <li>Custom CNNs and Transfer Learning models achieve strong classification accuracy on CIFAR-10.</li>
+            <li>Hyperparameter optimization ensures an efficient training process.</li>
+            <li>Training metrics and confusion matrices provide deep insights into model performance.</li>
+            <li>Reusable, modular code for dataset handling, training, and evaluation.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Conclusion</h2>
+        <p>
+            This project demonstrates the power of CNNs and transfer learning for image classification tasks.
+            By combining data augmentation, advanced model architectures, and rigorous evaluation, we achieve
+            robust results on the CIFAR-10 dataset. This approach can be extended to other image recognition problems
+            with similar techniques.
+        </p>
+    </section>
+
+    <section>
+        <h2>GitHub Repository</h2>
+        <p>
+            Access the complete codebase, datasets, and results here:
+            <a href="https://github.com/aryansingh920/image-reconginiton-cifar-10-dataset" target="_blank">GitHub
+                Repository</a>
+        </p>
+    </section>
+
+    <section>
+        <p>Built with a passion for deep learning and computer vision. Explore more projects on
+            <a href="https://github.com/aryansingh920" target="_blank">GitHub</a>.
+        </p>
+    </section>
+</body>
+
+
+
+
+
+
+
+</html>

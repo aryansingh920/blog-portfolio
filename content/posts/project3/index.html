@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Pairs Trading with Order Book Visualization</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            background-color: #f8f9fa;
+            color: #333;
+    
+    
+        }
+    
+        header {
+            background: rgba(0, 17, 40, 0.86);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5.1px);
+            -webkit-backdrop-filter: blur(5.1px);
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+        }
+    
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+    
+        header p {
+            font-size: 1.2em;
+        }
+    
+        section {
+            padding: 20px;
+            margin: 20px 10px;
+    
+            background: rgba(255, 255, 255, 0.35);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5.6px);
+            -webkit-backdrop-filter: blur(5.6px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+    
+        section h2 {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+    
+        section p,
+        ul,
+        ol {
+            margin-bottom: 15px;
+        }
+    
+        iframe {
+            display: block;
+            margin: 20px auto;
+            width: 100%;
+            height: 500px;
+            border: none;
+            border-radius: 8px;
+        }
+    
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+        }
+    
+        footer a {
+            color: #fff;
+            text-decoration: underline;
+        }
+    
+        .highlight {
+            background-color: #f0f8ff;
+            border-left: 5px solid #007bff;
+            padding: 10px 15px;
+            margin: 15px 0;
+            font-style: italic;
+        }
+    
+        .quote {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #555;
+            margin: 20px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Pairs Trading with Order Book Visualization</h1>
+        <p>Analyzing Cointegration and Backtesting Trading Strategies with Real-Time Visualizations</p>
+    </header>
+
+    <section>
+        <h2>Introduction</h2>
+        <p>
+            The <strong>Pairs Trading with Order Book Visualization</strong> project combines financial data analysis,
+            statistical techniques, backtesting, and visualization to identify trading opportunities between two
+            correlated assets. Pairs trading is a market-neutral strategy that involves simultaneously buying one asset
+            and shorting another based on their cointegration relationship.
+        </p>
+        <ul>
+            <li><strong>Primary Goal:</strong> Identify statistically significant price deviations between two
+                correlated assets.</li>
+            <li><strong>Tools Used:</strong> Python, NumPy, Pandas, Matplotlib, JavaScript (for visualization).</li>
+            <li><strong>Key Modules:</strong> Data fetching, cointegration analysis, signal generation, backtesting, and
+                order book visualization.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Technical Workflow</h2>
+        <h3>1. Data Retrieval</h3>
+        <p>
+            Data for the order book and asset prices is fetched using the <code>data/data_fetcher.py</code> module. The
+            <code>fetch_data()</code> function leverages APIs or CSV inputs to retrieve historical prices and order book
+            snapshots for two assets.
+        </p>
+        <ul>
+            <li><strong>Order Book:</strong> Depth data showing bid-ask levels.</li>
+            <li><strong>Timeframe:</strong> Configurable historical range for price and order book analysis.</li>
+        </ul>
+        <p>
+            The data module ensures consistent formatting of fetched data, handling missing values and ensuring
+            timestamps align for accurate analysis.
+        </p>
+
+        <h3>2. Cointegration Analysis</h3>
+        <p>
+            Cointegration testing, implemented in <code>analysis/cointegration.py</code>, forms the foundation of the
+            strategy. Two assets are said to be cointegrated if their price series have a constant mean-reverting
+            relationship over time.
+        </p>
+        <p>The workflow for cointegration testing:</p>
+        <ul>
+            <li><strong>Augmented Dickey-Fuller (ADF) Test:</strong> Determines stationarity of the residual between two
+                assets.</li>
+            <li><strong>P-value Threshold:</strong> If the p-value is below a specified threshold (e.g., 0.05), the
+                assets are considered cointegrated.</li>
+            <li><strong>Implementation:</strong> Utilizes the <code>statsmodels</code> library for robust statistical
+                testing.</li>
+        </ul>
+        <p>
+            The output of this step is a confirmation of cointegration, along with model coefficients (e.g., hedge
+            ratio), which are used to calculate deviations from the mean.
+        </p>
+
+        <h3>3. Signal Generation</h3>
+        <p>
+            Signals are generated based on price deviations relative to the mean of the spread between two assets. The
+            process is handled in <code>analysis/signals.py</code>:
+        </p>
+        <ul>
+            <li><strong>Mean-Spread Calculation:</strong> Compute the historical spread between asset prices using the
+                hedge ratio.</li>
+            <li><strong>Z-Score Calculation:</strong> Standardize deviations using the formula: <br>
+                <code>Z = (Spread - Mean(Spread)) / StdDev(Spread)</code>
+            </li>
+            <li><strong>Trading Logic:</strong>
+                <ul>
+                    <li>Buy the spread when Z-Score &lt; -2 (underpriced).</li>
+                    <li>Sell/Short the spread when Z-Score &gt; 2 (overpriced).</li>
+                    <li>Exit positions when Z-Score reverts close to 0.</li>
+                </ul>
+            </li>
+        </ul>
+        <p>
+            The signals are stored and passed to the backtesting module for evaluation.
+        </p>
+
+        <h3>4. Backtesting</h3>
+        <p>
+            The <code>backtesting/backtest.py</code> module evaluates the pairs trading strategy using historical data.
+            The backtester simulates trades based on the generated signals and calculates key performance metrics.
+        </p>
+        <p>The backtesting process includes:</p>
+        <ul>
+            <li><strong>Position Management:</strong> Simulate long and short positions for each trade.</li>
+            <li><strong>Risk Management:</strong> Leverage the <code>execution/risk_manager.py</code> to apply stop-loss
+                limits and maximum capital exposure.</li>
+            <li><strong>Performance Metrics:</strong>
+                <ul>
+                    <li>Cumulative P&L</li>
+                    <li>Sharpe Ratio</li>
+                    <li>Maximum Drawdown</li>
+                </ul>
+            </li>
+        </ul>
+        <p>
+            The module generates a detailed report on strategy performance, including trade-level and portfolio-level
+            statistics.
+        </p>
+
+        <h3>5. Order Book Visualization</h3>
+        <p>
+            The <code>visualization/order_book_viz.js</code> implements a real-time order book dashboard. Using
+            JavaScript, it renders bid-ask levels dynamically, providing insights into liquidity and market depth.
+        </p>
+        <ul>
+            <li><strong>Features:</strong>
+                <ul>
+                    <li>Visual representation of order book depth.</li>
+                    <li>Highlighting price levels triggering trade signals.</li>
+                </ul>
+            </li>
+            <li><strong>Integration:</strong> Fetches live or simulated order book data from the
+                <code>data/order_book.py</code> script.
+            </li>
+        </ul>
+        <p>
+            The visualization assists traders in identifying liquidity imbalances and validating trade entries.
+        </p>
+    </section>
+
+    <!-- <section>
+        <h2>Project Demonstration</h2>
+        <p>Below is a snapshot of the order book visualization during strategy execution:</p>
+        <img src="https://via.placeholder.com/800x400" alt="Order Book Visualization">
+        <p>
+            The chart shows the live bid-ask spread, with significant price deviations marked for trading signals.
+        </p>
+        <p>
+            Additionally, here is the backtesting performance summary:
+        </p>
+        <img src="https://via.placeholder.com/800x400" alt="Backtesting Results">
+        <p>The strategy achieved consistent returns with controlled risk exposure.</p>
+    </section> -->
+
+    <section>
+        <h2>Key Highlights</h2>
+        <ul>
+            <li>Robust cointegration testing to identify correlated asset pairs.</li>
+            <li>Dynamic signal generation using mean-reverting spreads.</li>
+            <li>Comprehensive backtesting framework with performance metrics.</li>
+            <li>Interactive order book visualization for real-time decision-making.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>GitHub Repository</h2>
+        <p>
+            Access the complete code, data, and visualization tools here:
+            <a href="https://github.com/aryansingh920/Pairs-Trading-with-Order-Book-Visualization"
+                target="_blank">GitHub Repository</a>
+        </p>
+    </section>
+
+    <section>
+        <p>Developed by Aryan. Explore more projects on <a href="https://github.com/aryansingh920"
+                target="_blank">GitHub</a>.</p>
+    </section>
+</body>
+
+
+</html>

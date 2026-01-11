@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Text-to-Image with Hugging Face</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                line-height: 1.6;
+                background-color: #f8f9fa;
+                color: #333;
+        
+        
+            }
+        
+            header {
+                background: rgba(0, 17, 40, 0.86);
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(5.1px);
+                -webkit-backdrop-filter: blur(5.1px);
+                color: #fff;
+                padding: 10px 0;
+                text-align: center;
+            }
+        
+            header h1 {
+                margin: 0;
+                font-size: 2.5em;
+            }
+        
+            header p {
+                font-size: 1.2em;
+            }
+        
+            section {
+                padding: 20px;
+                margin: 20px 10px;
+        
+                background: rgba(255, 255, 255, 0.35);
+                border-radius: 16px;
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(5.6px);
+                -webkit-backdrop-filter: blur(5.6px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+            }
+        
+            section h2 {
+                color: #007bff;
+                border-bottom: 2px solid #007bff;
+                padding-bottom: 10px;
+            }
+        
+            section p,
+            ul,
+            ol {
+                margin-bottom: 15px;
+            }
+        
+            iframe {
+                display: block;
+                margin: 20px auto;
+                width: 100%;
+                height: 500px;
+                border: none;
+                border-radius: 8px;
+            }
+        
+            footer {
+                text-align: center;
+                padding: 10px;
+                background-color: #007bff;
+                color: #fff;
+            }
+        
+            footer a {
+                color: #fff;
+                text-decoration: underline;
+            }
+        
+            .highlight {
+                background-color: #f0f8ff;
+                border-left: 5px solid #007bff;
+                padding: 10px 15px;
+                margin: 15px 0;
+                font-style: italic;
+            }
+        
+            .quote {
+                font-size: 1.2em;
+                font-weight: bold;
+                color: #555;
+                margin: 20px 0;
+                text-align: center;
+            }
+        </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Text-to-Image with Hugging Face</h1>
+        <p>Leverage state-of-the-art AI models to generate stunning images from textual descriptions.</p>
+    </header>
+
+    <section>
+        <h2>Introduction</h2>
+        <p>
+            This project uses Hugging Face's Stable Diffusion Pipeline to generate high-quality images based on
+            user-provided text prompts. It showcases the seamless integration of AI tools for creative and functional
+            purposes.
+        </p>
+        <ul>
+            <li><strong>Framework:</strong> Streamlit for interactive UI</li>
+            <li><strong>Model:</strong> Stable Diffusion (runwayml/stable-diffusion-v1-5)</li>
+            <li><strong>Device Support:</strong> CPU and MPS (Apple Silicon)</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Technical Implementation</h2>
+        <h3>1. Model Architecture</h3>
+        <p>
+            The project utilizes the <code>StableDiffusionPipeline</code> from Hugging Face's <code>diffusers</code>
+            library. This pre-trained model is fine-tuned for generating detailed and realistic images from textual
+            descriptions.
+        </p>
+        <ul>
+            <li><strong>Text Encoder:</strong> Encodes the user-provided prompt using a transformer-based model.</li>
+            <li><strong>Image Decoder:</strong> Uses a denoising diffusion probabilistic model (DDPM) to create
+                high-quality
+                images.</li>
+            <li><strong>Device Optimization:</strong> The model supports both <code>float32</code> (CPU) and
+                <code>float16</code> (MPS) precision for faster computation.
+            </li>
+        </ul>
+
+        <h3>2. User Input and Prompt Handling</h3>
+        <p>
+            Users input prompts directly into the Streamlit app. The prompt is validated and passed to the Stable
+            Diffusion
+            model. For demonstration purposes, a default prompt is provided:
+            <code>"A photograph of an astronaut riding a horse on Mars."</code>
+        </p>
+
+        <h3>3. Model Deployment</h3>
+        <p>
+            The application is built using <code>Streamlit</code>, which provides a responsive web interface. Key
+            technical
+            details:
+        </p>
+        <ul>
+            <li><strong>Device Selection:</strong> Users can select between <code>CPU</code> and <code>MPS</code> for
+                model
+                inference.</li>
+            <li><strong>Caching:</strong> <code>@st.cache_resource</code> ensures that the pipeline is loaded only once
+                per
+                session, significantly reducing runtime overhead.</li>
+            <li><strong>Processing:</strong> The pipeline processes the input prompt to generate an image using the
+                selected
+                computation device.</li>
+        </ul>
+
+        <h3>4. Image Generation Pipeline</h3>
+        <p>
+            The image generation process follows these steps:
+        </p>
+        <ol>
+            <li><strong>Text-to-Embedding:</strong> The prompt is encoded into text embeddings using a language model.
+            </li>
+            <li><strong>Diffusion Process:</strong> A noise-injection and denoising algorithm progressively refines an
+                image
+                representation.</li>
+            <li><strong>Output:</strong> A high-resolution image is produced and displayed directly within the Streamlit
+                app.</li>
+        </ol>
+
+        <h3>5. Performance Optimization</h3>
+        <p>
+            To ensure smooth and efficient image generation:
+        </p>
+        <ul>
+            <li><strong>Precision Tuning:</strong> The model uses <code>float16</code> on MPS devices to optimize memory
+                usage and reduce inference time.</li>
+            <li><strong>Parallel Processing:</strong> Streamlit leverages asynchronous tasks for responsive UI during
+                image
+                generation.</li>
+            <li><strong>Hardware Flexibility:</strong> The application adapts to both Apple Silicon devices (via MPS)
+                and
+                standard CPUs.</li>
+        </ul>
+    </section>
+
+
+    <section>
+        <h2>Project Demonstration</h2>
+        <p>Below is an example of a generated image based on the prompt: <em>"A photograph of an astronaut riding a
+                horse on Mars."</em></p>
+        <img src="https://res.cloudinary.com/ddodpfjxe/image/upload/v1736292637/22/g2x0hjiijvk7rlnhwfla.png"
+            alt="Generated Image: Astronaut on Mars">
+    </section>
+
+    <section>
+        <h2>Key Highlights</h2>
+        <ul>
+            <li>Interactive Streamlit app for real-time user input.</li>
+            <li>Efficient loading of AI models using Hugging Face's `diffusers` library.</li>
+            <li>Support for multiple devices (CPU and MPS) for enhanced flexibility.</li>
+            <li>High-quality image generation tailored to user prompts.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>GitHub Repository</h2>
+        <p>
+            Access the complete code, app, and documentation here:
+            <a href="https://github.com/aryansingh920/Text-to-image-genAI" target="_blank">GitHub Repository</a>
+        </p>
+    </section>
+
+
+
+
+    <section>
+        <p>Developed by Aryan Singh. Explore the full implementation on <a
+                href="https://github.com/aryansingh920/Text-to-image-genAI" target="_blank">GitHub</a>.</p>
+    </section>
+</body>
+
+</html>

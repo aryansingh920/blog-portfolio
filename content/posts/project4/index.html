@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Momentum-Based Algorithmic Trading Strategy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                line-height: 1.6;
+                background-color: #f8f9fa;
+                color: #333;
+        
+        
+            }
+        
+            header {
+                background: rgba(0, 17, 40, 0.86);
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(5.1px);
+                -webkit-backdrop-filter: blur(5.1px);
+                color: #fff;
+                padding: 10px 0;
+                text-align: center;
+            }
+        
+            header h1 {
+                margin: 0;
+                font-size: 2.5em;
+            }
+        
+            header p {
+                font-size: 1.2em;
+            }
+        
+            section {
+                padding: 20px;
+                margin: 20px 10px;
+        
+                background: rgba(255, 255, 255, 0.35);
+                border-radius: 16px;
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(5.6px);
+                -webkit-backdrop-filter: blur(5.6px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+            }
+        
+            section h2 {
+                color: #007bff;
+                border-bottom: 2px solid #007bff;
+                padding-bottom: 10px;
+            }
+        
+            section p,
+            ul,
+            ol {
+                margin-bottom: 15px;
+            }
+        
+            iframe {
+                display: block;
+                margin: 20px auto;
+                width: 100%;
+                height: 500px;
+                border: none;
+                border-radius: 8px;
+            }
+        
+            footer {
+                text-align: center;
+                padding: 10px;
+                background-color: #007bff;
+                color: #fff;
+            }
+        
+            footer a {
+                color: #fff;
+                text-decoration: underline;
+            }
+        
+            .highlight {
+                background-color: #f0f8ff;
+                border-left: 5px solid #007bff;
+                padding: 10px 15px;
+                margin: 15px 0;
+                font-style: italic;
+            }
+        
+            .quote {
+                font-size: 1.2em;
+                font-weight: bold;
+                color: #555;
+                margin: 20px 0;
+                text-align: center;
+            }
+        </style>
+</head>
+
+<body>
+    <header>
+        <h1>Momentum-Based Algorithmic Trading Strategy</h1>
+        <p>Leveraging Candlestick Patterns and Momentum Indicators for Smarter Trading Decisions</p>
+    </header>
+
+    <section>
+        <h2>Introduction</h2>
+        <p>
+            This project focuses on building an <strong>algorithmic trading strategy</strong> using momentum indicators
+            and candlestick patterns. The core objective is to develop a backtestable trading system that identifies
+            entry and exit points based on proven technical analysis techniques.
+        </p>
+        <ul>
+            <li>Trading Signals: <em>Momentum and Candlestick Patterns</em></li>
+            <li>Backtesting Engine: Python-based custom backtester</li>
+            <li>Tools and Libraries: Pandas, NumPy, Matplotlib, TA-Lib</li>
+            <li>Key Indicators: Relative Strength Index (RSI), Moving Averages, ATR</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Technical Workflow</h2>
+
+        <h3>1. Data Loading and Preprocessing</h3>
+        <p>
+            The strategy starts by loading historical stock or cryptocurrency price data using the
+            <code>data_loader.py</code> module. Data is fetched in OHLC (Open, High, Low, Close) format.
+        </p>
+        <ul>
+            <li>Data Source: CSV or API-based historical price feeds</li>
+            <li>Features Derived: Closing price, highs, lows, volume</li>
+            <li>Preprocessing Steps: Handling missing data, ensuring consistent time intervals</li>
+        </ul>
+        <p>
+            Here is a snippet for loading and processing the data:
+        </p>
+        <code>
+            df = pd.read_csv("data.csv")<br>
+            df = df.dropna()<br>
+            df['SMA_50'] = df['Close'].rolling(window=50).mean()<br>
+            df['SMA_200'] = df['Close'].rolling(window=200).mean()
+        </code>
+
+        <h3>2. Key Indicators and Patterns</h3>
+        <p>
+            The project incorporates momentum-based indicators and candlestick patterns for trade signals:
+        </p>
+
+        <h4>Momentum Indicators</h4>
+        <ul>
+            <li><strong>Relative Strength Index (RSI):</strong> Determines overbought and oversold conditions.</li>
+            <li><strong>Simple Moving Average (SMA):</strong> Short-term and long-term trend direction.</li>
+            <li><strong>Average True Range (ATR):</strong> Measures market volatility.</li>
+        </ul>
+        <p>
+            Example RSI Calculation (using TA-Lib):
+        </p>
+        <code>
+            df['RSI'] = talib.RSI(df['Close'], timeperiod=14)
+        </code>
+
+        <h4>Candlestick Patterns</h4>
+        <p>
+            The project detects key reversal and continuation patterns such as:
+        </p>
+        <ul>
+            <li><strong>Doji:</strong> Market indecision.</li>
+            <li><strong>Hammer:</strong> Bullish reversal signal.</li>
+            <li><strong>Engulfing Patterns:</strong> Strong reversal confirmation.</li>
+        </ul>
+        <p>Patterns are detected using the <code>candlestick_patterns.py</code> module, which maps conditions like:</p>
+        <code>
+            if open_price > close_price and close_price == low_price:
+                signal = "Hammer"
+        </code>
+
+        <h3>3. Entry and Exit Strategy</h3>
+        <p>
+            The <code>entry_rules.py</code> and <code>exit_rules.py</code> define the trading logic:
+        </p>
+        <h4>Entry Rules</h4>
+        <ul>
+            <li><strong>Buy Signal:</strong> When RSI < 30 (oversold) and SMA_50 crosses above SMA_200.</li>
+            <li><strong>Pattern Confirmation:</strong> Bullish candlestick patterns like Hammer or Bullish Engulfing.
+            </li>
+        </ul>
+        <h4>Exit Rules</h4>
+        <ul>
+            <li><strong>Sell Signal:</strong> When RSI > 70 (overbought) or price hits a defined trailing stop.</li>
+            <li><strong>Stop Loss:</strong> ATR-based volatility-adjusted stop loss.</li>
+        </ul>
+        <p>
+            These rules ensure trades are only triggered in favorable conditions with risk management baked in.
+        </p>
+    </section>
+
+    <section>
+        <h2>Backtesting and Performance Evaluation</h2>
+        <p>
+            The <code>backtest_engine.py</code> evaluates the strategy over historical data. It simulates trades
+            based on entry and exit rules and calculates performance metrics such as:
+        </p>
+        <ul>
+            <li><strong>Total Profit/Loss:</strong> Sum of gains from all trades.</li>
+            <li><strong>Win Rate:</strong> Percentage of winning trades.</li>
+            <li><strong>Maximum Drawdown:</strong> Largest peak-to-trough decline.</li>
+            <li><strong>Sharpe Ratio:</strong> Risk-adjusted return.</li>
+        </ul>
+        <p>
+            Here is how the backtesting is executed:
+        </p>
+        <code>
+            backtest = Backtest(df, strategy=MomentumStrategy, initial_cash=10000)<br>
+            results = backtest.run()<br>
+            print(results['Sharpe Ratio'], results['Total Return'])
+        </code>
+        <p>Visualization tools are employed to display equity curves and trade signals:</p>
+        <!-- <img src="https://example.com/equity_curve.png" alt="Equity Curve" /> -->
+    </section>
+
+    <!-- <section>
+        <h2>Project Demonstration</h2>
+        <p>Below is a brief demonstration of the project running in real-time:</p>
+        <video controls>
+            <source src="https://example.com/demo_trading_strategy.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <p>The visualization below shows the detected patterns and trades:</p>
+        <img src="https://example.com/trade_signals.png" alt="Trade Signals" />
+    </section> -->
+
+    <section>
+        <h2>Key Highlights</h2>
+        <ul>
+            <li>Robust trading logic using momentum and candlestick patterns.</li>
+            <li>Custom-built backtesting engine for historical performance analysis.</li>
+            <li>Risk management with ATR-based stop loss.</li>
+            <li>Clear visualization of trades and equity curves.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>GitHub Repository</h2>
+        <p>
+            Access the complete codebase and documentation here:
+            <a href="https://github.com/aryansingh920/Momentum-Based-Algorithmic-Trading-Strategy-Using-Candlestick-Patterns"
+                target="_blank">GitHub Repository</a>
+        </p>
+    </section>
+
+    <section>
+        <p>Developed with a passion for financial markets. Explore more projects on
+            <a href="https://github.com/aryansingh920" target="_blank">GitHub</a>.
+        </p>
+    </section>
+</body>
+
+
+
+</html>

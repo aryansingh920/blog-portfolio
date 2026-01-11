@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>CAPTCHA Recognition Project</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            background-color: #f8f9fa;
+            color: #333;
+    
+    
+        }
+    
+        header {
+            background: rgba(0, 17, 40, 0.86);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5.1px);
+            -webkit-backdrop-filter: blur(5.1px);
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+        }
+    
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+    
+        header p {
+            font-size: 1.2em;
+        }
+    
+        section {
+            padding: 20px;
+            margin: 20px 10px;
+    
+            background: rgba(255, 255, 255, 0.35);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5.6px);
+            -webkit-backdrop-filter: blur(5.6px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+    
+        section h2 {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+    
+        section p,
+        ul,
+        ol {
+            margin-bottom: 15px;
+        }
+    
+        iframe {
+            display: block;
+            margin: 20px auto;
+            width: 100%;
+            height: 500px;
+            border: none;
+            border-radius: 8px;
+        }
+    
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+        }
+    
+        footer a {
+            color: #fff;
+            text-decoration: underline;
+        }
+    
+        .highlight {
+            background-color: #f0f8ff;
+            border-left: 5px solid #007bff;
+            padding: 10px 15px;
+            margin: 15px 0;
+            font-style: italic;
+        }
+    
+        .quote {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #555;
+            margin: 20px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>CAPTCHA Recognition Project</h1>
+        <p>Building a Reliable Machine Learning Solution to Solve CAPTCHAs</p>
+    </header>
+
+    <section>
+        <h2>Introduction</h2>
+        <p>
+            This project automates CAPTCHA recognition using machine learning. It handles file management,
+            image generation, preprocessing, and deep learning model training to achieve accurate predictions.
+        </p>
+        <ul>
+            <li>Font Families: <em>Blooming of Lilian, King of Kerry, and Eamon Wide</em></li>
+            <li>Dataset Size: 330,000 images</li>
+            <li>Tools: Python, TensorFlow/Keras, Gaussian Object Detection</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Technical Workflow</h2>
+        <h3>1. Data Retrieval</h3>
+        <p>
+            The project uses <code>ThreadPoolExecutor</code> for parallelized file downloads. Missing files are logged
+            and re-attempted to ensure dataset consistency.
+        </p>
+
+        <h3>2. Preprocessing</h3>
+        <p>
+            Images are normalized and resized to a standard dimension of <code>192x96</code>. Augmentation techniques,
+            such as rotation and noise addition, are applied for robustness.
+        </p>
+
+        <h3>3. Model Architecture</h3>
+        <p>
+            The model uses a Convolutional Neural Network (CNN) with the following layers:
+        </p>
+        <ul>
+            <li><strong>Input Layer:</strong> Accepts preprocessed CAPTCHA images.</li>
+            <li><strong>Convolutional Layers:</strong> Extract features using filters and ReLU activations.</li>
+            <li><strong>Pooling Layers:</strong> Downsamples the feature maps to reduce dimensionality.</li>
+            <li><strong>Dense Layers:</strong> Fully connected layers for character classification.</li>
+            <li><strong>Softmax Output:</strong> Predicts the characters in the CAPTCHA.</li>
+        </ul>
+
+        <h3>4. Training</h3>
+        <p>
+            The model is trained on 80% of the dataset (264,000 images) and validated on the remaining 20%.
+            Early stopping is used to avoid overfitting, with validation loss monitored over <code>5 epochs</code>.
+        </p>
+    </section>
+
+    <section>
+        <h2>Project Demonstration</h2>
+        <p>Below is a video demonstrating the project execution, including its computational efficiency and output:</p>
+        <video controls>
+            <source src="https://res.cloudinary.com/ddodpfjxe/video/upload/v1734373805/atbdhmwkv7vpcoosnzif.mp4"
+                type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <p>And here is the resulting CAPTCHA prediction:</p>
+        <img src="https://res.cloudinary.com/ddodpfjxe/image/upload/v1734373938/xdtfnkyhpqpaophuc5ey.jpg"
+            alt="Guessed CAPTCHA Result">
+    </section>
+
+    <section>
+        <h2>Key Highlights</h2>
+        <ul>
+            <li>Optimized image preprocessing for consistent input dimensions.</li>
+            <li>Robust CNN architecture with pooling and dense layers.</li>
+            <li>Scalable design supporting large datasets and parallel processing.</li>
+            <li>Accuracy achieved across multiple font families.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>GitHub Repository</h2>
+        <p>
+            Access the complete code, dataset, and documentation here:
+            <a href="https://github.com/aryansingh920/scalable_project2_group24" target="_blank">GitHub Repository</a>
+        </p>
+    </section>
+
+    <section>
+        <p>Developed with passion. Check out more projects on <a href="https://github.com/aryansingh920"
+                target="_blank">GitHub</a>.</p>
+    </section>
+</body>
+
+</html>

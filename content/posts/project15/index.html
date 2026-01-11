@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Melody Generation Using GPT</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                line-height: 1.6;
+                background-color: #f8f9fa;
+                color: #333;
+        
+        
+            }
+        
+            header {
+                background: rgba(0, 17, 40, 0.86);
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(5.1px);
+                -webkit-backdrop-filter: blur(5.1px);
+                color: #fff;
+                padding: 10px 0;
+                text-align: center;
+            }
+        
+            header h1 {
+                margin: 0;
+                font-size: 2.5em;
+            }
+        
+            header p {
+                font-size: 1.2em;
+            }
+        
+            section {
+                padding: 20px;
+                margin: 20px 10px;
+        
+                background: rgba(255, 255, 255, 0.35);
+                border-radius: 16px;
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(5.6px);
+                -webkit-backdrop-filter: blur(5.6px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+            }
+        
+            section h2 {
+                color: #007bff;
+                border-bottom: 2px solid #007bff;
+                padding-bottom: 10px;
+            }
+        
+            section p,
+            ul,
+            ol {
+                margin-bottom: 15px;
+            }
+        
+            iframe {
+                display: block;
+                margin: 20px auto;
+                width: 100%;
+                height: 500px;
+                border: none;
+                border-radius: 8px;
+            }
+        
+            footer {
+                text-align: center;
+                padding: 10px;
+                background-color: #007bff;
+                color: #fff;
+            }
+        
+            footer a {
+                color: #fff;
+                text-decoration: underline;
+            }
+        
+            .highlight {
+                background-color: #f0f8ff;
+                border-left: 5px solid #007bff;
+                padding: 10px 15px;
+                margin: 15px 0;
+                font-style: italic;
+            }
+        
+            .quote {
+                font-size: 1.2em;
+                font-weight: bold;
+                color: #555;
+                margin: 20px 0;
+                text-align: center;
+            }
+        </style>
+</head>
+
+
+
+
+<body>
+    <header>
+        <h1>Melody Generation Using GPT</h1>
+        <p>Advancing Music Composition Through Transformer-Based Models</p>
+    </header>
+
+    <section>
+        <h2>Introduction</h2>
+        <p>
+            The <strong>Melody Generation Using GPT</strong> project applies state-of-the-art transformer architectures,
+            inspired by NLP advancements, to generate sequences of musical notes. This approach involves encoding
+            melodies into tokenized representations, training GPT models, and synthesizing new compositions that mimic
+            human-like creativity.
+        </p>
+        <p class="highlight">
+            By adapting Generative Pre-trained Transformers for music, this project demonstrates the versatility of AI
+            in creative domains.
+        </p>
+        <p>
+            The full implementation, including source code, datasets, and training configurations, is available on <a
+                href="https://github.com/aryansingh920/Melody-Generation-Using-GPT" target="_blank">GitHub</a>.
+        </p>
+    </section>
+
+    <section>
+        <h2>The Vision</h2>
+        <p>
+            This project seeks to explore AI's role in music composition by answering the following questions:
+        </p>
+        <ul>
+            <li>Can transformer-based models generate musically coherent sequences?</li>
+            <li>How do architectural variations impact melody quality?</li>
+            <li>What quantitative and qualitative metrics best evaluate AI-generated music?</li>
+        </ul>
+        <p>
+            By tackling these questions, the project aims to provide insights into how deep learning can be used as a
+            tool for musicians and composers.
+        </p>
+        <p class="quote">
+            "Transformers redefine creativity by turning data into art."
+        </p>
+    </section>
+
+    <section>
+        <h2>Technical Workflow</h2>
+        <p>The project is structured into the following stages:</p>
+        <ol>
+            <li><strong>Data Preparation:</strong> Musical sequences are extracted from MIDI files, tokenized into
+                sequences, and augmented to enhance diversity. The dataset comprises structured tokens such as note
+                durations, pitches, and rests.</li>
+            <li><strong>Model Training:</strong> Custom GPT architectures (Original, Deeper-Thinner, and
+                Wider-Shallower) are trained on tokenized data. Hyperparameters such as embedding dimensions, number of
+                attention heads, and layers are tuned to optimize performance.</li>
+            <li><strong>Evaluation:</strong> Metrics such as perplexity, BLEU scores, and loss functions measure the
+                models' ability to replicate patterns and coherence in music.</li>
+            <li><strong>Generation:</strong> The trained models synthesize melodies by sampling from the learned
+                probability distributions.</li>
+        </ol>
+        <p>
+            The training was conducted on high-performance GPUs, leveraging PyTorch for implementation and Weights &
+            Biases for experiment tracking.
+        </p>
+    </section>
+
+    <section>
+        <h2>Model Architectures</h2>
+        <p>
+            The project explores three configurations of GPT models, each tailored for specific trade-offs:
+        </p>
+        <ul>
+            <li><strong>Original Configuration:</strong> Balanced dimensions with two attention layers and moderate
+                embedding size.</li>
+            <li><strong>Deeper-Thinner Configuration:</strong> Narrow embedding dimensions but with more attention
+                layers to enhance sequence depth.</li>
+            <li><strong>Wider-Shallower Configuration:</strong> Broader embedding dimensions but fewer layers to
+                emphasize parallel learning of features.</li>
+        </ul>
+        <p>
+            The final model parameters range from ~23,000 to ~31,000, allowing for lightweight deployment without
+            compromising on quality.
+        </p>
+    </section>
+
+    <section>
+        <h2>Evaluation and Results</h2>
+        <p>
+            To evaluate the generated melodies, we used:
+        </p>
+        <ul>
+            <li><strong>Perplexity:</strong> Measures the uncertainty in the model's predictions. The lower perplexity
+                for the Original model indicates better learning stability compared to the alternative configurations.
+            </li>
+            <li><strong>BLEU Score:</strong> Quantifies similarity between generated sequences and ground truth
+                melodies. The Original configuration achieved the highest score of 0.64, reflecting its superior ability
+                to replicate musical structures.</li>
+            <li><strong>Overfitting Metric:</strong> Tracks the divergence between training and validation losses to
+                ensure generalization.</li>
+        </ul>
+        <p>
+            The generated samples demonstrated coherence in note transitions and adherence to learned patterns. However,
+            subjective evaluation revealed slight limitations in rhythmic variations for deeper models.
+        </p>
+    </section>
+
+    <section>
+        <h2>Generated Samples</h2>
+        <p>
+            Explore and compare the melodies generated by each configuration below:
+        </p>
+        <ul>
+            <li>
+                <strong>Original Configuration:</strong>
+                <audio controls>
+                    <source
+                        src="https://res.cloudinary.com/ddodpfjxe/video/upload/v1735170959/project15/clflz2f35clzlzm3grhg.wav"
+                        type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+            </li>
+            <li>
+                <strong>Deeper-Thinner Configuration:</strong>
+                <audio controls>
+                    <source
+                        src="https://res.cloudinary.com/ddodpfjxe/video/upload/v1735170991/project15/cwnzdhrwzfj93qbwrpbz.wav"
+                        type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+            </li>
+            <li>
+                <strong>Wider-Shallower Configuration:</strong>
+                <audio controls>
+                    <source
+                        src="https://res.cloudinary.com/ddodpfjxe/video/upload/v1735171041/project15/hqkgk1qpohjrvahuqxpr.wav"
+                        type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+            </li>
+        </ul>
+        <p>
+            The comparison of the improvement ratio for different configurations is visualized below:
+        </p>
+        <img src="https://res.cloudinary.com/ddodpfjxe/image/upload/v1735170771/project15/xipuzu9iri1kr2pzmbmu.png"
+            alt="Improvement Ratio Heatmap">
+    </section>
+
+    <section>
+        <h2>Significance and Future Scope</h2>
+        <p>
+            This project highlights AI's transformative role in music composition. Future work can expand upon this
+            foundation to include:
+        </p>
+        <ul>
+            <li>Integration with music theory constraints for stylistic control.</li>
+            <li>Fine-tuning on genre-specific datasets to specialize in styles like jazz or classical.</li>
+            <li>Real-time melody generation for live performances.</li>
+        </ul>
+        <p class="quote">
+            "AI-generated music has the potential to inspire human creativity in ways never imagined."
+        </p>
+    </section>
+
+    <section>
+        <p>Developed by Aryan Singh. Explore the full implementation on <a
+                href="https://github.com/aryansingh920/Melody-Generation-Using-GPT" target="_blank">GitHub</a>. For
+            inquiries, connect on <a href="#">LinkedIn</a>.</p>
+    </section>
+</body>
+
+
+
+
+
+
+
+
+</html>

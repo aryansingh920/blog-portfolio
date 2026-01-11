@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Whale Tracking: Secure Satellite Communication Using the Bobb Protocol</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                line-height: 1.6;
+                background-color: #f8f9fa;
+                color: #333;
+        
+        
+            }
+        
+            header {
+                background: rgba(0, 17, 40, 0.86);
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(5.1px);
+                -webkit-backdrop-filter: blur(5.1px);
+                color: #fff;
+                padding: 10px 0;
+                text-align: center;
+            }
+        
+            header h1 {
+                margin: 0;
+                font-size: 2.5em;
+            }
+        
+            header p {
+                font-size: 1.2em;
+            }
+        
+            section {
+                padding: 20px;
+                margin: 20px 10px;
+        
+                background: rgba(255, 255, 255, 0.35);
+                border-radius: 16px;
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(5.6px);
+                -webkit-backdrop-filter: blur(5.6px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+            }
+        
+            section h2 {
+                color: #007bff;
+                border-bottom: 2px solid #007bff;
+                padding-bottom: 10px;
+            }
+        
+            section p,
+            ul,
+            ol {
+                margin-bottom: 15px;
+            }
+        
+            iframe {
+                display: block;
+                margin: 20px auto;
+                width: 100%;
+                height: 500px;
+                border: none;
+                border-radius: 8px;
+            }
+        
+            footer {
+                text-align: center;
+                padding: 10px;
+                background-color: #007bff;
+                color: #fff;
+            }
+        
+            footer a {
+                color: #fff;
+                text-decoration: underline;
+            }
+        
+            .highlight {
+                background-color: #f0f8ff;
+                border-left: 5px solid #007bff;
+                padding: 10px 15px;
+                margin: 15px 0;
+                font-style: italic;
+            }
+        
+            .quote {
+                font-size: 1.2em;
+                font-weight: bold;
+                color: #555;
+                margin: 20px 0;
+                text-align: center;
+            }
+        </style>
+</head>
+
+
+
+
+<body>
+    <header>
+        <h1>Whale Tracking: Secure Satellite Communication Using the Bobb Protocol</h1>
+        <p>Simulating Satellite-Based Communication Networks for Real-Time Whale Tracking and Marine Conservation</p>
+    </header>
+
+    <section>
+        <h2>Introduction</h2>
+        <p>
+            This project implements the <strong>Bobb Protocol</strong> to enable <em>secure</em> and <em>efficient</em>
+            data transmission through Low Earth Orbit (LEO) satellites. By simulating whale tracking using Raspberry Pi
+            devices,
+            the project showcases a satellite communication model for real-time data transfer in challenging open-sea
+            environments.
+        </p>
+        <p>
+            The system is primarily designed for marine researchers and conservationists to monitor whale behavior,
+            migration
+            patterns, and their environmental responses using waterproof IoT sensors. The simulation incorporates core
+            security features
+            such as <strong>ECDH key exchange</strong>, <strong>AES-GCM encryption</strong>, and <strong>HMAC for
+                integrity verification</strong>.
+        </p>
+        <ul>
+            <li><strong>Use Case:</strong> Humpback Whales (25-30% surface time for communication)</li>
+            <li><strong>Network Simulation:</strong> Raspberry Pis act as satellites, performing device discovery and
+                multi-hop routing.</li>
+            <li><strong>Key Algorithms:</strong> ECDH for key exchange, AES-GCM for encryption, and HMAC for
+                verification.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Technical Workflow</h2>
+        <h3>1. Whale Data Collection and Communication</h3>
+        <p>
+            The whale tracking system uses waterproof IoT devices equipped with sensors to gather real-time parameters:
+        </p>
+        <ul>
+            <li><strong>Geographical Coordinates:</strong> Latitude and Longitude</li>
+            <li><strong>Depth:</strong> Water depth measured in meters</li>
+            <li><strong>Speed:</strong> Whale movement speed (m/s)</li>
+            <li><strong>Heart Rate:</strong> Measured heartbeats per minute</li>
+            <li><strong>Water Temperature:</strong> Current sea temperature</li>
+            <li><strong>Heading:</strong> Whale directional heading in degrees</li>
+        </ul>
+        <p>The IoT device transmits this data to the nearest LEO satellite using the Bobb Protocol.</p>
+        <p>Example Data Format:</p>
+        <code>
+        {
+            "whale_id": "whale-001",
+            "timestamp": 1697083106,
+            "latitude": 34.56,
+            "longitude": -120.45,
+            "depth": 200,
+            "speed": 3.2,
+            "heart_rate": 50,
+            "energy_level": 80,
+            "water_temperature": 18.5,
+            "heading": 120.5
+        }
+        </code>
+
+        <h3>2. Device Discovery in Simulated LEO Network</h3>
+        <p>
+            In real LEO systems, satellites rotate and establish connections using line-of-sight. To simulate this:
+        </p>
+        <ul>
+            <li>Raspberry Pis <strong>ping all IPs</strong> in a local network range.</li>
+            <li>Devices running the Bobb Protocol respond and are added as neighbors.</li>
+            <li>Dynamic updates include satellites going <strong>out-of-range</strong> or <strong>coming into
+                    range</strong>.</li>
+        </ul>
+        <p>Discovery Code Example:</p>
+        <code>
+        def discover_satellites(ip_range):
+            discovered = []
+            for ip in ip_range:
+                if ping(ip):
+                    if verify_bobb_protocol(ip):
+                        discovered.append(ip)
+            return discovered
+        </code>
+    </section>
+
+    <section>
+        <h2>Bobb Protocol Workflow</h2>
+
+        <h3>1. Satellite Handshake</h3>
+        <p>The protocol begins with a handshake:</p>
+        <ul>
+            <li>IoT devices exchange <strong>public keys</strong> and metadata (IP, Ports).</li>
+            <li>Trust establishment occurs to ensure secure communication.</li>
+        </ul>
+        <p>Example Handshake Sequence:</p>
+        <code>
+        Device A: "Request Connection" <br>
+        Device B: "Public Key, IP, Metadata" <br>
+        Device A: "Shared Secret via ECDH"
+        </code>
+
+        <h3>2. Key Exchange and Encryption</h3>
+        <p>
+            Secure communication relies on the <strong>Elliptic Curve Diffie-Hellman (ECDH)</strong> algorithm. After
+            the handshake:
+        </p>
+        <ul>
+            <li>ECDH generates a <strong>shared secret key</strong> between the IoT device and satellite.</li>
+            <li>The secret is passed through HKDF to derive an AES-GCM encryption key.</li>
+        </ul>
+        <p>Code for ECDH Key Exchange:</p>
+        <code>
+        shared_key = ECDH.exchange(device_private_key, satellite_public_key)
+        encryption_key = HKDF(shared_key)
+        </code>
+
+        <h3>3. Multi-Hop Routing and Heartbeats</h3>
+        <p>
+            If the satellite cannot directly reach the base station, it routes data through neighboring satellites.
+            This routing dynamically adjusts based on heartbeat messages:
+        </p>
+        <ul>
+            <li><strong>Heartbeat:</strong> Sent every 30 seconds to check connectivity.</li>
+            <li><strong>Timeout:</strong> 3 consecutive missed heartbeats mark a satellite as out-of-range.</li>
+            <li><strong>Constellation Update:</strong> Neighbors share an updated network map during heartbeats.</li>
+        </ul>
+        <p>Heartbeat Code Example:</p>
+        <code>
+        def send_heartbeat(neighbors):
+            for neighbor in neighbors:
+                if not ping(neighbor):
+                    mark_as_disconnected(neighbor)
+                else:
+                    update_constellation(neighbor)
+        </code>
+    </section>
+
+    <section>
+        <h2>Security Features</h2>
+        <p>The Bobb Protocol ensures robust security through:</p>
+        <ul>
+            <li><strong>Encryption:</strong> AES-GCM secures data transmission.</li>
+            <li><strong>Key Exchange:</strong> ECDH for shared key generation.</li>
+            <li><strong>Integrity Verification:</strong> HMAC detects tampering.</li>
+        </ul>
+        <p>Example AES-GCM Encryption:</p>
+        <code>
+        from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+        encryptor = Cipher(algorithms.AES(encryption_key), modes.GCM(nonce)).encryptor()
+        encrypted_data = encryptor.update(data) + encryptor.finalize()
+        </code>
+    </section>
+
+    <section>
+        <h2>Challenges and Solutions</h2>
+        <ul>
+            <li><strong>Dynamic Routing:</strong> Ensuring seamless communication when neighbors disconnect.</li>
+            <li><strong>Latency Simulation:</strong> Introducing realistic delays using randomness.</li>
+            <li><strong>Data Generation:</strong> Creating synthetic but realistic whale sensor data.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Key Highlights</h2>
+        <ul>
+            <li>Dynamic multi-hop routing for satellite communication.</li>
+            <li>Advanced encryption using AES-GCM and ECDH for key exchange.</li>
+            <li>Heartbeat messages for real-time constellation management.</li>
+            <li>Robust simulation using Raspberry Pi devices for LEO satellites.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>GitHub Repository</h2>
+        <p>
+            Access the full codebase and detailed documentation here:
+            <a href="https://github.com/Scalable-2024/bobb-protocol" target="_blank">GitHub Repository</a>
+        </p>
+    </section>
+
+    <section>
+        <p>Developed with a focus on secure communication and marine conservation research. Explore more on
+            <a href="https://github.com/aryansingh920" target="_blank">GitHub</a>.
+        </p>
+    </section>
+</body>
+
+
+
+
+
+
+
+
+</html>

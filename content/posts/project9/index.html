@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Face Recognition System Using FaceNet and MTCNN</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                line-height: 1.6;
+                background-color: #f8f9fa;
+                color: #333;
+        
+        
+            }
+        
+            header {
+                background: rgba(0, 17, 40, 0.86);
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(5.1px);
+                -webkit-backdrop-filter: blur(5.1px);
+                color: #fff;
+                padding: 10px 0;
+                text-align: center;
+            }
+        
+            header h1 {
+                margin: 0;
+                font-size: 2.5em;
+            }
+        
+            header p {
+                font-size: 1.2em;
+            }
+        
+            section {
+                padding: 20px;
+                margin: 20px 10px;
+        
+                background: rgba(255, 255, 255, 0.35);
+                border-radius: 16px;
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(5.6px);
+                -webkit-backdrop-filter: blur(5.6px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+            }
+        
+            section h2 {
+                color: #007bff;
+                border-bottom: 2px solid #007bff;
+                padding-bottom: 10px;
+            }
+        
+            section p,
+            ul,
+            ol {
+                margin-bottom: 15px;
+            }
+        
+            iframe {
+                display: block;
+                margin: 20px auto;
+                width: 100%;
+                height: 500px;
+                border: none;
+                border-radius: 8px;
+            }
+        
+            footer {
+                text-align: center;
+                padding: 10px;
+                background-color: #007bff;
+                color: #fff;
+            }
+        
+            footer a {
+                color: #fff;
+                text-decoration: underline;
+            }
+        
+            .highlight {
+                background-color: #f0f8ff;
+                border-left: 5px solid #007bff;
+                padding: 10px 15px;
+                margin: 15px 0;
+                font-style: italic;
+            }
+        
+            .quote {
+                font-size: 1.2em;
+                font-weight: bold;
+                color: #555;
+                margin: 20px 0;
+                text-align: center;
+            }
+        </style>
+</head>
+
+
+
+
+<body>
+    <header>
+        <h1>Face Recognition System Using FaceNet and MTCNN</h1>
+        <p>A Deep Learning-Based Real-Time Face Detection and Recognition System</p>
+    </header>
+
+    <section>
+        <h2>Introduction</h2>
+        <p>
+            This project implements a <strong>real-time face recognition system</strong> using a combination of
+            <strong>FaceNet</strong> for face embedding extraction and <strong>MTCNN</strong> for accurate face
+            detection.
+            It leverages deep learning models to detect, extract, and recognize faces efficiently.
+        </p>
+        <ul>
+            <li>Face Detection: <strong>MTCNN (Multi-task Cascaded Convolutional Networks)</strong></li>
+            <li>Face Embeddings: <strong>FaceNet Inception-ResNet-v1</strong></li>
+            <li>Frameworks Used: TensorFlow/Keras, OpenCV, and NumPy</li>
+            <li>Face Encoding Storage: Pickle Serialization</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Technical Workflow</h2>
+
+        <h3>1. Face Detection with MTCNN</h3>
+        <p>
+            The project uses <strong>MTCNN</strong> to detect faces in an image or video stream. MTCNN is a pre-trained
+            deep learning model that detects faces with high accuracy and outputs bounding box coordinates for each
+            face.
+        </p>
+        <p>For each detected face, MTCNN provides:</p>
+        <ul>
+            <li><strong>Bounding Box:</strong> Coordinates of the detected face (x, y, width, height)</li>
+            <li><strong>Confidence Score:</strong> Probability that the detected region is a face</li>
+        </ul>
+        <p>Here is how MTCNN is applied to detect a face in an image:</p>
+        <code>
+            face_detector = mtcnn.MTCNN()<br>
+            faces = face_detector.detect_faces(image_rgb)<br>
+            box = faces[0]['box']  # Extract bounding box of the first detected face
+        </code>
+
+        <h3>2. Face Embeddings with FaceNet</h3>
+        <p>
+            Once a face is detected, the project extracts <strong>face embeddings</strong> using the
+            <strong>FaceNet model</strong> (Inception-ResNet-v1 architecture). FaceNet is a deep learning
+            model that generates a compact 128-dimensional embedding for a face.
+        </p>
+        <p>
+            These embeddings represent the unique facial features, enabling accurate comparison and recognition.
+            The process involves:
+        </p>
+        <ul>
+            <li>Resizing the face to <code>160x160</code> pixels</li>
+            <li>Normalizing pixel values (zero mean and unit variance)</li>
+            <li>Passing the face through the FaceNet model to obtain embeddings</li>
+        </ul>
+        <p>Snippet for embedding extraction:</p>
+        <code>
+            face = cv2.resize(face, (160, 160))<br>
+            face = normalize(face)<br>
+            embeddings = face_encoder.predict(np.expand_dims(face, axis=0))
+        </code>
+    </section>
+
+    <section>
+        <h2>Training and Encoding Faces</h2>
+        <p>
+            To recognize faces, the system creates an "encoding dictionary" of known faces.
+            The training process involves:
+        </p>
+        <ul>
+            <li>Reading face images from a dataset directory (<code>Faces/</code>)</li>
+            <li>Detecting faces using MTCNN</li>
+            <li>Generating embeddings using FaceNet</li>
+            <li>Normalizing and averaging embeddings for each person</li>
+        </ul>
+        <p>The final embeddings are stored in a <strong>pickle file</strong> for fast retrieval during recognition.</p>
+        <code>
+            encoding_dict[person_name] = l2_normalizer.transform(np.mean(encodes, axis=0))<br>
+            with open("encodings/encodings.pkl", "wb") as file:<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;pickle.dump(encoding_dict, file)
+        </code>
+    </section>
+
+    <section>
+        <h2>Real-Time Face Recognition</h2>
+        <p>
+            The real-time recognition system uses a webcam feed. The process involves:
+        </p>
+        <ol>
+            <li>Capturing frames from the webcam</li>
+            <li>Detecting faces in the frame using MTCNN</li>
+            <li>Extracting embeddings for each face using FaceNet</li>
+            <li>Comparing embeddings with stored encodings using <strong>Cosine Similarity</strong></li>
+        </ol>
+        <p>The cosine similarity metric identifies how similar two embeddings are. If the distance is below a
+            threshold (<code>0.5</code>), the face is recognized.</p>
+        <code>
+            distance = cosine(db_encode, detected_face_encode)<br>
+            if distance &lt; recognition_threshold:<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;print(f"Recognized as: {name}")
+        </code>
+        <p>Recognized faces are displayed in green bounding boxes, and unknown faces are shown in red.</p>
+    </section>
+
+    <section>
+        <h2>Results and Analysis</h2>
+        <p>
+            The system performs real-time face recognition with impressive accuracy and low latency.
+            <strong>Key Observations:</strong>
+        </p>
+        <ul>
+            <li>FaceNet embeddings are highly robust and handle variations like lighting, orientation, and expression.
+            </li>
+            <li>MTCNN accurately detects faces even in cluttered backgrounds.</li>
+            <li>Real-time processing ensures smooth performance with a webcam feed.</li>
+        </ul>
+        <p>The cosine similarity threshold ensures a good balance between precision and recall in recognition.</p>
+    </section>
+
+    <section>
+        <h2>Key Highlights</h2>
+        <ul>
+            <li>Real-time face detection and recognition using deep learning</li>
+            <li>High-accuracy embeddings with FaceNet (128-dimensional vector)</li>
+            <li>Fast and accurate face detection using MTCNN</li>
+            <li>Seamless integration of OpenCV for real-time webcam feed</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>How to Run the Project</h2>
+        <ol>
+            <li>Place training images in the <code>Faces/{Person_Name}</code> directory.</li>
+            <li>Run <code>train_v2.py</code> to generate face encodings.</li>
+            <li>Start the recognition system using <code>detect.py</code>.</li>
+            <li>Press <code>'q'</code> to exit the webcam feed.</li>
+        </ol>
+    </section>
+
+    <section>
+        <h2>GitHub Repository</h2>
+        <p>
+            Access the complete project code and instructions here:
+            <a href="https://github.com/aryansingh920/Face-recognition" target="_blank">GitHub Repository</a>
+        </p>
+    </section>
+
+    <section>
+        <p>Developed with a passion for computer vision and deep learning. Explore more projects on
+            <a href="https://github.com/aryansingh920/" target="_blank">GitHub</a>.
+        </p>
+    </section>
+</body>
+
+
+
+
+
+
+</html>

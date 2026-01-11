@@ -1,0 +1,213 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Hand Tracking</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            background-color: #f8f9fa;
+            color: #333;
+
+
+        }
+
+        header {
+            background: rgba(0, 17, 40, 0.86);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5.1px);
+            -webkit-backdrop-filter: blur(5.1px);
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        header p {
+            font-size: 1.2em;
+        }
+
+        section {
+            padding: 20px;
+            margin: 20px 10px;
+
+            background: rgba(255, 255, 255, 0.35);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5.6px);
+            -webkit-backdrop-filter: blur(5.6px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        section h2 {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+
+        section p,
+        ul,
+        ol {
+            margin-bottom: 15px;
+        }
+
+        iframe {
+            display: block;
+            margin: 20px auto;
+            width: 100%;
+            height: 500px;
+            border: none;
+            border-radius: 8px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        footer a {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+        .highlight {
+            background-color: #f0f8ff;
+            border-left: 5px solid #007bff;
+            padding: 10px 15px;
+            margin: 15px 0;
+            font-style: italic;
+        }
+
+        .quote {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #555;
+            margin: 20px 0;
+            text-align: center;
+        }
+    </style>
+    </head>
+
+    <body>
+        <header>
+            <h1>Hand Tracking and Augmented Reality Interaction</h1>
+            <p>Real-time hand tracking and gesture-based interaction using OpenCV, MediaPipe, and ModernGL</p>
+        </header>
+        <section>
+            <h2>Introduction</h2>
+            <p>
+                This project focuses on building an Augmented Reality (AR) system for real-time hand tracking and
+                gesture-based interaction.
+                Leveraging OpenCV, MediaPipe, and ModernGL, the application captures live video, detects hands in 3D space,
+                and enables
+                intuitive manipulation of virtual 3D objects. The system supports grabbing and moving a virtual cube using
+                natural gestures
+                like pinching, creating an immersive AR experience using only a standard webcam.
+            </p>
+        </section>
+    
+        <section>
+            <h2>System Overview</h2>
+            <p>
+                The AR pipeline is built in Python, integrating several key technologies:
+            <ul>
+                <li><strong>MediaPipe</strong> for real-time 2D and 3D hand landmark detection.</li>
+                <li><strong>OpenCV</strong> for video capture and visualization.</li>
+                <li><strong>Moderngl</strong> for rendering textured 3D content, such as cubes and markers.</li>
+            </ul>
+            The application aligns the 3D landmarks with live video feed using solvePnP and renders interaction-aware 3D
+            graphics using OpenGL.
+            </p>
+        </section>
+    
+        <section>
+            <h2>Implementation Details</h2>
+            <p>
+                The system starts by capturing webcam frames and passing them through MediaPipe's HandLandmarker to extract
+                both 2D image-space
+                and relative 3D model-space landmarks. OpenCV visualizes initial detections, and then the program calculates
+                world-space coordinates
+                by solving the Perspective-n-Point (PnP) problem using OpenCV's <code>solvePnP</code>. This transformation
+                enables proper alignment
+                between physical hands and virtual overlays.
+            </p>
+        </section>
+    
+        <section>
+            <h2>3D Rendering and Interactions</h2>
+            <p>
+                Moderngl is used to render a virtual cube, textured using shaders, overlaid on the camera feed. Users can
+                interact with the cube using
+                pinch gestures. The index finger’s proximity to the cube triggers a “grab” state, letting the user
+                reposition the cube within the 3D space.
+                Fingertips and important joints are highlighted using marker meshes for visual feedback. The system supports
+                gesture recognition and
+                real-time updates with smooth animation.
+            </p>
+        </section>
+    
+        <section>
+            <h2>Gesture Detection</h2>
+            <p>
+                The application defines a pinch gesture by detecting minimal distance between the thumb and index
+                fingertips. Combined with proximity
+                checks against the virtual cube, this triggers interactive actions such as dragging. These mechanics allow
+                intuitive and physically consistent
+                manipulation in the AR environment.
+            </p>
+        </section>
+    
+        <section>
+            <h2>Performance and Results</h2>
+            <p>
+                The AR system runs in real time, consistently achieving over 10 FPS on a typical laptop. Visual
+                re-projection of 3D landmarks ensures accurate
+                alignment with the user's real hand. Color and saturation adjustments in shaders enhance visual clarity, and
+                fallback logic ensures usability
+                under varying lighting and movement speeds.
+            </p>
+        </section>
+    
+        <section>
+            <h2>Project Demo</h2>
+            <p>Watch a demonstration of the hand tracking and AR interaction capabilities below:</p>
+            <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                <iframe src="https://www.youtube.com/embed/ZdsOrryMtqM?si=cVNqeWUHb7BfPsRS"
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allowfullscreen>
+                </iframe>
+            </div>
+        </section>
+    
+        <!-- <section>
+            <h2>Project Report</h2>
+            <p>
+                Dive deeper into the assignment goals, requirements, and evaluation in the embedded PDF below:
+            </p>
+            <div style="position: relative; padding-bottom: 75%; height: 0; overflow: hidden;">
+                <iframe src="Hand%20Tracking%20Assignment%202.pdf"
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allowfullscreen>
+                </iframe>
+            </div>
+        </section> -->
+    
+
+    
+        <section>
+            <p>Developed by Aryan Singh. Explore the full implementation on <a href="https://github.com/aryansingh920/AR_VR_HandTracking_assignment2" target="_blank">GitHub</a>.</p>
+        </section>
+    </body>
+    </html>
+    
