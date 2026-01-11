@@ -1,4 +1,3 @@
-// app/blogs/components/SwipeFeed.tsx
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -15,6 +14,8 @@ import {
   type MotionValue,
 } from "framer-motion";
 import type { BlogPost } from "../types";
+
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { BlogsHeader } from "./BlogsHeader";
 import { BlogCard } from "./BlogCard";
@@ -39,6 +40,7 @@ const EDGE_GUARD_PX = 34;
 
 type SwipeFeedProps = {
   posts: BlogPost[];
+  initialIndex?: number; // NEW
 };
 
 type StartInfo = { x: number; y: number; w: number; h: number };
@@ -84,7 +86,6 @@ function useCardMotion() {
     return Math.min(1, (lx + ly) / 420);
   });
 
-
   const cardScale = useTransform(lift, [0, 1], [1, 0.985]);
   const shadow = useTransform(
     lift,
@@ -104,17 +105,15 @@ function useCardMotion() {
 }
 
 function resetMotionPair(x: MotionValue<number>, y: MotionValue<number>) {
-  // hard reset in a way that doesn't depend on component remounts
   x.stop();
   y.stop();
   x.set(0);
   y.set(0);
 }
 
-export function SwipeFeed({ posts }: SwipeFeedProps) {
-  const [index, setIndex] = useState(0);
-  const [isPeek, setIsPeek] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
+export function SwipeFeed({ posts, initialIndex = 0 }: SwipeFeedProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const n = posts.length;
 
@@ -125,6 +124,16 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
     },
     [n]
   );
+
+  // NEW: initialize index from prop (URL-derived)
+  const [index, setIndex] = useState(() => {
+    if (!n) return 0;
+    const safe = Number.isFinite(initialIndex) ? initialIndex : 0;
+    return mod(Math.max(0, safe));
+  });
+
+  const [isPeek, setIsPeek] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const current = n ? posts[mod(index)] : undefined;
 
@@ -152,7 +161,7 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
   const wheelAccumY = useRef(0);
   const wheelAccumX = useRef(0);
 
-  // ----- pointer start tracking (no element.ref usage; no React 19 ref warnings here) -----
+  // ----- pointer start tracking -----
   const startRef = useRef<StartInfo>({ x: 0, y: 0, w: 0, h: 0 });
 
   const captureStart = (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -206,7 +215,7 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
     }
   }, []);
 
-  // ----- actions (always reset motion so looping never “breaks” drag/pinch/hold) -----
+  // ----- actions -----
   const goNext = () => {
     if (!n || lockRef.current || showOnboarding) return;
     setIndex((i) => i + 1);
@@ -232,12 +241,29 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
   };
 
   // Hard reset motion + wheel accumulators whenever card changes or overlay/panel toggles.
-  // This fixes your “after looping I can’t drag/hold/pinch, only scroll” issue.
   useEffect(() => {
     resetMotionPair(x, y);
     wheelAccumX.current = 0;
     wheelAccumY.current = 0;
   }, [index, isPeek, showOnboarding, x, y]);
+
+  // NEW: keep URL in sync with current index: /blogs?i=...
+  // replace() avoids polluting browser history on every swipe.
+useEffect(() => {
+  if (!n) return;
+
+  const nextI = String(mod(index));
+  const currentI = searchParams?.get("i") ?? null;
+
+  // IMPORTANT: prevents infinite replace loop
+  if (currentI === nextI) return;
+
+  const sp = new URLSearchParams(searchParams?.toString());
+  sp.set("i", nextI);
+
+  router.replace(`/blogs?${sp.toString()}`, { scroll: false });
+}, [index, n, mod, router, searchParams]);
+
 
   // ----- drag end -----
   const onDragEnd = (
@@ -276,7 +302,6 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
       const swipeLeft = offset.x < -H_OFFSET || velocity.x < -H_VELOCITY;
       const swipeRight = offset.x > H_OFFSET || velocity.x > H_VELOCITY;
 
-      // Guard the right edge so OS/browser gestures don’t hijack it
       if (swipeLeft) {
         if (nearRightEdge) return;
         if (!nearLeftEdge) {
@@ -448,8 +473,6 @@ export function SwipeFeed({ posts }: SwipeFeedProps) {
               scale: cardScale,
               boxShadow: shadow,
               transformStyle: "preserve-3d",
-              // Keep pinch/zoom + pan working while still allowing drag.
-              // (If you set touchAction: "none", iOS pinch will break.)
               touchAction: "pan-x pan-y pinch-zoom",
             }}
             initial={{ opacity: 0, scale: 0.99 }}

@@ -1,23 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// // app/blogs/page.tsx
-// "use client";
-
-// import { SwipeFeed } from "./components/SwipeFeed";
-// import { demoPosts } from "./data";
-
-// export default function BlogsPage() {
-//   return <SwipeFeed posts={demoPosts} />;
-// }
-
-
-// app/blogs/page.tsx
 import { getBlogIndex, dailyShuffled } from "@/lib/blog";
 import { SwipeFeed } from "./components/SwipeFeed";
+import type { BlogPost } from "./types";
 
-export const revalidate = 3600; // cache page for 1 hour (change as you like)
+export const revalidate = 3600; // cache page for 1 hour
 
 function dayKeyUTC() {
-  // daily stable; if you want Dublin-local, use Europe/Dublin offset logic
   const d = new Date();
   const yyyy = d.getUTCFullYear();
   const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
@@ -25,24 +12,38 @@ function dayKeyUTC() {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-export default async function BlogsPage() {
-  const index = await getBlogIndex();
+type BlogsPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
+export default async function BlogsPage({ searchParams }: BlogsPageProps) {
+  const sp = await searchParams;
+
+  const index = await getBlogIndex();
   const shuffled = dailyShuffled(index, dayKeyUTC());
 
-  // Only send the fields your cards need (keep payload small)
-  const posts = shuffled.map((p) => ({
-    id: String(p.id),
-    title: p.title,
-    href: `/blogs/read?id=${p.id}&name=${encodeURIComponent(p.slug)}`,
-    author: p.author,
-    date: p.date,
-    section: p.section ?? "",
-    excerpt: p.excerpt ?? "",
-    imageMobile: p.imageMobile,
-    imageDesktop: p.imageDesktop,
-  }));
+  const posts: BlogPost[] = shuffled.map((p) => {
+    // reasonable defaults to satisfy BlogPost type
+    const tag = (p.section ?? "").trim() || "Blog";
+    const readTime = "5 min";
 
+    return {
+      id: String(p.id),
+      title: p.title,
+      excerpt: p.excerpt ?? "",
+      tag,
+      readTime,
+      href: `/blogs/read?id=${p.id}&name=${encodeURIComponent(p.slug)}`,
+      imageMobile: p.imageMobile ?? "",
+      imageDesktop: p.imageDesktop ?? "",
+    };
+  });
 
-  return <SwipeFeed posts={posts as any} />;
+  // read initial index from URL: /blogs?i=3
+  const rawI = sp.i;
+  const iStr = Array.isArray(rawI) ? rawI[0] : rawI;
+  const parsed = Number(iStr);
+  const initialIndex = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+
+  return <SwipeFeed posts={posts} initialIndex={initialIndex} />;
 }
