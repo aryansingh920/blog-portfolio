@@ -2,7 +2,7 @@ import { getBlogIndex, dailyShuffled } from "@/lib/blog";
 import { SwipeFeed } from "./components/SwipeFeed";
 import type { BlogPost } from "./types";
 
-export const revalidate = 3600; // cache page for 1 hour
+export const revalidate = 3600;
 
 function dayKeyUTC() {
   const d = new Date();
@@ -22,28 +22,22 @@ export default async function BlogsPage({ searchParams }: BlogsPageProps) {
   const index = await getBlogIndex();
   const shuffled = dailyShuffled(index, dayKeyUTC());
 
-  const posts: BlogPost[] = shuffled.map((p) => {
-    // reasonable defaults to satisfy BlogPost type
-    const tag = (p.section ?? "").trim() || "Blog";
-    const readTime = "5 min";
-
-    return {
-      id: String(p.id),
-      title: p.title,
-      excerpt: p.excerpt ?? "",
-      tag,
-      readTime,
-      href: `/blogs/read?id=${p.id}&name=${encodeURIComponent(p.slug)}`,
-      imageMobile: p.imageMobile ?? "",
-      imageDesktop: p.imageDesktop ?? "",
-    };
-  });
-
-  // read initial index from URL: /blogs?i=3
   const rawI = sp.i;
   const iStr = Array.isArray(rawI) ? rawI[0] : rawI;
   const parsed = Number(iStr);
   const initialIndex = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+
+  const posts: BlogPost[] = shuffled.map((p, idx) => ({
+    id: String(p.id),
+    title: p.title,
+    excerpt: p.excerpt ?? "",
+    tag: (p.section ?? "").trim() || "Blog",
+    readTime: "5 min",
+    // IMPORTANT: include i so reader can move next/prev in this same order
+    href: `/blogs/read?id=${p.id}&name=${encodeURIComponent(p.slug)}&i=${idx}`,
+    imageMobile: p.imageMobile ?? "",
+    imageDesktop: p.imageDesktop ?? "",
+  }));
 
   return <SwipeFeed posts={posts} initialIndex={initialIndex} />;
 }

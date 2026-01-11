@@ -177,8 +177,11 @@
 ========================= */
 .articleHtml img,
 .articleHtml video {
+    display: block;
     max-width: 100%;
     height: auto;
+    margin: 0 auto;
+    /* centers horizontally */
     border-radius: 1rem;
 }
 
