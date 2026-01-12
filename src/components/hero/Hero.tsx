@@ -2,6 +2,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { BlackHoleSceneProps } from "@/components/hero/BlackHoleScene";
 
@@ -220,8 +221,7 @@ export default function Hero() {
       </div>
 
       {/* BOOT overlay (above everything) */}
-        {!bootDone && <BootOverlay onDone={() => setBootDone(true)} />}
-
+      {!bootDone && <BootOverlay onDone={() => setBootDone(true)} />}
 
       {/* FOREGROUND CONTENT */}
       <div className="relative z-20 mx-auto flex min-h-[100vh] max-w-6xl flex-col justify-center px-6 py-20">
@@ -240,12 +240,12 @@ export default function Hero() {
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <a
-              href="#projects"
+            <Link
+              href="/blogs"
               className="rounded-xl border border-white/15 bg-white/10 px-5 py-3 text-sm text-white backdrop-blur transition hover:bg-white/15"
             >
-              View Projects
-            </a>
+              View Blogs
+            </Link>
             <a
               href="#contact"
               className="rounded-xl border border-white/15 bg-black/20 px-5 py-3 text-sm text-white/90 backdrop-blur transition hover:bg-black/30"

@@ -1,0 +1,100 @@
+[
+  {
+    "title": "Full Stack Intern",
+    "company": "Novade",
+    "location": "Singapore (Remote; India outsourcing with Maiver+Vidorno)",
+    "period": "09/2023 — 04/2024",
+    "tags": [
+      "Full-Stack",
+      "Lead Gen",
+      "Excel Automation",
+      "MERN",
+      "Go-Fiber",
+      "FastAPI",
+      "CI/CD"
+    ],
+    "bullets": [
+      "Built an automated lead generation tool, improving efficiency by 30% via Excel automation and complex data manipulation.",
+      "Optimized stacks (MERN, Go-Fiber, FastAPI), increasing deployment speed by 15% through refined CI/CD pipeline automation."
+    ]
+  },
+  {
+    "title": "Full Stack Web Development Intern",
+    "company": "Samsung PRISM",
+    "location": "India (R&D Project/Internship, Remote)",
+    "period": "12/2021 — 10/2022",
+    "tags": ["Full-Stack", "Node.js", "OpenCV", "Video Streaming", "Cloud"],
+    "bullets": [
+      "Engineered a full-stack platform for live video stitching and streaming, reducing video processing time by 20% using Node.js and OpenCV.",
+      "Implemented cloud infrastructure, reducing cloud costs by 12% with streamlined deployment processes."
+    ]
+  },
+  {
+    "title": "Full Stack Web Development Intern",
+    "company": "Chennai Metro Rails Limited",
+    "location": "India (Remote)",
+    "period": "07/2022 — 01/2023",
+    "tags": ["Full-Stack", "MERN", "AWS", "UI/UX", "React", "Scalability"],
+    "bullets": [
+      "Designed a feedback collection platform with 90% uptime, scaling to 500+ concurrent users using AWS deployment and MERN stack.",
+      "Improved user engagement by 18% through responsive UI/UX design using React."
+    ]
+  },
+  {
+    "title": "iOS App Development Intern",
+    "company": "Infosys",
+    "location": "Chennai, India",
+    "period": "04/2023 — 05/2023",
+    "tags": ["iOS", "Swift", "UIKit", "SwiftUI", "Node.js", "Backend"],
+    "bullets": [
+      "Developed two iOS applications, improving app load speed by 25% using Swift UI Kit.",
+      "Built backend systems in Node.js, reducing server response time by 15%."
+    ]
+  },
+  {
+    "title": "Full Stack Web Development Intern",
+    "company": "NuCash",
+    "location": "India (Fin-tech Startup, Remote)",
+    "period": "12/2022 — 03/2023",
+    "tags": [
+      "Full-Stack",
+      "MERN",
+      "Next.js",
+      "Golang",
+      "Microservices",
+      "Cloud"
+    ],
+    "bullets": [
+      "Integrated 20+ new features using MERN stack and Next, improving user experience by 40%.",
+      "Improved cloud infrastructure management, reducing latency by 10% using Golang microservices."
+    ]
+  },
+  {
+    "title": "Front-End Web Development Intern",
+    "company": "Edue Limited",
+    "location": "Hong Kong (Remote)",
+    "period": "06/2022 — 04/2023",
+    "tags": ["Frontend", "React", "Performance", "Web"],
+    "bullets": [
+      "Revamped React-based UI, improving loading speed by 15% and increasing site traffic by 25%."
+    ]
+  },
+  {
+    "title": "CTO & Co-Founder",
+    "company": "Canverro (formerly Zigy.in)",
+    "location": "India (Remote)",
+    "period": "03/2020 — 08/2024",
+    "tags": [
+      "Leadership",
+      "E-Commerce",
+      "Cloud",
+      "DevOps",
+      "Automation",
+      "NetOps"
+    ],
+    "bullets": [
+      "Scaled user base by 50% over 18 months by architecting a robust e-commerce platform on cloud.",
+      "Reduced deployment downtime by 30% through automation and NetOps strategies."
+    ]
+  }
+]

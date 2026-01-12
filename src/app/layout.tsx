@@ -26,8 +26,8 @@ export default function RootLayout({
   const tools = [
     { id: "home", label: "Home", href: "/" },
     { id: "blogs", label: "Blogs", href: "/blogs" },
-    { id: "projects", label: "Projects", href: "/projects" },
-    { id: "contact", label: "Contact", href: "/contact" },
+    // { id: "projects", label: "Projects", href: "/projects" },
+    // { id: "contact", label: "Contact", href: "/contact" },
   ];
 
   return (
