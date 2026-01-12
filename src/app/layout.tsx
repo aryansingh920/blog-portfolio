@@ -27,7 +27,7 @@ export default function RootLayout({
     { id: "home", label: "Home", href: "/" },
     { id: "blogs", label: "Blogs", href: "/blogs" },
     // { id: "projects", label: "Projects", href: "/projects" },
-    // { id: "contact", label: "Contact", href: "/contact" },
+    { id: "contact", label: "Contact", href: "/contact" },
   ];
 
   return (

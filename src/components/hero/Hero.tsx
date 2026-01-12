@@ -227,7 +227,6 @@ export default function Hero() {
       <div className="relative z-20 mx-auto min-h-[100vh] max-w-6xl px-6 py-20 flex items-center">
         <div className="grid w-full grid-cols-1 gap-12 md:grid-cols-2 items-center">
           {/* LEFT: IMAGE */}
-    
 
           {/* RIGHT: TEXT */}
           <div className="max-w-2xl">
@@ -250,12 +249,12 @@ export default function Hero() {
               >
                 View Blogs
               </Link>
-              <a
-                href="#contact"
-                className="rounded-xl border border-white/15 bg-black/20 px-5 py-3 text-sm text-white/90 backdrop-blur transition hover:bg-black/30"
+              <Link
+                href="/contact"
+                className="rounded-xl border border-white/15 bg-white/10 px-5 py-3 text-sm text-white backdrop-blur transition hover:bg-white/15"
               >
-                Contact
-              </a>
+                Contact Me
+              </Link>
             </div>
 
             <div className="mt-10 text-xs text-white/50">
