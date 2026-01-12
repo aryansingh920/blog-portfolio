@@ -209,7 +209,7 @@ function StarTunnel({
 export default function BlackHoleScene({
   progress,
   enabled,
-  modelUrl = "/models/black_hole.glb",
+  modelUrl = "/models/blackhole.glb",
   interactive = true,
 }: BlackHoleSceneProps) {
   if (!enabled) return null;
@@ -270,7 +270,7 @@ export default function BlackHoleScene({
               rotateSpeed={0.35}
               zoomSpeed={0.6}
               minDistance={3.0}
-              maxDistance={12.0}
+              maxDistance={18.0}
               target={[0, 0, 0]}
             />
           ) : null}
@@ -282,4 +282,4 @@ export default function BlackHoleScene({
   );
 }
 
-useGLTF.preload("/models/black_hole.glb");
+useGLTF.preload("/models/blackhole.glb");

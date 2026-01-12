@@ -97,7 +97,7 @@ function BootOverlay({ onDone }: { onDone: () => void }) {
         phase >= 4 ? "opacity-0 pointer-events-none" : "opacity-100"
       }`}
     >
-      <div className="w-[min(520px,90vw)] rounded-2xl border border-white/10 bg-white/5 p-6">
+      <div className="w-[min(520px,90vw)] rounded-2xl border border-white/10 bg-white/5 p-6 ">
         <div className="text-xs tracking-[0.25em] text-white/60">SYSTEM</div>
         <div className="mt-4 space-y-2 font-mono text-sm text-white/90">
           {lines.map((t, idx) => (
@@ -207,7 +207,7 @@ export default function Hero() {
         <BlackHoleScene
           progress={progress}
           enabled={bootDone}
-          modelUrl="/models/black_hole.glb"
+          modelUrl="/models/blackhole.glb"
           interactive={false} // keep false unless you want OrbitControls
         />
       ) : (
@@ -220,7 +220,8 @@ export default function Hero() {
       </div>
 
       {/* BOOT overlay (above everything) */}
-      {!bootDone && <BootOverlay onDone={() => setBootDone(true)} />}
+        {!bootDone && <BootOverlay onDone={() => setBootDone(true)} />}
+
 
       {/* FOREGROUND CONTENT */}
       <div className="relative z-20 mx-auto flex min-h-[100vh] max-w-6xl flex-col justify-center px-6 py-20">
