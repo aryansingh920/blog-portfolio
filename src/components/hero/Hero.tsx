@@ -3,9 +3,9 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { BlackHoleSceneProps } from "@/components/hero/BlackHoleScene";
-
+import { ImageDP } from "../ImageDP";
 const BlackHoleScene = dynamic<BlackHoleSceneProps>(
   () => import("@/components/hero/BlackHoleScene"),
   { ssr: false }
@@ -224,37 +224,43 @@ export default function Hero() {
       {!bootDone && <BootOverlay onDone={() => setBootDone(true)} />}
 
       {/* FOREGROUND CONTENT */}
-      <div className="relative z-20 mx-auto flex min-h-[100vh] max-w-6xl flex-col justify-center px-6 py-20">
-        <div className="max-w-2xl">
-          <div className="font-mono text-xs tracking-[0.35em] text-white/60">
-            IRELAND | INDIA • SECTOR: WEB/AI/APP/DATA/QUANT
-          </div>
+      <div className="relative z-20 mx-auto min-h-[100vh] max-w-6xl px-6 py-20 flex items-center">
+        <div className="grid w-full grid-cols-1 gap-12 md:grid-cols-2 items-center">
+          {/* LEFT: IMAGE */}
+    
 
-          <h1 className="mt-5 text-4xl font-semibold tracking-tight text-white sm:text-6xl">
-            Aryan Singh
-          </h1>
+          {/* RIGHT: TEXT */}
+          <div className="max-w-2xl">
+            <div className="font-mono text-xs tracking-[0.35em] text-white/60">
+              IRELAND | INDIA • SECTOR: WEB/AI/APP/DATA/QUANT
+            </div>
 
-          <p className="mt-5 text-base leading-relaxed text-white/75 sm:text-lg">
-            Engineer | Software & Data
-          </p>
+            <h1 className="mt-5 text-4xl font-semibold tracking-tight text-white sm:text-6xl">
+              Aryan Singh
+            </h1>
 
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/blogs"
-              className="rounded-xl border border-white/15 bg-white/10 px-5 py-3 text-sm text-white backdrop-blur transition hover:bg-white/15"
-            >
-              View Blogs
-            </Link>
-            <a
-              href="#contact"
-              className="rounded-xl border border-white/15 bg-black/20 px-5 py-3 text-sm text-white/90 backdrop-blur transition hover:bg-black/30"
-            >
-              Contact
-            </a>
-          </div>
+            <p className="mt-5 text-base leading-relaxed text-white/75 sm:text-lg">
+              Engineer | Software & Data
+            </p>
 
-          <div className="mt-10 text-xs text-white/50">
-            Scroll to approach the singularity.
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href="/blogs"
+                className="rounded-xl border border-white/15 bg-white/10 px-5 py-3 text-sm text-white backdrop-blur transition hover:bg-white/15"
+              >
+                View Blogs
+              </Link>
+              <a
+                href="#contact"
+                className="rounded-xl border border-white/15 bg-black/20 px-5 py-3 text-sm text-white/90 backdrop-blur transition hover:bg-black/30"
+              >
+                Contact
+              </a>
+            </div>
+
+            <div className="mt-10 text-xs text-white/50">
+              Scroll to approach the singularity.
+            </div>
           </div>
         </div>
       </div>
