@@ -227,7 +227,7 @@ export default function Hero() {
       <div className="relative z-20 mx-auto flex min-h-[100vh] max-w-6xl flex-col justify-center px-6 py-20">
         <div className="max-w-2xl">
           <div className="font-mono text-xs tracking-[0.35em] text-white/60">
-            COORDS: DUBLIN • SECTOR: WEB/AI/QUANT
+            IRELAND | INDIA • SECTOR: WEB/AI/APP/DATA/QUANT
           </div>
 
           <h1 className="mt-5 text-4xl font-semibold tracking-tight text-white sm:text-6xl">
@@ -235,8 +235,7 @@ export default function Hero() {
           </h1>
 
           <p className="mt-5 text-base leading-relaxed text-white/75 sm:text-lg">
-            Full-stack + data/quant. Building clean systems with cinematic
-            interfaces.
+            Engineer | Software & Data
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
