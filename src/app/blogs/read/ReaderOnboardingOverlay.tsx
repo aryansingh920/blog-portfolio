@@ -56,16 +56,20 @@ export default function ReaderOnboardingOverlay() {
             className="relative h-full w-full flex items-center justify-center p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-full max-w-130 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl">
-              <div className="text-base font-semibold">How to navigate</div>
-              <div className="mt-2 text-sm opacity-80">
+            {/* TEXT FIX HERE */}
+            <div className="w-full max-w-130 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl text-white">
+              <div className="text-base font-semibold">
+                How to navigate
+              </div>
+
+              <div className="mt-2 text-sm">
                 Swipe left/right on the reader (or use ← →) to go next/previous.
                 Tap anywhere outside to dismiss.
               </div>
 
               <div className="mt-5 grid gap-3 text-sm">
                 <div className="flex items-center justify-between rounded-2xl bg-white/5 border border-white/10 px-4 py-3">
-                  <div className="opacity-80">Next / Previous article</div>
+                  <div>Next / Previous article</div>
                   <div className="font-semibold">← →</div>
                 </div>
               </div>
@@ -78,7 +82,7 @@ export default function ReaderOnboardingOverlay() {
                   Got it
                 </button>
                 <button
-                  className="px-4 py-3 rounded-2xl bg-white/10 border border-white/10"
+                  className="px-4 py-3 rounded-2xl bg-white/10 border border-white/10 text-white"
                   onClick={dismiss}
                 >
                   Close
