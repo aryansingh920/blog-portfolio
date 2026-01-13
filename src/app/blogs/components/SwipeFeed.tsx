@@ -41,6 +41,7 @@ const H_DOMINANCE_RATIO = 1.6;
 type SwipeFeedProps = {
   posts: BlogPost[];
   initialIndex?: number;
+  initialSection?: string;
 };
 
 type StartInfo = { x: number; y: number; w: number; h: number };
@@ -93,15 +94,7 @@ function useCardMotion() {
     ["0px 14px 26px rgba(0,0,0,0.22)", "0px 28px 52px rgba(0,0,0,0.42)"]
   );
 
-  return {
-    x,
-    y,
-    rotateX,
-    rotateY,
-    rotateZ,
-    cardScale,
-    shadow,
-  };
+  return { x, y, rotateX, rotateY, rotateZ, cardScale, shadow };
 }
 
 function resetMotionPair(x: MotionValue<number>, y: MotionValue<number>) {
@@ -111,11 +104,46 @@ function resetMotionPair(x: MotionValue<number>, y: MotionValue<number>) {
   y.set(0);
 }
 
-export function SwipeFeed({ posts, initialIndex = 0 }: SwipeFeedProps) {
+export function SwipeFeed({
+  posts,
+  initialIndex = 0,
+  initialSection = "All",
+}: SwipeFeedProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const n = posts.length;
+  // ---------- derive sections ----------
+  const sections = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of posts) set.add((p.tag ?? "").trim() || "Blog");
+    return ["All", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
+  }, [posts]);
+
+  // ---------- read URL ONCE (no reactive URL->state syncing) ----------
+  const initRef = useRef<{ section: string; i: number } | null>(null);
+
+  if (initRef.current === null) {
+    const sRaw = (searchParams?.get("section") ?? "").trim();
+    const s = sections.includes(sRaw) ? sRaw : initialSection ?? "All";
+    const iRaw = searchParams?.get("i");
+    const parsedI = Number(iRaw);
+    const urlI = Number.isFinite(parsedI) ? Math.max(0, parsedI) : initialIndex;
+    initRef.current = { section: s, i: urlI };
+  }
+
+  const [activeSection, setActiveSection] = useState(
+    () => initRef.current!.section
+  );
+
+  // Filtered posts based on active section
+  const filteredPosts = useMemo(() => {
+    if (activeSection === "All") return posts;
+    return posts.filter(
+      (p) => ((p.tag ?? "").trim() || "Blog") === activeSection
+    );
+  }, [posts, activeSection]);
+
+  const n = filteredPosts.length;
 
   const mod = useCallback(
     (i: number) => {
@@ -127,29 +155,63 @@ export function SwipeFeed({ posts, initialIndex = 0 }: SwipeFeedProps) {
 
   const [index, setIndex] = useState(() => {
     if (!n) return 0;
-    const safe = Number.isFinite(initialIndex) ? initialIndex : 0;
+    const safe = initRef.current!.i;
     return mod(Math.max(0, safe));
   });
 
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  // ---------- URL writer (schedule, not navigate inline) ----------
+  const pendingNavRef = useRef<{ i: number; section: string } | null>(null);
+  const lastPushedRef = useRef<string>("");
 
-  const current = n ? posts[mod(index)] : undefined;
+  const writeUrl = useCallback((nextIndex: number, nextSection: string) => {
+    pendingNavRef.current = { i: nextIndex, section: nextSection };
+  }, []);
+
+  useEffect(() => {
+    const pending = pendingNavRef.current;
+    if (!pending) return;
+
+    pendingNavRef.current = null;
+
+    const { i: nextIndex, section: nextSection } = pending;
+
+    const cur = new URLSearchParams(window.location.search);
+    const nextI = String(nextIndex);
+    const nextS = nextSection;
+
+    const curI = cur.get("i") ?? "";
+    const curS = (cur.get("section") ?? "All").trim();
+
+    if (curI === nextI && curS === nextS) return;
+
+    cur.set("i", nextI);
+    cur.set("section", nextS);
+
+    const url = `/blogs?${cur.toString()}`;
+    if (lastPushedRef.current === url) return;
+    lastPushedRef.current = url;
+
+    router.replace(url, { scroll: false });
+  }, [router, index, activeSection]);
+
+  // ---------- posts around current ----------
+  const current = n ? filteredPosts[mod(index)] : undefined;
 
   const prevPost = useMemo(
-    () => (n ? posts[mod(index - 1)] : undefined),
-    [n, posts, mod, index]
+    () => (n ? filteredPosts[mod(index - 1)] : undefined),
+    [n, filteredPosts, mod, index]
   );
   const nextPost = useMemo(
-    () => (n ? posts[mod(index + 1)] : undefined),
-    [n, posts, mod, index]
+    () => (n ? filteredPosts[mod(index + 1)] : undefined),
+    [n, filteredPosts, mod, index]
   );
   const prev2Post = useMemo(
-    () => (n ? posts[mod(index - 2)] : undefined),
-    [n, posts, mod, index]
+    () => (n ? filteredPosts[mod(index - 2)] : undefined),
+    [n, filteredPosts, mod, index]
   );
   const next2Post = useMemo(
-    () => (n ? posts[mod(index + 2)] : undefined),
-    [n, posts, mod, index]
+    () => (n ? filteredPosts[mod(index + 2)] : undefined),
+    [n, filteredPosts, mod, index]
   );
 
   // ----- locks -----
@@ -195,6 +257,8 @@ export function SwipeFeed({ posts, initialIndex = 0 }: SwipeFeedProps) {
   const prev2Y = useTransform(y, [0, 320], [44, -4]);
 
   // ----- onboarding -----
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
   const dismissOnboarding = () => {
     setShowOnboarding(false);
     try {
@@ -202,13 +266,10 @@ export function SwipeFeed({ posts, initialIndex = 0 }: SwipeFeedProps) {
     } catch {}
   };
 
-
-  // 1-hour expiry onboarding (as you asked earlier)
   useEffect(() => {
     try {
       const raw = localStorage.getItem(ONBOARDING_KEY);
 
-      // never seen before → show
       if (!raw) {
         setShowOnboarding(true);
         return;
@@ -224,40 +285,40 @@ export function SwipeFeed({ posts, initialIndex = 0 }: SwipeFeedProps) {
     }
   }, []);
 
-
   // ----- actions -----
   const goNext = () => {
     if (!n || lockRef.current || showOnboarding) return;
+
+    const nextIdx = mod(index + 1);
+    writeUrl(nextIdx, activeSection);
     setIndex((i) => i + 1);
+
     lockFor(WHEEL_LOCK_MS);
   };
 
   const goPrev = () => {
     if (!n || lockRef.current || showOnboarding) return;
+
+    const nextIdx = mod(index - 1);
+    writeUrl(nextIdx, activeSection);
     setIndex((i) => i - 1);
+
     lockFor(WHEEL_LOCK_MS);
   };
 
-  // Hard reset motion + wheel accumulators whenever card changes or overlay toggles.
+  const onSectionChange = (s: string) => {
+    const next = sections.includes(s) ? s : "All";
+    setActiveSection(next);
+    setIndex(0);
+    writeUrl(0, next);
+  };
+
+  // Hard reset motion + wheel accumulators whenever card changes or overlay toggles / section changes.
   useEffect(() => {
     resetMotionPair(x, y);
     wheelAccumX.current = 0;
     wheelAccumY.current = 0;
-  }, [index, showOnboarding, x, y]);
-
-  // keep URL in sync with current index: /blogs?i=...
-  useEffect(() => {
-    if (!n) return;
-
-    const nextI = String(mod(index));
-    const currentI = searchParams?.get("i") ?? null;
-    if (currentI === nextI) return;
-
-    const sp = new URLSearchParams(searchParams?.toString());
-    sp.set("i", nextI);
-
-    router.replace(`/blogs?${sp.toString()}`, { scroll: false });
-  }, [index, n, mod, router, searchParams]);
+  }, [index, showOnboarding, x, y, activeSection]);
 
   // ----- drag end -----
   const onDragEnd = (
@@ -292,7 +353,6 @@ export function SwipeFeed({ posts, initialIndex = 0 }: SwipeFeedProps) {
       const swipeLeft = offset.x < -H_OFFSET || velocity.x < -H_VELOCITY;
       const swipeRight = offset.x > H_OFFSET || velocity.x > H_VELOCITY;
 
-      // swipe left -> next, swipe right -> prev
       if (swipeLeft) {
         goNext();
         lockFor(DRAG_LOCK_MS);
@@ -373,16 +433,14 @@ export function SwipeFeed({ posts, initialIndex = 0 }: SwipeFeedProps) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [n, showOnboarding]);
+  }, [n, showOnboarding, activeSection]);
 
   if (!current) {
     return (
       <div className="min-h-screen grid place-items-center p-6">
         <div className="text-center">
           <div className="text-xl font-semibold">No posts found</div>
-          <div className="opacity-70 mt-2">
-            Provide posts to render the feed.
-          </div>
+          <div className="opacity-70 mt-2">No posts in this section.</div>
         </div>
       </div>
     );
@@ -397,6 +455,9 @@ export function SwipeFeed({ posts, initialIndex = 0 }: SwipeFeedProps) {
         canGoNext={true}
         onPrev={goPrev}
         onNext={goNext}
+        sections={sections}
+        activeSection={activeSection}
+        onSectionChange={onSectionChange}
       />
 
       <main className="min-h-screen relative perspective-distant">
@@ -440,7 +501,7 @@ export function SwipeFeed({ posts, initialIndex = 0 }: SwipeFeedProps) {
         {/* Current card */}
         <AnimatePresence initial={false} mode="popLayout">
           <motion.div
-            key={`card-${index}`}
+            key={`card-${activeSection}-${index}`}
             className="absolute inset-0 h-svh w-full"
             drag
             dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}

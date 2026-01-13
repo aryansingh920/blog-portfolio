@@ -1,4 +1,3 @@
-// app/blogs/components/BlogsHeader.tsx
 "use client";
 
 type BlogsHeaderProps = {
@@ -8,6 +7,10 @@ type BlogsHeaderProps = {
   canGoNext: boolean;
   onPrev: () => void;
   onNext: () => void;
+
+  sections: string[];
+  activeSection: string;
+  onSectionChange: (s: string) => void;
 };
 
 export function BlogsHeader({
@@ -17,6 +20,9 @@ export function BlogsHeader({
   canGoNext,
   onPrev,
   onNext,
+  sections,
+  activeSection,
+  onSectionChange,
 }: BlogsHeaderProps) {
   return (
     <header className="fixed top-0 left-0 right-0 z-20 px-4 pt-4">
@@ -43,6 +49,27 @@ export function BlogsHeader({
         >
           Next
         </button>
+      </div>
+
+      {/* Section filter */}
+      <div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar pb-1">
+        {sections.map((s) => {
+          const active = s === activeSection;
+          return (
+            <button
+              key={s}
+              onClick={() => onSectionChange(s)}
+              className={[
+                "shrink-0 px-3 py-2 rounded-2xl border text-sm",
+                active
+                  ? "bg-white text-black border-white"
+                  : "bg-white/5 text-white border-white/10 hover:bg-white/10",
+              ].join(" ")}
+            >
+              {s}
+            </button>
+          );
+        })}
       </div>
     </header>
   );

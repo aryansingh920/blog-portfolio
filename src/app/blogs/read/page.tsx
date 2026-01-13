@@ -28,14 +28,15 @@ export default async function ReadPage({ searchParams }: ReadPageProps) {
   const iRaw = Array.isArray(sp.i) ? sp.i[0] : sp.i;
   const dirRaw = Array.isArray(sp.dir) ? sp.dir[0] : sp.dir;
 
+  const sectionRaw = Array.isArray(sp.section) ? sp.section[0] : sp.section;
+  const section = (sectionRaw ?? "All").trim();
+
   const i = Number(iRaw);
-  const initialI = Number.isFinite(i) ? i : 0;
   const dir: "next" | "prev" = dirRaw === "prev" ? "prev" : "next";
 
   if (!Number.isFinite(id) || id <= 0) return notFound();
 
   const index = await getBlogIndex();
-  const shuffled = dailyShuffled(index, dayKeyUTC());
 
   const post = index.find((p) => p.id === id);
   if (!post || (name && post.slug !== name)) return notFound();
@@ -43,7 +44,17 @@ export default async function ReadPage({ searchParams }: ReadPageProps) {
   const html = await getPostHtmlById(id);
   if (!html) return notFound();
 
-  const order = shuffled.map((p) => ({ id: p.id, slug: p.slug }));
+  const shuffledAll = dailyShuffled(index, dayKeyUTC());
+  const filtered =
+    section === "All"
+      ? shuffledAll
+      : shuffledAll.filter((p) => (p.section ?? "").trim() === section);
+
+  const order = filtered.map((p) => ({ id: p.id, slug: p.slug }));
+
+  // If i is missing/wrong, compute from filtered order
+  const computedI = order.findIndex((x) => x.id === id);
+  const initialI = Number.isFinite(i) ? i : Math.max(0, computedI);
 
   return (
     <div className={styles.spaceBg}>
@@ -54,7 +65,6 @@ export default async function ReadPage({ searchParams }: ReadPageProps) {
 
       <SwipeReaderNav order={order} initialIndex={initialI} />
 
-      {/* Card-like transition wrapper */}
       <ReaderMotionShell motionKey={String(id)} dir={dir}>
         <div className={styles.contentLayer}>
           <div className="relative h-[40vh] w-full overflow-hidden rounded-b-3xl">
