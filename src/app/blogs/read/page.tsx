@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBlogIndex, getPostHtmlById, dailyShuffled } from "@/lib/blog";
 import { ShootingStars } from "@/components/ui/shooting-stars";
@@ -5,6 +6,7 @@ import { StarsBackground } from "@/components/ui/stars-background";
 import styles from "./ReadPage.module.css";
 import SwipeReaderNav from "./SwipeReaderNav";
 import ReaderMotionShell from "./ReaderMotionShell";
+import ReaderOnboardingOverlay from "./ReaderOnboardingOverlay";
 
 export const revalidate = 86400;
 
@@ -20,6 +22,19 @@ function dayKeyUTC() {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+function estimateReadTimeFromHtml(html: string, wpm = 200) {
+  const text = html
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const words = text ? text.split(" ").length : 0;
+  const mins = Math.max(1, Math.ceil(words / wpm));
+  return `${mins} min`;
+}
+
 export default async function ReadPage({ searchParams }: ReadPageProps) {
   const sp = await searchParams;
 
@@ -28,15 +43,14 @@ export default async function ReadPage({ searchParams }: ReadPageProps) {
   const iRaw = Array.isArray(sp.i) ? sp.i[0] : sp.i;
   const dirRaw = Array.isArray(sp.dir) ? sp.dir[0] : sp.dir;
 
-  const sectionRaw = Array.isArray(sp.section) ? sp.section[0] : sp.section;
-  const section = (sectionRaw ?? "All").trim();
-
   const i = Number(iRaw);
+  const initialI = Number.isFinite(i) ? i : 0;
   const dir: "next" | "prev" = dirRaw === "prev" ? "prev" : "next";
 
   if (!Number.isFinite(id) || id <= 0) return notFound();
 
   const index = await getBlogIndex();
+  const shuffled = dailyShuffled(index, dayKeyUTC());
 
   const post = index.find((p) => p.id === id);
   if (!post || (name && post.slug !== name)) return notFound();
@@ -44,17 +58,10 @@ export default async function ReadPage({ searchParams }: ReadPageProps) {
   const html = await getPostHtmlById(id);
   if (!html) return notFound();
 
-  const shuffledAll = dailyShuffled(index, dayKeyUTC());
-  const filtered =
-    section === "All"
-      ? shuffledAll
-      : shuffledAll.filter((p) => (p.section ?? "").trim() === section);
+  const readTime = estimateReadTimeFromHtml(html);
 
-  const order = filtered.map((p) => ({ id: p.id, slug: p.slug }));
-
-  // If i is missing/wrong, compute from filtered order
-  const computedI = order.findIndex((x) => x.id === id);
-  const initialI = Number.isFinite(i) ? i : Math.max(0, computedI);
+  const order = shuffled.map((p) => ({ id: p.id, slug: p.slug }));
+  const sectionLabel = (post.section ?? "").trim() || "All";
 
   return (
     <div className={styles.spaceBg}>
@@ -63,8 +70,12 @@ export default async function ReadPage({ searchParams }: ReadPageProps) {
         <StarsBackground />
       </div>
 
+      {/* reader onboarding overlay */}
+      <ReaderOnboardingOverlay />
+
       <SwipeReaderNav order={order} initialIndex={initialI} />
 
+      {/* Card-like transition wrapper */}
       <ReaderMotionShell motionKey={String(id)} dir={dir}>
         <div className={styles.contentLayer}>
           <div className="relative h-[40vh] w-full overflow-hidden rounded-b-3xl">
@@ -82,10 +93,28 @@ export default async function ReadPage({ searchParams }: ReadPageProps) {
             <div className="absolute inset-0 bg-linear-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
 
             <div className="relative z-20 flex h-full flex-col justify-end p-6 md:p-10">
-              <span className="mb-2 font-medium text-blue-400">
-                {post.section}
-              </span>
+              <p className="flex flex-wrap items-center gap-2 text-sm">
+                <Link
+                  href="/blogs?i=0"
+                  className="font-medium text-blue-400 hover:text-blue-300 transition"
+                >
+                  All
+                </Link>
 
+                <span className="text-gray-500">/</span>
+
+                <Link
+                  href={`/blogs?i=0&section=${encodeURIComponent(
+                    sectionLabel
+                  )}`}
+                  className="font-medium text-blue-400 hover:text-blue-300 transition"
+                >
+                  {sectionLabel}
+                </Link>
+              </p>
+
+              
+              
               <h1 className="text-3xl text-white font-bold tracking-tight md:text-5xl">
                 {post.title}
               </h1>
@@ -94,6 +123,8 @@ export default async function ReadPage({ searchParams }: ReadPageProps) {
                 <span>{post.author}</span>
                 <span>•</span>
                 <span>{post.date}</span>
+                <span>•</span>
+                <span>{readTime}</span>
               </div>
             </div>
           </div>

@@ -1,4 +1,3 @@
-// app/blogs/components/BlogCard.tsx
 "use client";
 
 import Link from "next/link";
@@ -10,6 +9,7 @@ type BlogCardProps = {
 
 export function BlogCard({ post }: BlogCardProps) {
   const hasImages = Boolean(post.imageMobile || post.imageDesktop);
+  const tag = (post.tag ?? "").trim() || "All";
 
   return (
     <div className="relative h-svh w-full ">
@@ -44,11 +44,15 @@ export function BlogCard({ post }: BlogCardProps) {
         {/* Content */}
         <div className="relative z-10 h-full flex flex-col justify-end px-5 pb-8 pt-28">
           <div className="flex items-center gap-2 text-xs opacity-90">
-            {post.tag ? (
-              <span className="px-2 py-1 rounded-full bg-white/10">
-                {post.tag}
-              </span>
+            {tag ? (
+              <Link
+                href={`/blogs?i=0&section=${encodeURIComponent(tag)}`}
+                className="px-2 py-1 rounded-full bg-white/10 hover:bg-white/15 transition"
+              >
+                {tag}
+              </Link>
             ) : null}
+
             {post.readTime ? (
               <>
                 <span className="opacity-60">•</span>
