@@ -1,42 +1,34 @@
+/* eslint-disable react-hooks/refs */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type {
-  WheelEventHandler,
-  PointerEvent as ReactPointerEvent,
-} from "react";
 import {
   AnimatePresence,
   motion,
-  type PanInfo,
   useMotionValue,
   useTransform,
   type MotionValue,
 } from "framer-motion";
 import type { BlogPost } from "../types";
-
-import { useRouter, useSearchParams } from "next/navigation";
-
+import { useSearchParams } from "next/navigation";
 import { BlogsHeader } from "./BlogsHeader";
 import { BlogCard } from "./BlogCard";
 
 const V_OFFSET = 120;
-const V_VELOCITY = 800;
-
 const H_OFFSET = 120;
+
+// velocity thresholds in px/s
+const V_VELOCITY = 800;
 const H_VELOCITY = 800;
 
-// Wheel/trackpad tuning
 const WHEEL_THRESHOLD = 42;
-const WHEEL_LOCK_MS = 320;
-const DRAG_LOCK_MS = 220;
 
-// Onboarding overlay key
 const ONBOARDING_KEY = "blogs_swipe_onboarding_v1";
-const ONBOARDING_TTL_MS = 15 * 60 * 1000; // 15 minutes
+const ONBOARDING_TTL_MS = 15 * 60 * 1000;
 
-// Gesture tuning
 const H_DOMINANCE_RATIO = 1.6;
+const NAV_COOLDOWN_MS = 220;
 
 type SwipeFeedProps = {
   posts: BlogPost[];
@@ -44,31 +36,11 @@ type SwipeFeedProps = {
   initialSection?: string;
 };
 
-type StartInfo = { x: number; y: number; w: number; h: number };
-
-function useLocks() {
-  const lockRef = useRef(false);
-  const unlockTimerRef = useRef<number | null>(null);
-
-  const lockFor = useCallback((ms: number) => {
-    lockRef.current = true;
-    if (unlockTimerRef.current !== null)
-      window.clearTimeout(unlockTimerRef.current);
-
-    unlockTimerRef.current = window.setTimeout(() => {
-      lockRef.current = false;
-      unlockTimerRef.current = null;
-    }, ms);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (unlockTimerRef.current !== null)
-        window.clearTimeout(unlockTimerRef.current);
-    };
-  }, []);
-
-  return { lockRef, lockFor };
+function resetMotionPair(x: MotionValue<number>, y: MotionValue<number>) {
+  x.stop();
+  y.stop();
+  x.set(0);
+  y.set(0);
 }
 
 function useCardMotion() {
@@ -81,7 +53,6 @@ function useCardMotion() {
 
   const liftX = useTransform(x, (v) => Math.abs(v));
   const liftY = useTransform(y, (v) => Math.abs(v));
-
   const lift = useTransform([liftX, liftY], (v) => {
     const [lx, ly] = v as [number, number];
     return Math.min(1, (lx + ly) / 420);
@@ -97,45 +68,37 @@ function useCardMotion() {
   return { x, y, rotateX, rotateY, rotateZ, cardScale, shadow };
 }
 
-function resetMotionPair(x: MotionValue<number>, y: MotionValue<number>) {
-  x.stop();
-  y.stop();
-  x.set(0);
-  y.set(0);
-}
-
 export function SwipeFeed({
   posts,
   initialIndex = 0,
   initialSection = "All",
 }: SwipeFeedProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
-  // ---------- derive sections ----------
+  // sections
   const sections = useMemo(() => {
     const set = new Set<string>();
     for (const p of posts) set.add((p.tag ?? "").trim() || "Blog");
     return ["All", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
   }, [posts]);
 
-  // ---------- read URL ONCE (no reactive URL->state syncing) ----------
+  // init from URL once
   const initRef = useRef<{ section: string; i: number } | null>(null);
-
   if (initRef.current === null) {
     const sRaw = (searchParams?.get("section") ?? "").trim();
-    const s = sections.includes(sRaw) ? sRaw : initialSection ?? "All";
+    const section = sections.includes(sRaw) ? sRaw : initialSection ?? "All";
+
     const iRaw = searchParams?.get("i");
     const parsedI = Number(iRaw);
-    const urlI = Number.isFinite(parsedI) ? Math.max(0, parsedI) : initialIndex;
-    initRef.current = { section: s, i: urlI };
+    const i = Number.isFinite(parsedI) ? Math.max(0, parsedI) : initialIndex;
+
+    initRef.current = { section, i };
   }
 
   const [activeSection, setActiveSection] = useState(
     () => initRef.current!.section
   );
 
-  // Filtered posts based on active section
   const filteredPosts = useMemo(() => {
     if (activeSection === "All") return posts;
     return posts.filter(
@@ -155,48 +118,20 @@ export function SwipeFeed({
 
   const [index, setIndex] = useState(() => {
     if (!n) return 0;
-    const safe = initRef.current!.i;
-    return mod(Math.max(0, safe));
+    return mod(Math.max(0, initRef.current!.i));
   });
 
-  // ---------- URL writer (schedule, not navigate inline) ----------
-  const pendingNavRef = useRef<{ i: number; section: string } | null>(null);
-  const lastPushedRef = useRef<string>("");
-
+  // URL writer (no Next navigation)
   const writeUrl = useCallback((nextIndex: number, nextSection: string) => {
-    pendingNavRef.current = { i: nextIndex, section: nextSection };
+    const cur = new URLSearchParams(window.location.search);
+    cur.set("i", String(nextIndex));
+    cur.set("section", nextSection);
+    const nextUrl = `${window.location.pathname}?${cur.toString()}`;
+    window.history.replaceState(null, "", nextUrl);
   }, []);
 
-  useEffect(() => {
-    const pending = pendingNavRef.current;
-    if (!pending) return;
-
-    pendingNavRef.current = null;
-
-    const { i: nextIndex, section: nextSection } = pending;
-
-    const cur = new URLSearchParams(window.location.search);
-    const nextI = String(nextIndex);
-    const nextS = nextSection;
-
-    const curI = cur.get("i") ?? "";
-    const curS = (cur.get("section") ?? "All").trim();
-
-    if (curI === nextI && curS === nextS) return;
-
-    cur.set("i", nextI);
-    cur.set("section", nextS);
-
-    const url = `/blogs?${cur.toString()}`;
-    if (lastPushedRef.current === url) return;
-    lastPushedRef.current = url;
-
-    router.replace(url, { scroll: false });
-  }, [router, index, activeSection]);
-
-  // ---------- posts around current ----------
+  // around posts
   const current = n ? filteredPosts[mod(index)] : undefined;
-
   const prevPost = useMemo(
     () => (n ? filteredPosts[mod(index - 1)] : undefined),
     [n, filteredPosts, mod, index]
@@ -214,31 +149,11 @@ export function SwipeFeed({
     [n, filteredPosts, mod, index]
   );
 
-  // ----- locks -----
-  const { lockRef, lockFor } = useLocks();
-
-  // ----- wheel accumulators -----
-  const wheelAccumY = useRef(0);
-  const wheelAccumX = useRef(0);
-
-  // ----- pointer start tracking -----
-  const startRef = useRef<StartInfo>({ x: 0, y: 0, w: 0, h: 0 });
-
-  const captureStart = (e: ReactPointerEvent<HTMLDivElement>) => {
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    startRef.current = {
-      x: e.clientX,
-      y: e.clientY,
-      w: rect.width || window.innerWidth,
-      h: rect.height || window.innerHeight,
-    };
-  };
-
-  // ----- motion for card feel -----
+  // motion
   const { x, y, rotateX, rotateY, rotateZ, cardScale, shadow } =
     useCardMotion();
 
-  // Under-card reveal linked to y (only one side shows at a time)
+  // Under-card reveal linked to y
   const nextOpacity = useTransform(y, [-280, -60, 0], [1, 0.85, 0]);
   const nextScale = useTransform(y, [-280, 0], [1, 0.965]);
   const nextY = useTransform(y, [-280, 0], [-10, 26]);
@@ -247,7 +162,6 @@ export function SwipeFeed({
   const prevScale = useTransform(y, [0, 280], [0.965, 1]);
   const prevY = useTransform(y, [0, 280], [26, -10]);
 
-  // Second layer further back
   const next2Opacity = useTransform(y, [-320, -110, 0], [0.55, 0.3, 0]);
   const next2Scale = useTransform(y, [-320, 0], [0.985, 0.94]);
   const next2Y = useTransform(y, [-320, 0], [-4, 44]);
@@ -256,7 +170,7 @@ export function SwipeFeed({
   const prev2Scale = useTransform(y, [0, 320], [0.94, 0.985]);
   const prev2Y = useTransform(y, [0, 320], [44, -4]);
 
-  // ----- onboarding -----
+  // onboarding
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   const dismissOnboarding = () => {
@@ -269,140 +183,236 @@ export function SwipeFeed({
   useEffect(() => {
     try {
       const raw = localStorage.getItem(ONBOARDING_KEY);
-
       if (!raw) {
         setShowOnboarding(true);
         return;
       }
-
       const lastSeen = Number(raw);
       const expired =
         !Number.isFinite(lastSeen) || Date.now() - lastSeen > ONBOARDING_TTL_MS;
-
       setShowOnboarding(expired);
     } catch {
       setShowOnboarding(true);
     }
   }, []);
 
-  // ----- actions -----
-  const goNext = () => {
-    if (!n || lockRef.current || showOnboarding) return;
+  // cooldown
+  const lastNavAt = useRef(0);
+  const canNavNow = () =>
+    performance.now() - lastNavAt.current > NAV_COOLDOWN_MS;
 
-    const nextIdx = mod(index + 1);
-    writeUrl(nextIdx, activeSection);
-    setIndex((i) => i + 1);
+  const wheelAccumY = useRef(0);
+  const wheelAccumX = useRef(0);
+  const lastWheelAxis = useRef<"x" | "y" | null>(null);
 
-    lockFor(WHEEL_LOCK_MS);
-  };
+  const hardResetInputs = useCallback(() => {
+    resetMotionPair(x, y);
+    wheelAccumX.current = 0;
+    wheelAccumY.current = 0;
+    lastWheelAxis.current = null;
+  }, [x, y]);
 
-  const goPrev = () => {
-    if (!n || lockRef.current || showOnboarding) return;
+  const doNav = useCallback(
+    (dir: 1 | -1) => {
+      if (!n || showOnboarding) return;
+      if (!canNavNow()) return;
 
-    const nextIdx = mod(index - 1);
-    writeUrl(nextIdx, activeSection);
-    setIndex((i) => i - 1);
+      lastNavAt.current = performance.now();
 
-    lockFor(WHEEL_LOCK_MS);
-  };
+      const nextIdx = mod(index + dir);
+      writeUrl(nextIdx, activeSection);
+      setIndex((i) => i + dir);
+
+      hardResetInputs();
+    },
+    [n, showOnboarding, mod, index, writeUrl, activeSection, hardResetInputs]
+  );
+
+  const goNext = useCallback(() => doNav(1), [doNav]);
+  const goPrev = useCallback(() => doNav(-1), [doNav]);
 
   const onSectionChange = (s: string) => {
     const next = sections.includes(s) ? s : "All";
     setActiveSection(next);
     setIndex(0);
     writeUrl(0, next);
+    hardResetInputs();
+    lastNavAt.current = 0;
   };
 
-  // Hard reset motion + wheel accumulators whenever card changes or overlay toggles / section changes.
   useEffect(() => {
-    resetMotionPair(x, y);
-    wheelAccumX.current = 0;
-    wheelAccumY.current = 0;
-  }, [index, showOnboarding, x, y, activeSection]);
+    hardResetInputs();
+    if (showOnboarding) lastNavAt.current = 0;
+  }, [showOnboarding, hardResetInputs]);
 
-  // ----- drag end -----
-  const onDragEnd = (
-    _: MouseEvent | TouchEvent | PointerEvent,
-    info: PanInfo
-  ) => {
-    if (!n || lockRef.current || showOnboarding) return;
+  // -------------------------
+  // POINTER SWIPE (NO framer drag)
+  // -------------------------
+  const gestureRef = useRef<HTMLDivElement | null>(null);
+  const ptr = useRef<{
+    active: boolean;
+    id: number;
+    sx: number;
+    sy: number;
+    t0: number;
+    lastX: number;
+    lastY: number;
+    lastT: number;
+  }>({
+    active: false,
+    id: -1,
+    sx: 0,
+    sy: 0,
+    t0: 0,
+    lastX: 0,
+    lastY: 0,
+    lastT: 0,
+  });
 
-    const { offset, velocity } = info;
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!n || showOnboarding) return;
 
-    const absX = Math.abs(offset.x);
-    const absY = Math.abs(offset.y);
+    // only primary pointer
+    if (e.isPrimary === false) return;
+
+    ptr.current.active = true;
+    ptr.current.id = e.pointerId;
+    ptr.current.sx = e.clientX;
+    ptr.current.sy = e.clientY;
+    ptr.current.t0 = performance.now();
+    ptr.current.lastX = e.clientX;
+    ptr.current.lastY = e.clientY;
+    ptr.current.lastT = ptr.current.t0;
+
+    // capture so we keep getting moves even if pointer leaves element
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+
+    // prevent browser gestures
+    e.preventDefault();
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!ptr.current.active) return;
+    if (e.pointerId !== ptr.current.id) return;
+
+    const dx = e.clientX - ptr.current.sx;
+    const dy = e.clientY - ptr.current.sy;
+
+    // update motion for feel
+    x.set(dx);
+    y.set(dy);
+
+    ptr.current.lastX = e.clientX;
+    ptr.current.lastY = e.clientY;
+    ptr.current.lastT = performance.now();
+
+    e.preventDefault();
+  };
+
+  const endPointer = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!ptr.current.active) return;
+    if (e.pointerId !== ptr.current.id) return;
+
+    const t1 = performance.now();
+    const dt = Math.max(1, t1 - ptr.current.t0);
+
+    const dx = ptr.current.lastX - ptr.current.sx;
+    const dy = ptr.current.lastY - ptr.current.sy;
+
+    // velocity px/s
+    const vx = (dx / dt) * 1000;
+    const vy = (dy / dt) * 1000;
+
+    ptr.current.active = false;
+
+    // decide direction
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
 
     const horizontalDominant = absX > absY * H_DOMINANCE_RATIO;
     const verticalDominant = absY >= absX;
 
-    if (verticalDominant) {
-      const swipeDown = offset.y > V_OFFSET || velocity.y > V_VELOCITY;
-      const swipeUp = offset.y < -V_OFFSET || velocity.y < -V_VELOCITY;
+    let didNav = false;
 
+    if (verticalDominant) {
+      const swipeUp = dy < -V_OFFSET || vy < -V_VELOCITY;
+      const swipeDown = dy > V_OFFSET || vy > V_VELOCITY;
       if (swipeUp) {
         goNext();
-        lockFor(DRAG_LOCK_MS);
+        didNav = true;
       } else if (swipeDown) {
         goPrev();
-        lockFor(DRAG_LOCK_MS);
+        didNav = true;
       }
-      return;
-    }
-
-    if (horizontalDominant) {
-      const swipeLeft = offset.x < -H_OFFSET || velocity.x < -H_VELOCITY;
-      const swipeRight = offset.x > H_OFFSET || velocity.x > H_VELOCITY;
-
+    } else if (horizontalDominant) {
+      const swipeLeft = dx < -H_OFFSET || vx < -H_VELOCITY;
+      const swipeRight = dx > H_OFFSET || vx > H_VELOCITY;
       if (swipeLeft) {
         goNext();
-        lockFor(DRAG_LOCK_MS);
+        didNav = true;
       } else if (swipeRight) {
         goPrev();
-        lockFor(DRAG_LOCK_MS);
+        didNav = true;
       }
     }
-  };
 
-  // ----- wheel/trackpad -----
-  const onWheel: WheelEventHandler<HTMLDivElement> = (e) => {
-    if (!n || lockRef.current || showOnboarding) return;
-
-    // macOS pinch-to-zoom comes as wheel with ctrlKey -> do not preventDefault
-    if (e.ctrlKey) return;
+    // snap back visuals if no navigation
+    if (!didNav) {
+      hardResetInputs();
+    }
 
     e.preventDefault();
-
-    const dx = e.deltaX;
-    const dy = e.deltaY;
-
-    const horizontalIntent = Math.abs(dx) > Math.abs(dy) * 1.2 || e.shiftKey;
-
-    if (horizontalIntent) {
-      wheelAccumX.current += e.shiftKey ? dy : dx;
-
-      // trackpad right -> prev, left -> next (matches drag mapping)
-      if (wheelAccumX.current > WHEEL_THRESHOLD) {
-        wheelAccumX.current = 0;
-        goPrev();
-      } else if (wheelAccumX.current < -WHEEL_THRESHOLD) {
-        wheelAccumX.current = 0;
-        goNext();
-      }
-      return;
-    }
-
-    wheelAccumY.current += dy;
-
-    if (wheelAccumY.current > WHEEL_THRESHOLD) {
-      wheelAccumY.current = 0;
-      goNext();
-    } else if (wheelAccumY.current < -WHEEL_THRESHOLD) {
-      wheelAccumY.current = 0;
-      goPrev();
-    }
   };
 
-  // ----- keyboard -----
+  // wheel with native listener (still useful for desktop trackpads)
+  useEffect(() => {
+    const el = gestureRef.current;
+    if (!el) return;
+
+    const onWheelNative = (e: WheelEvent) => {
+      if (!n || showOnboarding) return;
+      if (e.ctrlKey) return; // allow pinch zoom
+      e.preventDefault();
+
+      const dx = e.deltaX;
+      const dy = e.deltaY;
+
+      const horizontalIntent = Math.abs(dx) > Math.abs(dy) * 1.2 || e.shiftKey;
+      const axis: "x" | "y" = horizontalIntent ? "x" : "y";
+
+      if (lastWheelAxis.current && lastWheelAxis.current !== axis) {
+        wheelAccumX.current = 0;
+        wheelAccumY.current = 0;
+      }
+      lastWheelAxis.current = axis;
+
+      if (horizontalIntent) {
+        wheelAccumX.current += e.shiftKey ? dy : dx;
+        if (wheelAccumX.current > WHEEL_THRESHOLD) {
+          wheelAccumX.current = 0;
+          goPrev();
+        } else if (wheelAccumX.current < -WHEEL_THRESHOLD) {
+          wheelAccumX.current = 0;
+          goNext();
+        }
+        return;
+      }
+
+      wheelAccumY.current += dy;
+      if (wheelAccumY.current > WHEEL_THRESHOLD) {
+        wheelAccumY.current = 0;
+        goNext();
+      } else if (wheelAccumY.current < -WHEEL_THRESHOLD) {
+        wheelAccumY.current = 0;
+        goPrev();
+      }
+    };
+
+    el.addEventListener("wheel", onWheelNative, { passive: false });
+    return () => el.removeEventListener("wheel", onWheelNative as any);
+  }, [n, showOnboarding, goNext, goPrev]);
+
+  // keyboard
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (showOnboarding) {
@@ -412,8 +422,7 @@ export function SwipeFeed({
         }
         return;
       }
-
-      if (!n || lockRef.current) return;
+      if (!n) return;
 
       if (e.key === "ArrowDown" || e.key === "PageDown") {
         e.preventDefault();
@@ -432,8 +441,7 @@ export function SwipeFeed({
 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [n, showOnboarding, activeSection]);
+  }, [n, showOnboarding, goNext, goPrev]);
 
   if (!current) {
     return (
@@ -498,20 +506,16 @@ export function SwipeFeed({
           )}
         </div>
 
-        {/* Current card */}
+        {/* Gesture surface + current card */}
         <AnimatePresence initial={false} mode="popLayout">
           <motion.div
+            ref={gestureRef}
             key={`card-${activeSection}-${index}`}
             className="absolute inset-0 h-svh w-full"
-            drag
-            dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}
-            dragElastic={0.45}
-            dragMomentum={false}
-            dragSnapToOrigin
-            dragTransition={{ bounceStiffness: 420, bounceDamping: 26 }}
-            onPointerDown={captureStart}
-            onDragEnd={onDragEnd}
-            onWheel={onWheel}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={endPointer}
+            onPointerCancel={endPointer}
             style={{
               x,
               y,
@@ -521,7 +525,8 @@ export function SwipeFeed({
               scale: cardScale,
               boxShadow: shadow,
               transformStyle: "preserve-3d",
-              touchAction: "pan-x pan-y pinch-zoom",
+              // critical: browser must not steal gestures
+              touchAction: "none",
             }}
             initial={{ opacity: 0, scale: 0.99 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -532,7 +537,6 @@ export function SwipeFeed({
               damping: 24,
               mass: 0.9,
             }}
-            whileDrag={{ scale: 0.99 }}
           >
             <div className="relative h-full w-full rounded-[28px] overflow-hidden ring-1 ring-white/10 bg-black">
               <BlogCard post={current} />
