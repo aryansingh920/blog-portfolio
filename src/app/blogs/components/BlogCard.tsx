@@ -1,3 +1,4 @@
+// components/BlogCard.tsx
 "use client";
 
 import Link from "next/link";
@@ -12,19 +13,16 @@ export function BlogCard({ post }: BlogCardProps) {
   const tag = (post.tag ?? "").trim() || "All";
 
   return (
-    <div className="relative h-svh w-full ">
-      {/* Card shell */}
+    <div className="relative h-svh w-full">
       <div className="relative h-full w-full overflow-hidden rounded-[28px] ring-1 ring-white/10 bg-black">
         {/* Background */}
         <div className="absolute inset-0">
           {hasImages ? (
             <picture>
-              {/* Desktop */}
               {post.imageDesktop ? (
                 <source media="(min-width: 768px)" srcSet={post.imageDesktop} />
               ) : null}
 
-              {/* Mobile fallback */}
               <img
                 src={post.imageMobile || post.imageDesktop || ""}
                 alt=""
@@ -37,7 +35,6 @@ export function BlogCard({ post }: BlogCardProps) {
             <div className="h-full w-full bg-linear-to-b from-zinc-900 to-black" />
           )}
 
-          {/* Darken for text readability */}
           <div className="absolute inset-0 bg-linear-to-b from-black/25 via-black/55 to-black/85" />
         </div>
 
@@ -46,8 +43,12 @@ export function BlogCard({ post }: BlogCardProps) {
           <div className="flex items-center gap-2 text-xs opacity-90">
             {tag ? (
               <Link
+                data-no-swipe
                 href={`/blogs?i=0&section=${encodeURIComponent(tag)}`}
                 className="px-2 py-1 rounded-full bg-white/10 hover:bg-white/15 transition"
+                onPointerDownCapture={(e) => e.stopPropagation()}
+                onPointerMoveCapture={(e) => e.stopPropagation()}
+                onPointerUpCapture={(e) => e.stopPropagation()}
               >
                 {tag}
               </Link>
@@ -71,7 +72,14 @@ export function BlogCard({ post }: BlogCardProps) {
             </p>
           ) : null}
 
-          <div className="mt-5 flex gap-2">
+          {/* Actions: mark as no-swipe so desktop clicks work */}
+          <div
+            className="mt-5 flex gap-2"
+            data-no-swipe
+            onPointerDownCapture={(e) => e.stopPropagation()}
+            onPointerMoveCapture={(e) => e.stopPropagation()}
+            onPointerUpCapture={(e) => e.stopPropagation()}
+          >
             <Link
               href={post.href}
               className="inline-flex items-center justify-center px-4 py-3 rounded-2xl bg-white text-black font-semibold"

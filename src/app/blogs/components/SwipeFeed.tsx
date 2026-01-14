@@ -1,11 +1,13 @@
 /* eslint-disable react-hooks/refs */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+// components/SwipeFeed.tsx
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AnimatePresence,
   motion,
+  animate,
   useMotionValue,
   useTransform,
   type MotionValue,
@@ -18,9 +20,8 @@ import { BlogCard } from "./BlogCard";
 const V_OFFSET = 120;
 const H_OFFSET = 120;
 
-// velocity thresholds in px/s
-const V_VELOCITY = 800;
-const H_VELOCITY = 800;
+const V_VELOCITY = 800; // px/s
+const H_VELOCITY = 800; // px/s
 
 const WHEEL_THRESHOLD = 42;
 
@@ -28,7 +29,9 @@ const ONBOARDING_KEY = "blogs_swipe_onboarding_v1";
 const ONBOARDING_TTL_MS = 15 * 60 * 1000;
 
 const H_DOMINANCE_RATIO = 1.6;
+
 const NAV_COOLDOWN_MS = 220;
+const MOVE_START_PX = 6;
 
 type SwipeFeedProps = {
   posts: BlogPost[];
@@ -41,6 +44,13 @@ function resetMotionPair(x: MotionValue<number>, y: MotionValue<number>) {
   y.stop();
   x.set(0);
   y.set(0);
+}
+
+function springBack(x: MotionValue<number>, y: MotionValue<number>) {
+  x.stop();
+  y.stop();
+  animate(x, 0, { type: "spring", stiffness: 320, damping: 28, mass: 0.9 });
+  animate(y, 0, { type: "spring", stiffness: 320, damping: 28, mass: 0.9 });
 }
 
 function useCardMotion() {
@@ -153,7 +163,7 @@ export function SwipeFeed({
   const { x, y, rotateX, rotateY, rotateZ, cardScale, shadow } =
     useCardMotion();
 
-  // Under-card reveal linked to y
+  // under stack transforms
   const nextOpacity = useTransform(y, [-280, -60, 0], [1, 0.85, 0]);
   const nextScale = useTransform(y, [-280, 0], [1, 0.965]);
   const nextY = useTransform(y, [-280, 0], [-10, 26]);
@@ -196,7 +206,13 @@ export function SwipeFeed({
     }
   }, []);
 
-  // cooldown
+  // guard interactive areas (desktop click must pass through)
+  const isNoSwipeTarget = (t: EventTarget | null) => {
+    const el = t as HTMLElement | null;
+    return Boolean(el?.closest?.("[data-no-swipe]"));
+  };
+
+  // cooldown + wheel accumulators
   const lastNavAt = useRef(0);
   const canNavNow = () =>
     performance.now() - lastNavAt.current > NAV_COOLDOWN_MS;
@@ -212,24 +228,67 @@ export function SwipeFeed({
     lastWheelAxis.current = null;
   }, [x, y]);
 
-  const doNav = useCallback(
-    (dir: 1 | -1) => {
+  useEffect(() => {
+    // ensure nothing sticks
+    hardResetInputs();
+    if (showOnboarding) lastNavAt.current = 0;
+  }, [showOnboarding, hardResetInputs]);
+
+  // realistic throw animation + nav
+  const animatingOutRef = useRef(false);
+
+  const animateOutAndNav = useCallback(
+    (dir: 1 | -1, axis: "x" | "y") => {
       if (!n || showOnboarding) return;
       if (!canNavNow()) return;
+      if (animatingOutRef.current) return;
 
+      animatingOutRef.current = true;
       lastNavAt.current = performance.now();
 
-      const nextIdx = mod(index + dir);
-      writeUrl(nextIdx, activeSection);
-      setIndex((i) => i + dir);
+      const w = window.innerWidth || 1200;
+      const h = window.innerHeight || 800;
 
-      hardResetInputs();
+      const targetX = axis === "x" ? (dir === 1 ? -w * 0.92 : w * 0.92) : 0;
+      const targetY = axis === "y" ? (dir === 1 ? -h * 0.92 : h * 0.92) : 0;
+
+      // push out quickly
+      const ax = animate(x, targetX, { duration: 0.18, ease: "easeOut" });
+      const ay = animate(y, targetY, { duration: 0.18, ease: "easeOut" });
+
+      Promise.all([ax.finished, ay.finished])
+        .catch(() => void 0)
+        .then(() => {
+          const nextIdx = mod(index + dir);
+          writeUrl(nextIdx, activeSection);
+          setIndex((i) => i + dir);
+
+          // next card starts centered
+          hardResetInputs();
+          animatingOutRef.current = false;
+        });
     },
-    [n, showOnboarding, mod, index, writeUrl, activeSection, hardResetInputs]
+    [
+      n,
+      showOnboarding,
+      mod,
+      index,
+      writeUrl,
+      activeSection,
+      x,
+      y,
+      hardResetInputs,
+    ]
   );
 
-  const goNext = useCallback(() => doNav(1), [doNav]);
-  const goPrev = useCallback(() => doNav(-1), [doNav]);
+  const goNext = useCallback(
+    () => animateOutAndNav(1, "y"),
+    [animateOutAndNav]
+  );
+  const goPrev = useCallback(
+    () => animateOutAndNav(-1, "y"),
+    [animateOutAndNav]
+  );
 
   const onSectionChange = (s: string) => {
     const next = sections.includes(s) ? s : "All";
@@ -238,16 +297,10 @@ export function SwipeFeed({
     writeUrl(0, next);
     hardResetInputs();
     lastNavAt.current = 0;
+    animatingOutRef.current = false;
   };
 
-  useEffect(() => {
-    hardResetInputs();
-    if (showOnboarding) lastNavAt.current = 0;
-  }, [showOnboarding, hardResetInputs]);
-
-  // -------------------------
-  // POINTER SWIPE (NO framer drag)
-  // -------------------------
+  // pointer swipe (no framer drag)
   const gestureRef = useRef<HTMLDivElement | null>(null);
   const ptr = useRef<{
     active: boolean;
@@ -257,7 +310,7 @@ export function SwipeFeed({
     t0: number;
     lastX: number;
     lastY: number;
-    lastT: number;
+    moved: boolean;
   }>({
     active: false,
     id: -1,
@@ -266,14 +319,13 @@ export function SwipeFeed({
     t0: 0,
     lastX: 0,
     lastY: 0,
-    lastT: 0,
+    moved: false,
   });
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!n || showOnboarding) return;
-
-    // only primary pointer
-    if (e.isPrimary === false) return;
+    if (isNoSwipeTarget(e.target)) return; // allow desktop click on links/buttons
+    if (!e.isPrimary) return;
 
     ptr.current.active = true;
     ptr.current.id = e.pointerId;
@@ -282,13 +334,9 @@ export function SwipeFeed({
     ptr.current.t0 = performance.now();
     ptr.current.lastX = e.clientX;
     ptr.current.lastY = e.clientY;
-    ptr.current.lastT = ptr.current.t0;
+    ptr.current.moved = false;
 
-    // capture so we keep getting moves even if pointer leaves element
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-
-    // prevent browser gestures
-    e.preventDefault();
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -298,15 +346,19 @@ export function SwipeFeed({
     const dx = e.clientX - ptr.current.sx;
     const dy = e.clientY - ptr.current.sy;
 
-    // update motion for feel
+    if (!ptr.current.moved) {
+      const dist = Math.abs(dx) + Math.abs(dy);
+      if (dist >= MOVE_START_PX) ptr.current.moved = true;
+    }
+
+    // only prevent default once it's clearly a swipe
+    if (ptr.current.moved) e.preventDefault();
+
     x.set(dx);
     y.set(dy);
 
     ptr.current.lastX = e.clientX;
     ptr.current.lastY = e.clientY;
-    ptr.current.lastT = performance.now();
-
-    e.preventDefault();
   };
 
   const endPointer = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -319,13 +371,17 @@ export function SwipeFeed({
     const dx = ptr.current.lastX - ptr.current.sx;
     const dy = ptr.current.lastY - ptr.current.sy;
 
-    // velocity px/s
     const vx = (dx / dt) * 1000;
     const vy = (dy / dt) * 1000;
 
     ptr.current.active = false;
 
-    // decide direction
+    // if they didn't really move, treat as a click (do nothing)
+    if (!ptr.current.moved) {
+      springBack(x, y);
+      return;
+    }
+
     const absX = Math.abs(dx);
     const absY = Math.abs(dy);
 
@@ -337,41 +393,38 @@ export function SwipeFeed({
     if (verticalDominant) {
       const swipeUp = dy < -V_OFFSET || vy < -V_VELOCITY;
       const swipeDown = dy > V_OFFSET || vy > V_VELOCITY;
+
       if (swipeUp) {
-        goNext();
+        animateOutAndNav(1, "y");
         didNav = true;
       } else if (swipeDown) {
-        goPrev();
+        animateOutAndNav(-1, "y");
         didNav = true;
       }
     } else if (horizontalDominant) {
       const swipeLeft = dx < -H_OFFSET || vx < -H_VELOCITY;
       const swipeRight = dx > H_OFFSET || vx > H_VELOCITY;
+
       if (swipeLeft) {
-        goNext();
+        animateOutAndNav(1, "x");
         didNav = true;
       } else if (swipeRight) {
-        goPrev();
+        animateOutAndNav(-1, "x");
         didNav = true;
       }
     }
 
-    // snap back visuals if no navigation
-    if (!didNav) {
-      hardResetInputs();
-    }
-
-    e.preventDefault();
+    if (!didNav) springBack(x, y);
   };
 
-  // wheel with native listener (still useful for desktop trackpads)
+  // wheel native (desktop trackpads)
   useEffect(() => {
     const el = gestureRef.current;
     if (!el) return;
 
     const onWheelNative = (e: WheelEvent) => {
       if (!n || showOnboarding) return;
-      if (e.ctrlKey) return; // allow pinch zoom
+      if (e.ctrlKey) return;
       e.preventDefault();
 
       const dx = e.deltaX;
@@ -388,29 +441,31 @@ export function SwipeFeed({
 
       if (horizontalIntent) {
         wheelAccumX.current += e.shiftKey ? dy : dx;
+
         if (wheelAccumX.current > WHEEL_THRESHOLD) {
           wheelAccumX.current = 0;
-          goPrev();
+          animateOutAndNav(-1, "x"); // right -> prev
         } else if (wheelAccumX.current < -WHEEL_THRESHOLD) {
           wheelAccumX.current = 0;
-          goNext();
+          animateOutAndNav(1, "x"); // left -> next
         }
         return;
       }
 
       wheelAccumY.current += dy;
+
       if (wheelAccumY.current > WHEEL_THRESHOLD) {
         wheelAccumY.current = 0;
-        goNext();
+        animateOutAndNav(1, "y"); // down -> next
       } else if (wheelAccumY.current < -WHEEL_THRESHOLD) {
         wheelAccumY.current = 0;
-        goPrev();
+        animateOutAndNav(-1, "y"); // up -> prev
       }
     };
 
     el.addEventListener("wheel", onWheelNative, { passive: false });
     return () => el.removeEventListener("wheel", onWheelNative as any);
-  }, [n, showOnboarding, goNext, goPrev]);
+  }, [n, showOnboarding, animateOutAndNav]);
 
   // keyboard
   useEffect(() => {
@@ -426,22 +481,22 @@ export function SwipeFeed({
 
       if (e.key === "ArrowDown" || e.key === "PageDown") {
         e.preventDefault();
-        goNext();
+        animateOutAndNav(1, "y");
       } else if (e.key === "ArrowUp" || e.key === "PageUp") {
         e.preventDefault();
-        goPrev();
+        animateOutAndNav(-1, "y");
       } else if (e.key === "ArrowLeft") {
         e.preventDefault();
-        goPrev();
+        animateOutAndNav(-1, "x");
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
-        goNext();
+        animateOutAndNav(1, "x");
       }
     };
 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [n, showOnboarding, goNext, goPrev]);
+  }, [n, showOnboarding, animateOutAndNav]);
 
   if (!current) {
     return (
@@ -525,7 +580,6 @@ export function SwipeFeed({
               scale: cardScale,
               boxShadow: shadow,
               transformStyle: "preserve-3d",
-              // critical: browser must not steal gestures
               touchAction: "none",
             }}
             initial={{ opacity: 0, scale: 0.99 }}
