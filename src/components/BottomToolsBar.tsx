@@ -124,18 +124,40 @@ export default function BottomToolsBar({
 
               <div className="flex items-center gap-2">
                 {/* collapse button */}
+
                 <button
                   type="button"
                   onClick={() => setHidden(true)}
                   className={[
-                    "rounded-full px-3 py-1.5",
-                    "text-[12px] text-white/70 hover:text-white/90",
-                    "bg-white/5 hover:bg-white/8",
-                    "border border-white/10",
-                    "transition",
+                    "relative overflow-hidden",
+                    "rounded-full px-3.5 py-1.5",
+                    "text-[12px] font-semibold tracking-wide",
+                    "text-white/90 hover:text-white",
+                    "border border-white/20",
+                    "bg-gradient-to-b from-white/14 to-white/7 hover:from-white/18 hover:to-white/9",
+                    "shadow-[0_10px_34px_rgba(0,0,0,0.55)]",
+                    "ring-1 ring-white/15 hover:ring-white/25",
+                    "transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]",
+                    "animate-[toolsHidePulse_2.6s_ease-in-out_infinite]",
                   ].join(" ")}
+                  aria-label="Hide tools"
                 >
-                  Hide
+                  {/* subtle moving shine */}
+                  <span
+                    aria-hidden
+                    className={[
+                      "pointer-events-none absolute inset-0",
+                      "bg-[linear-gradient(110deg,transparent_0%,rgba(255,255,255,0.22)_35%,transparent_70%)]",
+                      "translate-x-[-120%]",
+                      "animate-[toolsHideShine_2.8s_ease-in-out_infinite]",
+                    ].join(" ")}
+                  />
+                  {/* glow */}
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 rounded-full shadow-[0_0_28px_rgba(120,160,255,0.35)] opacity-70"
+                  />
+                  <span className="relative">Hide</span>
                 </button>
               </div>
             </div>
