@@ -7,6 +7,7 @@ import styles from "./ReadPage.module.css";
 import SwipeReaderNav from "./SwipeReaderNav";
 import ReaderMotionShell from "./ReaderMotionShell";
 import ReaderOnboardingOverlay from "./ReaderOnboardingOverlay";
+import ReaderTTSButton from "./ReaderTTSButton";
 
 export const revalidate = 86400;
 
@@ -105,7 +106,7 @@ export default async function ReadPage({ searchParams }: ReadPageProps) {
 
                 <Link
                   href={`/blogs?i=0&section=${encodeURIComponent(
-                    sectionLabel
+                    sectionLabel,
                   )}`}
                   className="font-medium text-blue-400 hover:text-blue-300 transition"
                 >
@@ -113,8 +114,6 @@ export default async function ReadPage({ searchParams }: ReadPageProps) {
                 </Link>
               </p>
 
-              
-              
               <h1 className="text-3xl text-white font-bold tracking-tight md:text-5xl">
                 {post.title}
               </h1>
@@ -126,11 +125,19 @@ export default async function ReadPage({ searchParams }: ReadPageProps) {
                 <span>•</span>
                 <span>{readTime}</span>
               </div>
+
+              <br />
+
+              <ReaderTTSButton
+                targetId="blog-article-text"
+                motionKey={String(id)}
+              />
             </div>
           </div>
 
           <article className="prose prose-invert prose-zinc mx-auto px-6 py-12">
             <div
+              id="blog-article-text"
               className={`${styles.articleHtml} [&>p]:mb-6 [&>h2]:mb-4 [&>h2]:mt-10 [&>h2]:text-2xl [&>h2]:font-bold`}
               dangerouslySetInnerHTML={{ __html: html }}
             />

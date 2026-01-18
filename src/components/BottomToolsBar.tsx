@@ -119,7 +119,7 @@ export default function BottomToolsBar({
                 <span className="h-2 w-2 rounded-full bg-white/60 shadow-[0_0_18px_rgba(120,160,255,0.55)]" />
                 <span className="text-[11px] tracking-[0.16em] text-white/70 uppercase">
                   Quick tools
-                </span>
+                </span> q
               </div>
 
               <div className="flex items-center gap-2">
