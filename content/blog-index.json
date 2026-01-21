@@ -10,7 +10,7 @@
     "html": "/posts/project1/index.html",
     "imageMobile": "/posts/project1/desktop.png",
     "imageDesktop": "/posts/project1/desktop.png",
-    "excerpt": ""
+    "excerpt": "An interactive 3D visualization platform for mapping global datasets onto a digital twin of Earth."
   },
   {
     "id": 2,
@@ -23,7 +23,7 @@
     "html": "/posts/project2/index.html",
     "imageMobile": "/posts/project2/image.png",
     "imageDesktop": "/posts/project2/image.png",
-    "excerpt": ""
+    "excerpt": "Leveraging deep learning and computer vision to break complex CAPTCHA patterns with high accuracy."
   },
   {
     "id": 3,
@@ -36,7 +36,7 @@
     "html": "/posts/project3/index.html",
     "imageMobile": "/posts/project3/Gemini_Generated_Image_3p8p8z3p8p8z3p8p.png",
     "imageDesktop": "/posts/project3/Gemini_Generated_Image_3p8p8z3p8p8z3p8p.png",
-    "excerpt": ""
+    "excerpt": "A quantitative approach to statistical arbitrage using real-time order book depth for trade execution."
   },
   {
     "id": 4,
@@ -49,7 +49,7 @@
     "html": "/posts/project4/index.html",
     "imageMobile": "/posts/project4/Gemini_Generated_Image_n9sjfun9sjfun9sj.png",
     "imageDesktop": "/posts/project4/Gemini_Generated_Image_n9sjfun9sjfun9sj.png",
-    "excerpt": ""
+    "excerpt": "Analyzing technical momentum through automated candlestick pattern recognition and algorithmic backtesting."
   },
   {
     "id": 5,
@@ -62,7 +62,7 @@
     "html": "/posts/project5/index.html",
     "imageMobile": "/posts/project5/Gemini_Generated_Image_6xtvl96xtvl96xtv.png",
     "imageDesktop": "/posts/project5/Gemini_Generated_Image_6xtvl96xtvl96xtv.png",
-    "excerpt": ""
+    "excerpt": "Applying advanced heuristic algorithms to find the efficient frontier in complex multi-asset portfolios."
   },
   {
     "id": 6,
@@ -75,7 +75,7 @@
     "html": "/posts/project6/index.html",
     "imageMobile": "/posts/project6/Gemini_Generated_Image_tnpinstnpinstnpi.png",
     "imageDesktop": "/posts/project6/Gemini_Generated_Image_tnpinstnpinstnpi.png",
-    "excerpt": ""
+    "excerpt": "Decoding the building blocks of life through computational analysis and visual mapping of RNA sequences."
   },
   {
     "id": 7,
@@ -88,7 +88,7 @@
     "html": "/posts/project7/index.html",
     "imageMobile": "/posts/project7/Gemini_Generated_Image_xn21eaxn21eaxn21.png",
     "imageDesktop": "/posts/project7/Gemini_Generated_Image_xn21eaxn21eaxn21.png",
-    "excerpt": ""
+    "excerpt": "Using stochastic simulations to model market volatility and optimize asset allocation for risk mitigation."
   },
   {
     "id": 8,
@@ -101,7 +101,7 @@
     "html": "/posts/project8/index.html",
     "imageMobile": "/posts/project8/Gemini_Generated_Image_rvm8d6rvm8d6rvm8.png",
     "imageDesktop": "/posts/project8/Gemini_Generated_Image_rvm8d6rvm8d6rvm8.png",
-    "excerpt": ""
+    "excerpt": "Bridging NLP and finance to predict price action based on real-time news and social media sentiment."
   },
   {
     "id": 9,
@@ -114,7 +114,7 @@
     "html": "/posts/project9/index.html",
     "imageMobile": "/posts/project9/Gemini_Generated_Image_ngw5khngw5khngw5.png",
     "imageDesktop": "/posts/project9/Gemini_Generated_Image_ngw5khngw5khngw5.png",
-    "excerpt": ""
+    "excerpt": "A high-performance biometric system utilizing deep embedding networks for accurate identity verification."
   },
   {
     "id": 10,
@@ -127,7 +127,7 @@
     "html": "/posts/project10/index.html",
     "imageMobile": "/posts/project10/Gemini_Generated_Image_wkgi8ywkgi8ywkgi.png",
     "imageDesktop": "/posts/project10/Gemini_Generated_Image_wkgi8ywkgi8ywkgi.png",
-    "excerpt": ""
+    "excerpt": "Exploring the capabilities of CNN architectures in classifying diverse objects within a large-scale dataset."
   },
   {
     "id": 11,
@@ -140,7 +140,7 @@
     "html": "/posts/project11/index.html",
     "imageMobile": "/posts/project11/Gemini_Generated_Image_nlesctnlesctnles.png",
     "imageDesktop": "/posts/project11/Gemini_Generated_Image_nlesctnlesctnles.png",
-    "excerpt": ""
+    "excerpt": "Developing a custom encryption protocol to secure sensitive wildlife telemetry data transmitted via satellite."
   },
   {
     "id": 12,
@@ -153,7 +153,7 @@
     "html": "/posts/project12/index.html",
     "imageMobile": "/posts/project12/Gemini_Generated_Image_i3l3eli3l3eli3l3.png",
     "imageDesktop": "/posts/project12/Gemini_Generated_Image_i3l3eli3l3eli3l3.png",
-    "excerpt": ""
+    "excerpt": "Customizing large language models to generate domain-specific insights and financial market reports."
   },
   {
     "id": 13,
@@ -166,7 +166,7 @@
     "html": "/posts/project13/index.html",
     "imageMobile": "/posts/project13/Gemini_Generated_Image_zbrcygzbrcygzbrc.png",
     "imageDesktop": "/posts/project13/Gemini_Generated_Image_zbrcygzbrcygzbrc.png",
-    "excerpt": ""
+    "excerpt": "Investigating how quantum algorithms can accelerate the discovery of complex genetic mutation patterns."
   },
   {
     "id": 14,
@@ -179,7 +179,7 @@
     "html": "/posts/project14/index.html",
     "imageMobile": "/posts/project14/Gemini_Generated_Image_1ldezc1ldezc1lde.png",
     "imageDesktop": "/posts/project14/Gemini_Generated_Image_1ldezc1ldezc1lde.png",
-    "excerpt": ""
+    "excerpt": "Simulating high-dimensional physical models using the computational power of quantum processing units."
   },
   {
     "id": 15,
@@ -192,7 +192,7 @@
     "html": "/posts/project15/index.html",
     "imageMobile": "/posts/project15/Gemini_Generated_Image_gt0zbdgt0zbdgt0z.png",
     "imageDesktop": "/posts/project15/Gemini_Generated_Image_gt0zbdgt0zbdgt0z.png",
-    "excerpt": ""
+    "excerpt": "Applying generative transformer models to compose original musical sequences and harmonic structures."
   },
   {
     "id": 16,
@@ -205,7 +205,7 @@
     "html": "/posts/project16/index.html",
     "imageMobile": "/posts/project16/Gemini_Generated_Image_js6ov0js6ov0js6o.png",
     "imageDesktop": "/posts/project16/Gemini_Generated_Image_js6ov0js6ov0js6o.png",
-    "excerpt": ""
+    "excerpt": "Developing real-time vision systems to identify and track obstacles for safer self-driving technology."
   },
   {
     "id": 17,
@@ -218,7 +218,7 @@
     "html": "/posts/project17/index.html",
     "imageMobile": "/posts/project17/Gemini_Generated_Image_x9s0q7x9s0q7x9s0.png",
     "imageDesktop": "/posts/project17/Gemini_Generated_Image_x9s0q7x9s0q7x9s0.png",
-    "excerpt": ""
+    "excerpt": "An exploration of biological evolution and the philosophical possibilities of panspermia across the universe."
   },
   {
     "id": 18,
@@ -231,7 +231,7 @@
     "html": "/posts/project18/index.html",
     "imageMobile": "/posts/project18/Gemini_Generated_Image_miu32fmiu32fmiu3.png",
     "imageDesktop": "/posts/project18/Gemini_Generated_Image_miu32fmiu32fmiu3.png",
-    "excerpt": ""
+    "excerpt": "Analyzing whether theoretical physics and advanced technology could bridge the gap between science and divinity."
   },
   {
     "id": 19,
@@ -244,7 +244,7 @@
     "html": "/posts/project19/index.html",
     "imageMobile": "/posts/project19/Gemini_Generated_Image_fjsa1zfjsa1zfjsa.png",
     "imageDesktop": "/posts/project19/Gemini_Generated_Image_fjsa1zfjsa1zfjsa.png",
-    "excerpt": ""
+    "excerpt": "Debating the simulation hypothesis through the lenses of computational theory and quantum mechanics."
   },
   {
     "id": 20,
@@ -257,7 +257,7 @@
     "html": "/posts/project20/index.html",
     "imageMobile": "/posts/project20/Gemini_Generated_Image_6opg596opg596opg.png",
     "imageDesktop": "/posts/project20/Gemini_Generated_Image_6opg596opg596opg.png",
-    "excerpt": ""
+    "excerpt": "Investigating unexplained phenomena through the potential existence of hidden physical dimensions."
   },
   {
     "id": 21,
@@ -270,7 +270,7 @@
     "html": "/posts/project21/index.html",
     "imageMobile": "/posts/project21/Gemini_Generated_Image_mscr5omscr5omscr.png",
     "imageDesktop": "/posts/project21/Gemini_Generated_Image_mscr5omscr5omscr.png",
-    "excerpt": ""
+    "excerpt": "A deep dive into the mathematical framework of the universe and the quest for a theory of everything."
   },
   {
     "id": 22,
@@ -283,7 +283,7 @@
     "html": "/posts/project22/index.html",
     "imageMobile": "/posts/project22/Gemini_Generated_Image_lazc3ylazc3ylazc.png",
     "imageDesktop": "/posts/project22/Gemini_Generated_Image_lazc3ylazc3ylazc.png",
-    "excerpt": ""
+    "excerpt": "Implementing state-of-the-art diffusion models to transform natural language prompts into high-fidelity visuals."
   },
   {
     "id": 23,
@@ -296,7 +296,7 @@
     "html": "/posts/project23/index.html",
     "imageMobile": "/posts/project23/Gemini_Generated_Image_a5l5soa5l5soa5l5.png",
     "imageDesktop": "/posts/project23/Gemini_Generated_Image_a5l5soa5l5soa5l5.png",
-    "excerpt": ""
+    "excerpt": "Analyzing the science of ultra-low temperatures and its implications for human life extension."
   },
   {
     "id": 24,
@@ -309,7 +309,7 @@
     "html": "/posts/project24/index.html",
     "imageMobile": "/posts/project24/Gemini_Generated_Image_6i86tb6i86tb6i86.png",
     "imageDesktop": "/posts/project24/Gemini_Generated_Image_6i86tb6i86tb6i86.png",
-    "excerpt": ""
+    "excerpt": "Examining the paradoxical nature of quantum mechanics and its impact on our perception of time and space."
   },
   {
     "id": 25,
@@ -322,7 +322,7 @@
     "html": "/posts/project25/index.html",
     "imageMobile": "/posts/project25/Gemini_Generated_Image_ikb465ikb465ikb4.png",
     "imageDesktop": "/posts/project25/Gemini_Generated_Image_ikb465ikb465ikb4.png",
-    "excerpt": ""
+    "excerpt": "Investigating the invisible forces that shape our cosmos and the particles that remain to be discovered."
   },
   {
     "id": 26,
@@ -335,7 +335,7 @@
     "html": "/posts/project26/index.html",
     "imageMobile": "/posts/project26/Gemini_Generated_Image_5k3ibl5k3ibl5k3i.png",
     "imageDesktop": "/posts/project26/Gemini_Generated_Image_5k3ibl5k3ibl5k3i.png",
-    "excerpt": ""
+    "excerpt": "Designing next-generation network architectures built on quantum-resistant security and high-speed data transfer."
   },
   {
     "id": 27,
@@ -348,7 +348,7 @@
     "html": "/posts/project27/index.html",
     "imageMobile": "/posts/project27/Gemini_Generated_Image_hanq95hanq95hanq.png",
     "imageDesktop": "/posts/project27/Gemini_Generated_Image_hanq95hanq95hanq.png",
-    "excerpt": ""
+    "excerpt": "A comprehensive analysis of derivative pricing and the mathematical tools used for economic forecasting."
   },
   {
     "id": 28,
@@ -361,7 +361,7 @@
     "html": "/posts/project28/index.html",
     "imageMobile": "/posts/project28/Gemini_Generated_Image_2tce242tce242tce.png",
     "imageDesktop": "/posts/project28/Gemini_Generated_Image_2tce242tce242tce.png",
-    "excerpt": ""
+    "excerpt": "Mastering risk management through real-time portfolio adjustments and sophisticated hedging techniques."
   },
   {
     "id": 29,
@@ -374,7 +374,7 @@
     "html": "/posts/project29/index.html",
     "imageMobile": "/posts/project29/Gemini_Generated_Image_fna0kqfna0kqfna0.png",
     "imageDesktop": "/posts/project29/Gemini_Generated_Image_fna0kqfna0kqfna0.png",
-    "excerpt": ""
+    "excerpt": "Examining the theoretical foundations of temporal displacement and the branching paths of the multiverse."
   },
   {
     "id": 30,
@@ -387,7 +387,7 @@
     "html": "/posts/project30/index.html",
     "imageMobile": "/posts/project30/Gemini_Generated_Image_wyhx34wyhx34wyhx.png",
     "imageDesktop": "/posts/project30/Gemini_Generated_Image_wyhx34wyhx34wyhx.png",
-    "excerpt": ""
+    "excerpt": "Utilizing advanced statistical copulas to model complex dependencies and systemic risk in financial markets."
   },
   {
     "id": 31,
@@ -400,7 +400,7 @@
     "html": "/posts/project31/index.html",
     "imageMobile": "/posts/project31/Gemini_Generated_Image_wl2p98wl2p98wl2p.png",
     "imageDesktop": "/posts/project31/Gemini_Generated_Image_wl2p98wl2p98wl2p.png",
-    "excerpt": ""
+    "excerpt": "Optimizing virtual AI entities for more natural interactions within immersive AR/VR environments."
   },
   {
     "id": 32,
@@ -413,7 +413,7 @@
     "html": "/posts/project32/index.html",
     "imageMobile": "/posts/project32/Gemini_Generated_Image_xyv9lkxyv9lkxyv9.png",
     "imageDesktop": "/posts/project32/Gemini_Generated_Image_xyv9lkxyv9lkxyv9.png",
-    "excerpt": ""
+    "excerpt": "Implementing precise gesture recognition to enable controller-less navigation in digital spaces."
   },
   {
     "id": 33,
