@@ -427,5 +427,18 @@
     "imageMobile": "/posts/project33/Gemini_Generated_Image_d7kgynd7kgynd7kg.png",
     "imageDesktop": "/posts/project33/Gemini_Generated_Image_d7kgynd7kgynd7kg.png",
     "excerpt": "What if the zombie apocalypse wasn't a fantasy, but a blueprint waiting for the right alignment of science, ambition, and accident?"
+  },
+  {
+    "id": 34,
+    "slug": "sentient-ai-dont-give-your-ai-root-access-why-copilots-beat-autopilots-for-now",
+    "title": "Sentient AI : Don’t Give Your AI Root Access: Why Copilots Beat Autopilots (For Now)",
+    "section": "AI",
+    "date": "2026-02-01",
+    "author": "Aryan Singh",
+    "dir": "/posts/project34",
+    "html": "/posts/project34/index.html",
+    "imageMobile": "/posts/project34/Gemini_Generated_Image_eelrqpeelrqpeelr.png",
+    "imageDesktop": "/posts/project34/Gemini_Generated_Image_eelrqpeelrqpeelr.png",
+    "excerpt": "AI agents are evolving fast but are they ready to run your digital life unsupervised? This deep dive explores the promise of autonomous workflows, the hidden risks behind the hype, and why keeping a human in the loop is still the smartest move. Copilot now, autopilot later."
   }
 ]
