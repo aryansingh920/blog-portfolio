@@ -21,7 +21,7 @@ export type PortfolioRequestFailure = {
   status?: number;
 };
 
-const ENDPOINT: string = Constants.uri;
+const ENDPOINT: string = `${Constants.uri}/email/portfolio/form`;
 
 
 /**
