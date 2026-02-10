@@ -45,10 +45,28 @@ export async function sendPortfolioRequest(
     cache: "no-store",
   });
 
+  console.log(res.body);
+
   const data = (await res.json().catch(() => null)) as Record<
     string,
     unknown
   > | null;
+
+  console.log(data);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const okField = (data as any)?.ok;
+  if (okField === false) {
+    const backendMsg =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ((data as any)?.error as string) ||
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ((data as any)?.message as string) ||
+      "Request failed";
+    const err = new Error(backendMsg) as Error & { status?: number };
+    err.status = res.status;
+    throw err;
+  }
 
   if (!res.ok) {
     const backendMsg =
