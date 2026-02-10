@@ -45,14 +45,14 @@ export async function sendPortfolioRequest(
     cache: "no-store",
   });
 
-  console.log(res.body);
+  // console.log(res.body);
 
   const data = (await res.json().catch(() => null)) as Record<
     string,
     unknown
   > | null;
 
-  console.log(data);
+  // console.log(data);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const okField = (data as any)?.ok;
