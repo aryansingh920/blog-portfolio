@@ -2,9 +2,8 @@
 "use client";
 
 import React from "react";
-import { Card } from "./Card";
-// add this import at the top
 import { sendPortfolioRequest } from "@/api/sendPortfolioRequest";
+import { Github, Linkedin, Mail } from "lucide-react";
 
 type FormState = {
   name: string;
@@ -77,7 +76,6 @@ export default function ContactPage() {
           email,
           phone: phone || undefined,
           inquiry,
-          // backend can evolve this schema later
         },
         { signal: controller.signal },
       );
@@ -88,7 +86,6 @@ export default function ContactPage() {
       });
       setForm({ name: "", email: "", phone: "", inquiry: "" });
     } catch (err: any) {
-      // Abort errors are normal when navigating away
       if (err?.name === "AbortError") return;
 
       setStatus({
@@ -128,8 +125,7 @@ export default function ContactPage() {
           Connect With me Here!
         </h1>
 
-        {/* FORM FIRST */}
-        <div className="w-full mt-8 md:mt-10">
+        <div className="w-full mt-8 md:mt-10 mb-14">
           <div className="mx-auto max-w-4xl">
             {/* gradient border wrapper */}
             <div className="rounded-[28px] p-[1px] bg-gradient-to-b from-white/15 via-white/5 to-transparent">
@@ -263,58 +259,99 @@ export default function ContactPage() {
                       reply. Nothing else.
                     </div>
                   </form>
+
+                  {/* ICONS BELOW FORM */}
+                  <div className="mt-6 pt-5 border-t border-white/10">
+                    <div className="flex items-center justify-center gap-3">
+                      <a
+                        href="https://www.linkedin.com/in/aryan-singh-axone125/"
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="LinkedIn"
+                        title="LinkedIn"
+                        className={[
+                          "relative inline-flex items-center justify-center",
+                          "h-11 w-11 rounded-full",
+                          "border border-white/12",
+                          "bg-gradient-to-b from-white/10 to-white/5",
+                          "shadow-[0_10px_34px_rgba(0,0,0,0.45)]",
+                          "ring-1 ring-white/10 hover:ring-white/20",
+                          "text-white/85 hover:text-white",
+                          "transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]",
+                        ].join(" ")}
+                      >
+                        <span
+                          aria-hidden
+                          className="pointer-events-none absolute inset-0 rounded-full shadow-[0_0_22px_rgba(120,160,255,0.18)] opacity-0 hover:opacity-100 transition"
+                        />
+                        <span className="relative">
+                          <Linkedin size={18} />
+                        </span>
+                      </a>
+
+                      <a
+                        href="mailto:aryansingh920@outlook.com"
+                        aria-label="Email"
+                        title="Email"
+                        className={[
+                          "relative inline-flex items-center justify-center",
+                          "h-11 w-11 rounded-full",
+                          "border border-white/12",
+                          "bg-gradient-to-b from-white/10 to-white/5",
+                          "shadow-[0_10px_34px_rgba(0,0,0,0.45)]",
+                          "ring-1 ring-white/10 hover:ring-white/20",
+                          "text-white/85 hover:text-white",
+                          "transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]",
+                        ].join(" ")}
+                      >
+                        <span
+                          aria-hidden
+                          className="pointer-events-none absolute inset-0 rounded-full shadow-[0_0_22px_rgba(120,160,255,0.18)] opacity-0 hover:opacity-100 transition"
+                        />
+                        <span className="relative">
+                          <Mail size={18} />
+                        </span>
+                      </a>
+
+                      <a
+                        href="https://github.com/aryansingh920"
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="GitHub"
+                        title="GitHub"
+                        className={[
+                          "relative inline-flex items-center justify-center",
+                          "h-11 w-11 rounded-full",
+                          "border border-white/12",
+                          "bg-gradient-to-b from-white/10 to-white/5",
+                          "shadow-[0_10px_34px_rgba(0,0,0,0.45)]",
+                          "ring-1 ring-white/10 hover:ring-white/20",
+                          "text-white/85 hover:text-white",
+                          "transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]",
+                        ].join(" ")}
+                      >
+                        <span
+                          aria-hidden
+                          className="pointer-events-none absolute inset-0 rounded-full shadow-[0_0_22px_rgba(120,160,255,0.18)] opacity-0 hover:opacity-100 transition"
+                        />
+                        <span className="relative">
+                          <Github size={18} />
+                        </span>
+                      </a>
+                    </div>
+
+                    <div className="mt-3 text-center text-xs text-white/40">
+                      Or reach out directly.
+                    </div>
+                  </div>
+                  {/* /ICONS BELOW FORM */}
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ICONS BELOW FORM */}
-        <div className="w-full mt-8 md:mt-10 mb-14">
-          {/* Desktop / tablet: keep your Card UI */}
-          <div className="hidden md:flex justify-center items-stretch gap-8">
-            <Card
-              title="LinkedIn"
-              description="Connect with me on LinkedIn"
-              link="https://www.linkedin.com/in/aryan-singh-axone125/"
-              linkText="linkedin.com/in/aryan-singh-axone125"
-              image="/img/linkedin.png"
-            />
-            <Card
-              title="Email"
-              description="Write to me at"
-              link="mailto:aryansingh920@outlook.com"
-              linkText="aryansingh920@outlook.com"
-              image="/img/mail.png"
-            />
-            <Card
-              title="GitHub"
-              description="Check out my GitHub"
-              link="https://github.com/aryansingh920"
-              linkText="github.com/aryansingh920"
-              image="/img/github.png"
-            />
-          </div>
-
-          {/* Mobile: simple icon buttons (no Aceternity Card stuff) */}
-          <div className="md:hidden grid grid-cols-3 gap-3 max-w-md mx-auto">
-            <IconLink
-              href="https://www.linkedin.com/in/aryan-singh-axone125/"
-              label="LinkedIn"
-              img="/img/linkedin.png"
-            />
-            <IconLink
-              href="mailto:aryansingh920@outlook.com"
-              label="Email"
-              img="/img/mail.png"
-            />
-            <IconLink
-              href="https://github.com/aryansingh920"
-              label="GitHub"
-              img="/img/github.png"
-            />
-          </div>
-        </div>
+        {/* nothing else here */}
       </div>
     </div>
   );
@@ -343,31 +380,5 @@ function Field({
       </div>
       {children}
     </div>
-  );
-}
-
-function IconLink({
-  href,
-  label,
-  img,
-}: {
-  href: string;
-  label: string;
-  img: string;
-}) {
-  return (
-    <a
-      href={href}
-      target={href.startsWith("http") ? "_blank" : undefined}
-      rel={href.startsWith("http") ? "noreferrer" : undefined}
-      className="group flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-3 py-4 active:scale-[0.99] transition"
-    >
-      <div className="h-10 w-10 rounded-xl border border-white/10 bg-black/30 flex items-center justify-center overflow-hidden">
-        <img src={img} alt="" className="h-8 w-8 object-contain opacity-90" />
-      </div>
-      <div className="mt-2 text-xs font-medium text-white/75 group-hover:text-white/90">
-        {label}
-      </div>
-    </a>
   );
 }

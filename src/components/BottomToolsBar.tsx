@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Github, Linkedin, Mail } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 type Tool = {
   id: string;
@@ -19,6 +21,9 @@ export default function BottomToolsBar({
   tools,
   storageKey = "bottom_tools_hidden_v2",
 }: BottomToolsBarProps) {
+  const pathname = usePathname();
+  const hideContactIcons = pathname === "/contact"; // <-- hide ONLY on contact page
+
   const [mounted, setMounted] = useState(false);
   const [hidden, setHidden] = useState(false);
 
@@ -27,6 +32,30 @@ export default function BottomToolsBar({
   const timeoutRef = useRef<number | null>(null);
 
   const hasTools = useMemo(() => tools.length > 0, [tools]);
+
+  const contactTools: Tool[] = useMemo(
+    () => [
+      {
+        id: "contact_linkedin",
+        label: "LinkedIn",
+        href: "https://www.linkedin.com/in/aryan-singh-axone125/",
+        icon: <Linkedin size={16} />,
+      },
+      {
+        id: "contact_email",
+        label: "Email",
+        href: "mailto:aryansingh920@outlook.com",
+        icon: <Mail size={16} />,
+      },
+      {
+        id: "contact_github",
+        label: "GitHub",
+        href: "https://github.com/aryansingh920",
+        icon: <Github size={16} />,
+      },
+    ],
+    [],
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -65,7 +94,6 @@ export default function BottomToolsBar({
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-[9999] pointer-events-none">
-      {/* COLLAPSED HANDLE (only when hidden) */}
       {hidden && (
         <button
           type="button"
@@ -86,13 +114,11 @@ export default function BottomToolsBar({
             nudge ? "animate-bounce" : "",
           ].join(" ")}
         >
-          {/* glow dot */}
           <span className="absolute inset-0 rounded-full shadow-[0_0_24px_rgba(120,160,255,0.25)]" />
           <span className="relative text-white/90 text-lg leading-none">⌃</span>
         </button>
       )}
 
-      {/* MAIN BAR */}
       <div
         className={[
           "pointer-events-auto",
@@ -105,26 +131,20 @@ export default function BottomToolsBar({
           hidden ? "translate-y-[170%] pointer-events-none" : "translate-y-0",
         ].join(" ")}
       >
-        {/* outer shell */}
         <div className="relative">
-          {/* subtle animated accent line */}
           <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/35 to-transparent opacity-70" />
           <div className="absolute -top-24 left-1/2 h-48 w-[520px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_center,rgba(120,160,255,0.22),transparent_60%)] blur-2xl" />
 
-          {/* glass background */}
           <div className="bg-gradient-to-b from-black/35 via-black/55 to-black/70 backdrop-blur-2xl border border-white/10 shadow-[0_18px_60px_rgba(0,0,0,0.7)]">
-            {/* header row */}
             <div className="flex items-center justify-between px-4 py-3">
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-white/60 shadow-[0_0_18px_rgba(120,160,255,0.55)]" />
                 <span className="text-[11px] tracking-[0.16em] text-white/70 uppercase">
                   Quick tools
-                </span> 
+                </span>
               </div>
 
               <div className="flex items-center gap-2">
-                {/* collapse button */}
-
                 <button
                   type="button"
                   onClick={() => setHidden(true)}
@@ -142,7 +162,6 @@ export default function BottomToolsBar({
                   ].join(" ")}
                   aria-label="Hide tools"
                 >
-                  {/* subtle moving shine */}
                   <span
                     aria-hidden
                     className={[
@@ -152,7 +171,6 @@ export default function BottomToolsBar({
                       "animate-[toolsHideShine_2.8s_ease-in-out_infinite]",
                     ].join(" ")}
                   />
-                  {/* glow */}
                   <span
                     aria-hidden
                     className="pointer-events-none absolute inset-0 rounded-full shadow-[0_0_28px_rgba(120,160,255,0.35)] opacity-70"
@@ -162,19 +180,55 @@ export default function BottomToolsBar({
               </div>
             </div>
 
-            {/* tools grid */}
             <div className="px-3 pb-3">
-              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
-                {hasTools ? (
-                  tools.map((tool) => <ToolButton key={tool.id} tool={tool} />)
-                ) : (
-                  <div className="text-sm text-white/70 py-3 px-2">
-                    No tools configured
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-1 items-center gap-2 overflow-x-auto pr-2">
+                  {hasTools ? (
+                    tools.map((tool) => <ToolPill key={tool.id} tool={tool} />)
+                  ) : (
+                    <div className="text-sm text-white/70 py-2 px-1">
+                      No tools configured
+                    </div>
+                  )}
+                </div>
+
+                {/* hide icons on /contact */}
+                {!hideContactIcons && (
+                  <div className="flex items-center gap-1 shrink-0">
+                    {contactTools.map((t) => (
+                      <a
+                        key={t.id}
+                        href={t.href}
+                        target={
+                          t.href?.startsWith("http") ? "_blank" : undefined
+                        }
+                        rel={
+                          t.href?.startsWith("http") ? "noreferrer" : undefined
+                        }
+                        aria-label={t.label}
+                        title={t.label}
+                        className={[
+                          "relative inline-flex items-center justify-center",
+                          "h-9 w-9 rounded-full",
+                          "border border-white/12",
+                          "bg-gradient-to-b from-white/10 to-white/5",
+                          "shadow-[0_10px_34px_rgba(0,0,0,0.45)]",
+                          "ring-1 ring-white/10 hover:ring-white/20",
+                          "text-white/85 hover:text-white",
+                          "transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]",
+                        ].join(" ")}
+                      >
+                        <span
+                          aria-hidden
+                          className="pointer-events-none absolute inset-0 rounded-full shadow-[0_0_22px_rgba(120,160,255,0.18)] opacity-0 hover:opacity-100 transition"
+                        />
+                        <span className="relative">{t.icon}</span>
+                      </a>
+                    ))}
                   </div>
                 )}
               </div>
 
-              {/* footer hint line (optional) */}
               <div className="mt-3 px-1 text-[11px] text-white/40">
                 Tip: collapse when reading to avoid distractions.
               </div>
@@ -186,9 +240,9 @@ export default function BottomToolsBar({
   );
 }
 
-function ToolButton({ tool }: { tool: Tool }) {
+function ToolPill({ tool }: { tool: Tool }) {
   const base =
-    "group relative w-full rounded-xl px-3 py-2.5 " +
+    "group relative shrink-0 rounded-xl px-4 py-2 " +
     "border border-white/10 " +
     "bg-gradient-to-b from-white/8 to-white/4 " +
     "hover:from-white/12 hover:to-white/6 " +
@@ -209,7 +263,7 @@ function ToolButton({ tool }: { tool: Tool }) {
       <span className={glow} />
       <span className="relative flex items-center justify-center gap-2">
         {tool.icon ? <span className="text-white/80">{tool.icon}</span> : null}
-        <span className="truncate">{tool.label}</span>
+        <span className="whitespace-nowrap">{tool.label}</span>
       </span>
     </>
   );
