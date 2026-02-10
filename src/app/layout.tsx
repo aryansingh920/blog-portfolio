@@ -14,8 +14,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Aryan Singh",
-  description: "Portfolio and Blog",
+  title: "Aryan Singh — Digital Garden",
+  description:
+    "A collection of code, thoughts, and side projects. Exploring the intersection of design and scalable systems.",
+  icons: {
+    icon: "./favicon.png", // Path to image in your /public folder
+    // Optional: You can also specify apple touch icons
+    apple: "./favicon.png",
+  },
 };
 
 export default function RootLayout({
