@@ -4,6 +4,7 @@
 import React from "react";
 import { sendPortfolioRequest } from "@/api/sendPortfolioRequest";
 import { Github, Linkedin, Mail } from "lucide-react";
+import Link from "next/link";
 
 type FormState = {
   name: string;
@@ -260,6 +261,19 @@ export default function ContactPage() {
                     </div>
                   </form>
 
+                  <div className="mt-3 text-xs text-white/40">
+                    For more information regarding the services visit my{" "}
+                    <Link
+                      style={{
+                        color: "blue",
+                      }}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      href="https://portfolio.aryan-singh.online"
+                    >
+                      <u>Portfolio</u>
+                    </Link>
+                  </div>
                   {/* ICONS BELOW FORM */}
                   <div className="mt-6 pt-5 border-t border-white/10">
                     <div className="flex items-center justify-center gap-3">

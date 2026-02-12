@@ -92,6 +92,37 @@ export default function BottomToolsBar({
 
   if (!mounted) return null;
 
+  const SocialIcons = () => (
+    <div className="flex items-center gap-1 shrink-0">
+      {contactTools.map((t) => (
+        <a
+          key={t.id}
+          href={t.href}
+          target={t.href?.startsWith("http") ? "_blank" : undefined}
+          rel={t.href?.startsWith("http") ? "noreferrer" : undefined}
+          aria-label={t.label}
+          title={t.label}
+          className={[
+            "relative inline-flex items-center justify-center",
+            "h-9 w-9 rounded-full",
+            "border border-white/12",
+            "bg-gradient-to-b from-white/10 to-white/5",
+            "shadow-[0_10px_34px_rgba(0,0,0,0.45)]",
+            "ring-1 ring-white/10 hover:ring-white/20",
+            "text-white/85 hover:text-white",
+            "transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]",
+          ].join(" ")}
+        >
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 rounded-full shadow-[0_0_22px_rgba(120,160,255,0.18)] opacity-0 hover:opacity-100 transition"
+          />
+          <span className="relative">{t.icon}</span>
+        </a>
+      ))}
+    </div>
+  );
+
   return (
     <div className="fixed inset-x-0 bottom-0 z-[9999] pointer-events-none">
       {hidden && (
@@ -145,6 +176,13 @@ export default function BottomToolsBar({
               </div>
 
               <div className="flex items-center gap-2">
+                {/* Social icons: visible on mobile only (hidden on sm and above) */}
+                {!hideContactIcons && (
+                  <div className="flex sm:hidden items-center gap-1">
+                    <SocialIcons />
+                  </div>
+                )}
+
                 <button
                   type="button"
                   onClick={() => setHidden(true)}
@@ -192,39 +230,10 @@ export default function BottomToolsBar({
                   )}
                 </div>
 
-                {/* hide icons on /contact */}
+                {/* Social icons: visible on desktop only (hidden below sm) */}
                 {!hideContactIcons && (
-                  <div className="flex items-center gap-1 shrink-0">
-                    {contactTools.map((t) => (
-                      <a
-                        key={t.id}
-                        href={t.href}
-                        target={
-                          t.href?.startsWith("http") ? "_blank" : undefined
-                        }
-                        rel={
-                          t.href?.startsWith("http") ? "noreferrer" : undefined
-                        }
-                        aria-label={t.label}
-                        title={t.label}
-                        className={[
-                          "relative inline-flex items-center justify-center",
-                          "h-9 w-9 rounded-full",
-                          "border border-white/12",
-                          "bg-gradient-to-b from-white/10 to-white/5",
-                          "shadow-[0_10px_34px_rgba(0,0,0,0.45)]",
-                          "ring-1 ring-white/10 hover:ring-white/20",
-                          "text-white/85 hover:text-white",
-                          "transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]",
-                        ].join(" ")}
-                      >
-                        <span
-                          aria-hidden
-                          className="pointer-events-none absolute inset-0 rounded-full shadow-[0_0_22px_rgba(120,160,255,0.18)] opacity-0 hover:opacity-100 transition"
-                        />
-                        <span className="relative">{t.icon}</span>
-                      </a>
-                    ))}
+                  <div className="hidden sm:flex items-center gap-1 shrink-0">
+                    <SocialIcons />
                   </div>
                 )}
               </div>
