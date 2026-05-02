@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import BottomToolsBar from "@/components/BottomToolsBar";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,8 +19,7 @@ export const metadata: Metadata = {
   description:
     "A collection of code, thoughts, and side projects. Exploring the intersection of design and scalable systems.",
   icons: {
-    icon: "./favicon.png", // Path to image in your /public folder
-    // Optional: You can also specify apple touch icons
+    icon: "./favicon.png",
     apple: "./favicon.png",
   },
 };
@@ -46,9 +46,15 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
-
-        {/* persistent bottom tools bar across all pages */}
         <BottomToolsBar tools={tools} />
+
+        <Script id="mathjax-config" strategy="beforeInteractive">
+          {`MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] } };`}
+        </Script>
+        <Script
+          src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
