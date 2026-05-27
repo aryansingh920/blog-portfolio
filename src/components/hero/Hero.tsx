@@ -239,7 +239,7 @@ export default function Hero() {
             </h1>
 
             <p className="mt-5 text-base leading-relaxed text-white/75 sm:text-lg">
-              Engineer | Software & Data
+              Engineer | Devops | Infrastructure | Software 
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
