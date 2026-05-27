@@ -249,14 +249,14 @@ export default function Hero() {
               >
                 View Blogs
               </Link>
-              <Link
+              {/* <Link
                 href="http://portfolio.aryan-singh.online"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-xl border border-white/15 bg-white/10 px-5 py-3 text-sm text-white backdrop-blur transition hover:bg-white/15"
               >
                 Portfolio
-              </Link>
+              </Link> */}
               <Link
                 href="/contact"
                 className="rounded-xl border border-white/15 bg-white/10 px-5 py-3 text-sm text-white backdrop-blur transition hover:bg-white/15"

@@ -1,4 +1,21 @@
 [
+    {
+    "title": "Devops Engineer",
+    "company": "Apple",
+    "location": "Dublin",
+    "period": "05/2026 - Current",
+    "tags": [
+      "Devops",
+      "Infrastructure",
+      "AWS",
+      "Kubernetes",
+      "MDM",
+      "CI/CD"
+    ],
+    "bullets": [
+      "Devops Engineer at IS&T @"
+    ]
+  },
   {
     "title": "Full Stack Intern",
     "company": "Novade",
