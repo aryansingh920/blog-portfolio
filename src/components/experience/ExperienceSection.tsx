@@ -66,38 +66,44 @@ function LogoAvatar({
 }: {
   company: string; domain?: string; accentRgb: string;
 }) {
-  const [failed, setFailed] = useState(false);
+  const [imgState, setImgState] = useState<"idle" | "loaded" | "failed">("idle");
   const initial = company.charAt(0).toUpperCase();
-
-  if (domain && !failed) {
-    return (
-      <div
-        className="h-10 w-10 shrink-0 rounded-xl overflow-hidden flex items-center justify-center bg-white/95"
-        style={{ border: `1px solid rgba(${accentRgb},0.3)`, boxShadow: `0 0 14px rgba(${accentRgb},0.2)` }}
-      >
-        <img
-          src={`https://logo.clearbit.com/${domain}`}
-          alt={company}
-          width={32}
-          height={32}
-          className="h-8 w-8 object-contain"
-          onError={() => setFailed(true)}
-        />
-      </div>
-    );
-  }
+  const showLogo = domain && imgState === "loaded";
 
   return (
     <div
-      className="h-10 w-10 shrink-0 rounded-xl flex items-center justify-center font-black text-base select-none"
-      style={{
-        background: `linear-gradient(135deg, rgba(${accentRgb},0.28), rgba(${accentRgb},0.10))`,
-        border: `1px solid rgba(${accentRgb},0.45)`,
+      className="h-10 w-10 shrink-0 rounded-xl flex items-center justify-center font-black text-base select-none relative overflow-hidden"
+      style={showLogo ? {
+        background: "rgba(255,255,255,0.94)",
+        border: `1px solid rgba(${accentRgb},0.35)`,
+        boxShadow: `0 0 14px rgba(${accentRgb},0.22)`,
+      } : {
+        background: `linear-gradient(135deg, rgba(${accentRgb},0.30), rgba(${accentRgb},0.12))`,
+        border: `1px solid rgba(${accentRgb},0.50)`,
         color: `rgba(${accentRgb},1)`,
-        boxShadow: `0 0 16px rgba(${accentRgb},0.28), inset 0 1px 0 rgba(255,255,255,0.08)`,
+        boxShadow: `0 0 18px rgba(${accentRgb},0.30), inset 0 1px 0 rgba(255,255,255,0.10)`,
+        textShadow: `0 0 12px rgba(${accentRgb},0.6)`,
       }}
     >
-      {initial}
+      {/* Initial letter — visible until logo loads successfully */}
+      {!showLogo && (
+        <span className="relative z-10 leading-none">{initial}</span>
+      )}
+
+      {/* Logo image loads silently in background; appears only on success */}
+      {domain && imgState !== "failed" && (
+        <img
+          src={`https://logo.clearbit.com/${domain}`}
+          alt={company}
+          className={[
+            "absolute inset-0 h-full w-full object-contain p-1.5",
+            "transition-opacity duration-300",
+            imgState === "loaded" ? "opacity-100" : "opacity-0 pointer-events-none",
+          ].join(" ")}
+          onLoad={() => setImgState("loaded")}
+          onError={() => setImgState("failed")}
+        />
+      )}
     </div>
   );
 }
