@@ -85,19 +85,21 @@ export default function SpacePageBackground() {
     if (!ctx) return;
 
     let W = window.innerWidth;
-    let H = document.documentElement.scrollHeight;
+    let H = window.innerHeight;  // fixed canvas — only viewport size matters
     let stars: Star[] = [];
     let meteors: Meteor[] = [];
     let raf: number;
     let lastTime = performance.now();
     let nextMeteor = 3 + Math.random() * 5; // seconds until next meteor
 
+    const starDensity = window.innerWidth < 768 ? 3600 : 1800;
+
     const resize = () => {
       W = window.innerWidth;
-      H = document.documentElement.scrollHeight;
+      H = window.innerHeight;
       canvas.width  = W;
       canvas.height = H;
-      stars = buildStars(W, H, Math.round(W * H / 1800));
+      stars = buildStars(W, H, Math.round(W * H / starDensity));
     };
 
     resize();

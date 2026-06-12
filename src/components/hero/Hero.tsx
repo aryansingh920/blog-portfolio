@@ -32,6 +32,18 @@ function usePrefersReducedMotion() {
   return reduced;
 }
 
+function useIsMobile() {
+  const [mobile, setMobile] = useState(false);
+  useEffect(() => {
+    const check = () =>
+      setMobile(window.innerWidth < 768 || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return mobile;
+}
+
 function usePageScrollProgress() {
   const [p, setP] = useState(0);
   useEffect(() => {
@@ -377,9 +389,13 @@ const itemVariants = {
 
 export default function Hero() {
   const reducedMotion = usePrefersReducedMotion();
+  const isMobile      = useIsMobile();
   const [bootDone, setBootDone] = useState(false);
   const [contentReady, setContentReady] = useState(false);
   const progress = usePageScrollProgress();
+
+  // Disable 3D scene on mobile or reduced-motion — saves GPU/RAM
+  const use3D = !reducedMotion && !isMobile;
 
   // Mouse tracking for 3D tilt + blob chase
   const rawX = useMotionValue(0.5);
@@ -417,11 +433,11 @@ export default function Hero() {
   return (
     <section
       className="relative min-h-[100vh] w-full bg-black overflow-hidden"
-      onMouseMove={reducedMotion ? undefined : onMouseMove}
-      onMouseLeave={reducedMotion ? undefined : onMouseLeave}
+      onMouseMove={use3D ? onMouseMove : undefined}
+      onMouseLeave={use3D ? onMouseLeave : undefined}
     >
-      {/* ── 3D SCENE ── */}
-      {!reducedMotion ? (
+      {/* ── 3D SCENE (desktop only) ── */}
+      {use3D ? (
         <BlackHoleScene
           progress={progress}
           enabled={bootDone}
@@ -429,11 +445,11 @@ export default function Hero() {
           interactive={false}
         />
       ) : (
-        <div className="fixed inset-0 z-0 bg-[radial-gradient(circle_at_50%_55%,rgba(255,255,255,0.06),rgba(0,0,0,0.85)_55%,rgba(0,0,0,1)_100%)]" />
+        <div className="fixed inset-0 z-0 bg-[radial-gradient(ellipse_at_50%_45%,rgba(99,102,241,0.15)_0%,rgba(0,0,0,0.9)_60%,rgba(0,0,0,1)_100%)]" />
       )}
 
-      {/* ── ANIMATED GRADIENT BLOBS ── */}
-      {!reducedMotion && (
+      {/* ── ANIMATED GRADIENT BLOBS (desktop only) ── */}
+      {use3D && (
         <div className="fixed inset-0 z-[1] pointer-events-none">
           <motion.div
             className="absolute rounded-full blur-[130px]"
@@ -480,7 +496,7 @@ export default function Hero() {
 
       {/* ── PARTICLES ── */}
       <div className="fixed inset-0 z-10 pointer-events-none">
-        <ParticlesOverlay density={reducedMotion ? 40 : 70} />
+        <ParticlesOverlay density={isMobile ? 30 : reducedMotion ? 40 : 70} />
       </div>
 
       {/* ── BOOT OVERLAY ── */}
@@ -490,7 +506,7 @@ export default function Hero() {
       <motion.div
         className="relative z-20 mx-auto min-h-[100vh] max-w-6xl px-6 py-24 flex items-center"
         style={
-          !reducedMotion
+          use3D
             ? { rotateX, rotateY, transformStyle: "preserve-3d" }
             : {}
         }
@@ -599,7 +615,7 @@ export default function Hero() {
       <div className="pointer-events-none fixed inset-0 z-30 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0)_38%,rgba(0,0,0,0.72)_100%)]" />
 
       {/* ── SCROLL PROGRESS SIDEBAR (desktop only) ── */}
-      {!reducedMotion && (
+      {use3D && (
         <div className="pointer-events-none fixed right-5 top-1/2 z-40 hidden -translate-y-1/2 flex-col items-center gap-2.5 lg:flex">
           <div className="relative h-28 w-px overflow-hidden rounded-full bg-white/10">
             <motion.div

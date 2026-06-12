@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import {
   motion, useInView, useMotionValue, useScroll,
   useSpring, useTransform,
@@ -18,6 +18,17 @@ type ExperienceItem = {
 function usePrefersReducedMotion() {
   if (typeof window === "undefined") return false;
   return window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+}
+
+function useIsDesktop() {
+  const [desktop, setDesktop] = useState(false);
+  useEffect(() => {
+    const check = () => setDesktop(window.innerWidth >= 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return desktop;
 }
 
 function toSafeItems(input: unknown): ExperienceItem[] {
@@ -380,6 +391,7 @@ function ExperienceCard({
 
 export default function ExperienceSection() {
   const reduced    = usePrefersReducedMotion();
+  const isDesktop  = useIsDesktop();
   const sectionRef = useRef<HTMLElement>(null);
   const headRef    = useRef<HTMLDivElement>(null);
   const headInView = useInView(headRef, { once: true, margin: "-8% 0px" });
@@ -411,11 +423,11 @@ export default function ExperienceSection() {
         }}
       />
 
-      {/* 3D orbital rings */}
-      {!reduced && <OrbitalRings />}
+      {/* 3D orbital rings — desktop only */}
+      {!reduced && isDesktop && <OrbitalRings />}
 
-      {/* Floating cosmic orbs */}
-      {!reduced && <CosmicOrbs />}
+      {/* Floating cosmic orbs — desktop only */}
+      {!reduced && isDesktop && <CosmicOrbs />}
 
       {/* ── Section header ── */}
       <motion.div
@@ -453,8 +465,8 @@ export default function ExperienceSection() {
       {/* ── Layout: left rail + cards ── */}
       <div className="relative mx-auto max-w-3xl z-10">
 
-        {/* Plasma rail — hidden on mobile */}
-        {!reduced && (
+        {/* Plasma rail — lg+ only */}
+        {!reduced && isDesktop && (
           <div className="absolute -left-8 top-0 bottom-0 hidden w-px lg:block">
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/6 to-transparent" />
             <motion.div
