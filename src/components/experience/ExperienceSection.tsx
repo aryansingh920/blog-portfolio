@@ -2,7 +2,7 @@
 "use client";
 
 import { useMemo, useRef } from "react";
-import { motion, useInView, useScroll, useTransform } from "framer-motion";
+import { motion, useInView, useMotionValue, useScroll, useSpring, useTransform } from "framer-motion";
 
 // ✅ CHANGE THIS IMPORT PATH to wherever your JSON lives
 // Example JSON shape expected (array):
@@ -87,6 +87,7 @@ function HoloCard({
   glow: any;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
+  const cardRef = useRef<HTMLDivElement | null>(null);
   const inView = useInView(ref, { margin: "-15% 0px -15% 0px", amount: 0.25 });
 
   const y = useTransform(
@@ -103,6 +104,25 @@ function HoloCard({
     const a = 0.06 + v * 0.09;
     return `rgba(255,255,255,${a})`;
   });
+
+  // 3D tilt on hover
+  const tiltX = useMotionValue(0);
+  const tiltY = useMotionValue(0);
+  const tiltSpringX = useSpring(tiltX, { stiffness: 200, damping: 22 });
+  const tiltSpringY = useSpring(tiltY, { stiffness: 200, damping: 22 });
+  const cardRotateX = useTransform(tiltSpringY, [-0.5, 0.5], [6, -6]);
+  const cardRotateY = useTransform(tiltSpringX, [-0.5, 0.5], [-8, 8]);
+  const shimmerX = useTransform(tiltSpringX, [-0.5, 0.5], ["20%", "80%"]);
+  const shimmerY = useTransform(tiltSpringY, [-0.5, 0.5], ["20%", "80%"]);
+
+  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = cardRef.current;
+    if (!el) return;
+    const { left, top, width, height } = el.getBoundingClientRect();
+    tiltX.set(((e.clientX - left) / width - 0.5));
+    tiltY.set(((e.clientY - top) / height - 0.5));
+  };
+  const onMouseLeave = () => { tiltX.set(0); tiltY.set(0); };
 
   return (
     <motion.div
@@ -124,7 +144,16 @@ function HoloCard({
       />
 
       <motion.div
-        style={{ borderColor, backgroundColor }}
+        ref={cardRef}
+        style={{
+          borderColor,
+          backgroundColor,
+          rotateX: cardRotateX,
+          rotateY: cardRotateY,
+          transformStyle: "preserve-3d",
+        }}
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
         className={cn(
           "relative overflow-hidden rounded-2xl border",
           "backdrop-blur-2xl",
@@ -132,6 +161,18 @@ function HoloCard({
           "px-6 py-6 sm:px-7"
         )}
       >
+        {/* Dynamic shimmer spot that follows mouse within card */}
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 rounded-2xl"
+          style={{
+            background: useTransform(
+              [shimmerX, shimmerY],
+              ([sx, sy]) =>
+                `radial-gradient(circle 180px at ${sx} ${sy}, rgba(255,255,255,0.07), transparent 70%)`
+            ),
+          }}
+        />
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,0.22),transparent_40%),radial-gradient(circle_at_80%_0%,rgba(255,255,255,0.10),transparent_45%),linear-gradient(135deg,rgba(255,255,255,0.10),rgba(255,255,255,0.03)_40%,rgba(0,0,0,0)_70%)] opacity-70"

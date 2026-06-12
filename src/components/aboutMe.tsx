@@ -1,153 +1,211 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import styles from "./AboutMe.module.css";
+import { useRef } from "react";
+import { motion, useInView, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { ImageDP } from "./ImageDP";
 
+// ─── 3D tilt card ─────────────────────────────────────────────────────────────
 
-export default function AboutMe() {
+function TiltCard({
+  children,
+  className = "",
+  glowColor = "rgba(167,139,250,0.15)",
+}: {
+  children: React.ReactNode;
+  className?: string;
+  glowColor?: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-10% 0px" });
+
+  const tx = useMotionValue(0);
+  const ty = useMotionValue(0);
+  const sx = useSpring(tx, { stiffness: 180, damping: 20 });
+  const sy = useSpring(ty, { stiffness: 180, damping: 20 });
+  const rotateX = useTransform(sy, [-0.5, 0.5], [5, -5]);
+  const rotateY = useTransform(sx, [-0.5, 0.5], [-7, 7]);
+  const shimX = useTransform(sx, [-0.5, 0.5], ["20%", "80%"]);
+  const shimY = useTransform(sy, [-0.5, 0.5], ["20%", "80%"]);
+
+  const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = ref.current;
+    if (!el) return;
+    const { left, top, width, height } = el.getBoundingClientRect();
+    tx.set((e.clientX - left) / width - 0.5);
+    ty.set((e.clientY - top) / height - 0.5);
+  };
+  const onLeave = () => { tx.set(0); ty.set(0); };
 
   return (
-    <section className={styles.section} id="about">
-      <div className={styles.shell}>
-        <div className={styles.glass}>
-          <header className={styles.header}>
-            <h2 className={styles.title}>About Me</h2>
-            <div className={styles.subtleLine} />
-          </header>
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
+      animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+      className={`relative overflow-hidden rounded-2xl border border-white/8 bg-white/[0.04] backdrop-blur-xl
+        shadow-[0_20px_60px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.06)]
+        transition-shadow duration-300 hover:shadow-[0_28px_80px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.08)]
+        ${className}`}
+    >
+      {/* Top shimmer line */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(167,139,250,0.4), transparent)",
+        }}
+      />
+      {/* Mouse spotlight */}
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 rounded-2xl"
+        style={{
+          background: useTransform(
+            [shimX, shimY],
+            ([x, y]) =>
+              `radial-gradient(circle 200px at ${x} ${y}, ${glowColor}, transparent 70%)`
+          ),
+        }}
+      />
+      {/* Outer glow */}
+      <div
+        className="pointer-events-none absolute -inset-4 rounded-[28px] opacity-0 transition-opacity duration-500 group-hover:opacity-100 blur-2xl"
+        style={{ background: glowColor }}
+      />
+      <div className="relative p-6 sm:p-7">{children}</div>
+    </motion.div>
+  );
+}
 
-          <div className={styles.grid}>
-            <div>
-              <ImageDP />
-            </div>
-            <div className={styles.card}>
-              <p className={styles.p}>
-                I am a passionate and versatile innovator with a deep-rooted
-                curiosity for solving complex problems at the intersection of
-                technology, data, and strategy. With a strong foundation in
-                computational thinking and analytical rigor, I thrive on
-                transforming abstract concepts into tangible solutions that
-                drive progress and create value. My journey is fueled by a blend
-                of creativity, technical expertise, and an insatiable appetite
-                for learning, allowing me to navigate diverse domains and adapt
-                to the ever-evolving landscape of innovation.
-              </p>
-            </div>
-            <div className={styles.card}>
-              <h3 className={styles.h3}>Professional Background</h3>
-              <p className={styles.p}>
-                I have honed my skills through diverse professional roles,
-                including internships at renowned organizations such as Novade,
-                Samsung PRISM, Chennai Metro Rails Limited, Infosys, Nucash, and
-                Edue Limited. These experiences equipped me with a deep
-                understanding of full-stack and iOS development, algorithms,
-                cloud services, and DevOps. As the CTO & Co-Founder of Canverro,
-                I spearheaded innovative solutions that bridged gaps in
-                technology, driving meaningful impact.
-              </p>
-            </div>
+// ─── Section heading ───────────────────────────────────────────────────────────
 
-            <div className={styles.card}>
-              <h3 className={styles.h3}>Research and Innovations</h3>
-              <p className={styles.p}>
-                I am deeply passionate about exploring intersections of quantum
-                computing and finance. My dissertation on Quantum Machine
-                Learning (QML) delves into leveraging quantum algorithms for
-                financial modeling, showcasing my ability to apply cutting-edge
-                research to industry challenges. Notably, I’ve devised a method
-                that uses qudits and Grover’s algorithm to break hash functions
-                in linear time, demonstrating my knack for tackling complex
-                computational problems with creative solutions.
-              </p>
-            </div>
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.3em] text-white/35 mb-2">
+      {children}
+    </div>
+  );
+}
 
-            <div className={styles.card}>
-              <h3 className={styles.h3}>Investment Insights</h3>
-              <p className={styles.p}>
-                I am equally fascinated by financial markets, with a focus on
-                investment strategies and quantitative analysis. I’ve analyzed
-                U.S. stocks like ServiceNow and Paycom Software, exploring
-                valuation metrics such as Price-to-Earnings ratios, and I
-                actively identify growth opportunities in small-cap companies
-                with promising revenue potential.
-              </p>
-            </div>
+// ─── AboutMe ──────────────────────────────────────────────────────────────────
 
-            <div className={styles.cardWide}>
-              <h3 className={styles.h3}>Beyond the Professional Sphere</h3>
-              <p className={styles.p}>
-                Outside the realm of my technical and professional endeavors, I
-                immerse myself in exploring the profound mysteries of existence
-                and the intricate tapestry of our universe. My interests extend
-                far beyond the confines of technology and finance, reaching into
-                the realms of evolution, space, quantum mechanics, philosophy,
-                and history—subjects that not only inspire but also shape my
-                understanding of humanity’s place in the cosmos. I often find
-                myself reflecting on the grand narratives of our universe, from
-                the moment of the Big Bang to the evolutionary journey that led
-                to conscious beings pondering their origins.
-                <br />
-                <br /> The interplay between the infinitely vast cosmos and the
-                intricate workings of quantum particles fascinates me, as it
-                bridges the macro and micro scales of existence. These
-                reflections fuel my curiosity about how the fundamental
-                principles of the universe can be harnessed, not just for
-                technological advancements, but to answer timeless questions
-                about existence itself. Space, in particular, captivates my
-                imagination—not merely as a frontier of exploration but as a
-                stage for humanity’s potential to transcend its limitations. I
-                marvel at the sheer vastness of the cosmos and the profound
-                questions it raises about life beyond Earth, the origins of
-                time, and the potential for interstellar communication.
-                <br />
-                <br /> This fascination often finds parallels in my projects,
-                like secure satellite communication protocols, where I seek to
-                replicate, albeit in a small way, the seamless and dynamic
-                systems that govern celestial bodies. Philosophy and history
-                ground these explorations, providing a framework to connect
-                abstract scientific concepts with human experience. I am
-                intrigued by how ancient civilizations grappled with questions
-                of purpose and existence, and how their insights echo in today’s
-                scientific pursuits. The convergence of these disciplines—where
-                philosophy informs science, and history illuminates the
-                future—is a constant source of inspiration for me. Quantum
-                mechanics, with its mind-bending principles and infinite
-                possibilities, is another area where I find endless wonder.
-                <br />
-                <br />
-                The duality of particles, the strange entanglements, and the
-                non-intuitive nature of quantum reality challenge the very
-                foundations of classical thinking, pushing the boundaries of
-                what we understand about reality itself. My work in quantum
-                machine learning and algorithmic development is deeply
-                influenced by this fascination, as I strive to bring abstract
-                theories into practical applications that could revolutionize
-                industries. I also take great interest in the interconnectedness
-                of life and the philosophical implications of evolution. From
-                the simplest single-celled organisms to the emergence of
-                complex, intelligent beings, I find awe in how {"nature's"}{" "}
-                patterns and processes mirror the complexity and elegance of the
-                systems I study and create in my work. Writing and thinking
-                about these topics allow me to connect deeply with both the
-                material and the immaterial—using words to explore ideas that
-                lie at the intersection of science, philosophy, and the human
-                condition.
-                <br />
-                <br />
-                It is through this lens that I approach both my professional and
-                personal pursuits, seeking to understand not just how things
-                work but why they matter in the grand scheme of existence. For
-                me, these explorations are not mere intellectual pursuits; they
-                are a way to contextualize my work and my life. They remind me
-                that while we may strive to solve immediate problems and push
-                the boundaries of technology, we are ultimately participants in
-                a much larger story—a story of evolution, discovery, and the
-                enduring quest to understand our place in the universe.
-              </p>
-            </div>
-          </div>
+export default function AboutMe() {
+  const headRef = useRef<HTMLDivElement>(null);
+  const headInView = useInView(headRef, { once: true, margin: "-10% 0px" });
+
+  return (
+    <section id="about" className="relative w-full">
+      {/* Section header */}
+      <motion.div
+        ref={headRef}
+        initial={{ opacity: 0, y: 20 }}
+        animate={headInView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        className="mb-10"
+      >
+        <div className="inline-flex items-center gap-3">
+          <div className="h-px w-8 bg-gradient-to-r from-transparent to-violet-400/60" />
+          <span className="font-mono text-[10px] tracking-[0.3em] text-white/35 uppercase">
+            About
+          </span>
+          <div className="h-px w-8 bg-gradient-to-l from-transparent to-violet-400/60" />
         </div>
+        <h2
+          className="mt-3 font-bold tracking-tight leading-tight"
+          style={{
+            fontSize: "clamp(2rem, 5vw, 3rem)",
+            background:
+              "linear-gradient(135deg, #fff 0%, rgba(167,139,250,0.85) 60%, rgba(99,102,241,0.7) 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
+          Who I Am
+        </h2>
+      </motion.div>
+
+      {/* Grid */}
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+        {/* Avatar + intro — spans full width on mobile, 1 col on desktop */}
+        <TiltCard
+          className="md:col-span-2 lg:col-span-1 flex flex-col items-center text-center"
+          glowColor="rgba(167,139,250,0.12)"
+        >
+          <div className="mb-5">
+            <ImageDP />
+          </div>
+          <SectionLabel>Identity</SectionLabel>
+          <p className="text-sm leading-relaxed text-white/60">
+            Passionate and versatile innovator at the intersection of
+            technology, data, and strategy. Fueled by creativity, technical
+            depth, and an appetite for unsolved problems.
+          </p>
+        </TiltCard>
+
+        {/* Professional background */}
+        <TiltCard glowColor="rgba(99,102,241,0.14)">
+          <SectionLabel>Career</SectionLabel>
+          <h3 className="mb-3 text-base font-semibold text-white/90">
+            Professional Background
+          </h3>
+          <p className="text-sm leading-relaxed text-white/55">
+            Roles spanning Novade, Samsung PRISM, Chennai Metro Rails, Infosys,
+            Nucash, and Edue — covering full-stack, iOS, cloud, and DevOps. CTO
+            &amp; Co-Founder of Canverro, bridging technology gaps with
+            meaningful impact.
+          </p>
+        </TiltCard>
+
+        {/* Research */}
+        <TiltCard glowColor="rgba(236,72,153,0.1)">
+          <SectionLabel>Research</SectionLabel>
+          <h3 className="mb-3 text-base font-semibold text-white/90">
+            Research &amp; Innovations
+          </h3>
+          <p className="text-sm leading-relaxed text-white/55">
+            Dissertation in Quantum Machine Learning for financial modeling.
+            Devised a method using qudits and Grover&apos;s algorithm to break
+            hash functions in linear time — applying quantum theory to real
+            computational limits.
+          </p>
+        </TiltCard>
+
+        {/* Quant */}
+        <TiltCard glowColor="rgba(34,197,94,0.1)">
+          <SectionLabel>Finance</SectionLabel>
+          <h3 className="mb-3 text-base font-semibold text-white/90">
+            Investment Insights
+          </h3>
+          <p className="text-sm leading-relaxed text-white/55">
+            Deep focus on quantitative investment strategy. Analyzed U.S. stocks
+            like ServiceNow and Paycom via P/E ratios and revenue growth signals.
+            Identifying alpha in small-cap companies with asymmetric upside.
+          </p>
+        </TiltCard>
+
+        {/* Philosophy — spans 2 cols */}
+        <TiltCard
+          className="md:col-span-2"
+          glowColor="rgba(167,139,250,0.1)"
+        >
+          <SectionLabel>Beyond Work</SectionLabel>
+          <h3 className="mb-3 text-base font-semibold text-white/90">
+            Beyond the Professional Sphere
+          </h3>
+          <p className="text-sm leading-relaxed text-white/55">
+            Immersed in the profound mysteries of existence — evolution, space,
+            quantum mechanics, philosophy, history. The interplay between an
+            infinite cosmos and quantum-scale reality shapes how I approach
+            every system I build. Space captivates as humanity&apos;s next
+            frontier; philosophy grounds abstract science in human experience.
+            These aren&apos;t separate from my work — they are the lens through
+            which I pursue it.
+          </p>
+        </TiltCard>
       </div>
     </section>
   );

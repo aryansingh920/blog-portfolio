@@ -160,6 +160,24 @@
   70% { transform: translate(15px, -10px) scale(0.92); opacity: 0.04; }
 }
 
+@keyframes heroScanLine {
+  0%   { top: -2px; opacity: 0; }
+  5%   { opacity: 0.9; }
+  95%  { opacity: 0.5; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.hero-scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(74,222,128,0.7) 30%, rgba(74,222,128,0.9) 50%, rgba(74,222,128,0.7) 70%, transparent 100%);
+  box-shadow: 0 0 12px rgba(74,222,128,0.5), 0 0 24px rgba(74,222,128,0.2);
+  animation: heroScanLine 0.65s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+  pointer-events: none;
+}
+
 @keyframes readingBarGrow {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
