@@ -1,35 +1,20 @@
 [
-    {
+  {
     "title": "Devops Engineer",
     "company": "Apple",
+    "domain": "apple.com",
     "location": "Dublin",
     "period": "05/2026 - Current",
-    "tags": [
-      "Devops",
-      "Infrastructure",
-      "AWS",
-      "Kubernetes",
-      "MDM",
-      "CI/CD"
-    ],
-    "bullets": [
-      "Devops Engineer at IS&T @"
-    ]
+    "tags": ["Devops", "Infrastructure", "AWS", "Kubernetes", "MDM", "CI/CD"],
+    "bullets": ["Devops Engineer at IS&T — managing cloud infrastructure and MDM pipelines across Apple's enterprise fleet."]
   },
   {
     "title": "Full Stack Intern",
     "company": "Novade",
-    "location": "Singapore (Remote; India outsourcing with Maiver+Vidorno)",
+    "domain": "novade.net",
+    "location": "Singapore (Remote)",
     "period": "09/2023 — 04/2024",
-    "tags": [
-      "Full-Stack",
-      "Lead Gen",
-      "Excel Automation",
-      "MERN",
-      "Go-Fiber",
-      "FastAPI",
-      "CI/CD"
-    ],
+    "tags": ["Full-Stack", "Lead Gen", "Excel Automation", "MERN", "Go-Fiber", "FastAPI", "CI/CD"],
     "bullets": [
       "Built an automated lead generation tool, improving efficiency by 30% via Excel automation and complex data manipulation.",
       "Optimized stacks (MERN, Go-Fiber, FastAPI), increasing deployment speed by 15% through refined CI/CD pipeline automation."
@@ -38,7 +23,8 @@
   {
     "title": "Full Stack Web Development Intern",
     "company": "Samsung PRISM",
-    "location": "India (R&D Project/Internship, Remote)",
+    "domain": "samsung.com",
+    "location": "India (R&D Project, Remote)",
     "period": "12/2021 — 10/2022",
     "tags": ["Full-Stack", "Node.js", "OpenCV", "Video Streaming", "Cloud"],
     "bullets": [
@@ -48,7 +34,8 @@
   },
   {
     "title": "Full Stack Web Development Intern",
-    "company": "Chennai Metro Rails Limited",
+    "company": "Chennai Metro Rail",
+    "domain": "chennaimetrorail.org",
     "location": "India (Remote)",
     "period": "07/2022 — 01/2023",
     "tags": ["Full-Stack", "MERN", "AWS", "UI/UX", "React", "Scalability"],
@@ -60,6 +47,7 @@
   {
     "title": "iOS App Development Intern",
     "company": "Infosys",
+    "domain": "infosys.com",
     "location": "Chennai, India",
     "period": "04/2023 — 05/2023",
     "tags": ["iOS", "Swift", "UIKit", "SwiftUI", "Node.js", "Backend"],
@@ -73,14 +61,7 @@
     "company": "NuCash",
     "location": "India (Fin-tech Startup, Remote)",
     "period": "12/2022 — 03/2023",
-    "tags": [
-      "Full-Stack",
-      "MERN",
-      "Next.js",
-      "Golang",
-      "Microservices",
-      "Cloud"
-    ],
+    "tags": ["Full-Stack", "MERN", "Next.js", "Golang", "Microservices", "Cloud"],
     "bullets": [
       "Integrated 20+ new features using MERN stack and Next, improving user experience by 40%.",
       "Improved cloud infrastructure management, reducing latency by 10% using Golang microservices."
@@ -98,17 +79,10 @@
   },
   {
     "title": "CTO & Co-Founder",
-    "company": "Canverro (formerly Zigy.in)",
+    "company": "Canverro",
     "location": "India (Remote)",
     "period": "03/2020 — 08/2024",
-    "tags": [
-      "Leadership",
-      "E-Commerce",
-      "Cloud",
-      "DevOps",
-      "Automation",
-      "NetOps"
-    ],
+    "tags": ["Leadership", "E-Commerce", "Cloud", "DevOps", "Automation", "NetOps"],
     "bullets": [
       "Scaled user base by 50% over 18 months by architecting a robust e-commerce platform on cloud.",
       "Reduced deployment downtime by 30% through automation and NetOps strategies."

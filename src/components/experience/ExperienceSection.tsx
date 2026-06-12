@@ -1,353 +1,491 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useMemo, useRef } from "react";
-import { motion, useInView, useMotionValue, useScroll, useSpring, useTransform } from "framer-motion";
-
+import { useMemo, useRef, useState } from "react";
+import {
+  motion, useInView, useMotionValue, useScroll,
+  useSpring, useTransform,
+} from "framer-motion";
 import experienceJson from "@/../public/data/expreience.json";
 
-type ExperienceItem = {
-  title: string;
-  company: string;
-  location?: string;
-  period: string;
-  tags: string[];
-  bullets: string[];
-};
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-function cn(...c: Array<string | false | null | undefined>) {
-  return c.filter(Boolean).join(" ");
-}
+type ExperienceItem = {
+  title: string; company: string; location?: string; domain?: string;
+  period: string; tags: string[]; bullets: string[];
+};
 
 function usePrefersReducedMotion() {
   if (typeof window === "undefined") return false;
   return window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
 }
 
-function GlowGrid() {
+function toSafeItems(input: unknown): ExperienceItem[] {
+  if (!Array.isArray(input)) return [];
+  return (input as any[]).flatMap((raw) => {
+    const title   = typeof raw?.title   === "string" ? raw.title   : "";
+    const company = typeof raw?.company === "string" ? raw.company : "";
+    const period  = typeof raw?.period  === "string" ? raw.period  : "";
+    if (!title || !company || !period) return [];
+    const location = typeof raw?.location === "string" && raw.location.trim() ? raw.location : undefined;
+    const domain   = typeof raw?.domain   === "string" && raw.domain.trim()   ? raw.domain   : undefined;
+    const tags     = Array.isArray(raw?.tags)    ? raw.tags.filter((t: any) => typeof t === "string") : [];
+    const bullets  = Array.isArray(raw?.bullets) ? raw.bullets.filter((b: any) => typeof b === "string") : [];
+    return [{ title, company, location, domain, period, tags, bullets }];
+  });
+}
+
+// ─── Accent palette ───────────────────────────────────────────────────────────
+
+const ACCENTS = [
+  { rgb: "124,58,237",  hex: "#7c3aed" }, // violet
+  { rgb: "37,99,235",   hex: "#2563eb" }, // blue
+  { rgb: "219,39,119",  hex: "#db2777" }, // pink
+  { rgb: "2,132,199",   hex: "#0284c7" }, // sky
+  { rgb: "5,150,105",   hex: "#059669" }, // emerald
+  { rgb: "217,119,6",   hex: "#d97706" }, // amber
+  { rgb: "220,38,38",   hex: "#dc2626" }, // red
+  { rgb: "109,40,217",  hex: "#6d28d9" }, // purple
+];
+
+// ─── Company Logo ─────────────────────────────────────────────────────────────
+
+function LogoAvatar({
+  company, domain, accentRgb,
+}: {
+  company: string; domain?: string; accentRgb: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  const initial = company.charAt(0).toUpperCase();
+
+  if (domain && !failed) {
+    return (
+      <div
+        className="h-10 w-10 shrink-0 rounded-xl overflow-hidden flex items-center justify-center bg-white/95"
+        style={{ border: `1px solid rgba(${accentRgb},0.3)`, boxShadow: `0 0 14px rgba(${accentRgb},0.2)` }}
+      >
+        <img
+          src={`https://logo.clearbit.com/${domain}`}
+          alt={company}
+          width={32}
+          height={32}
+          className="h-8 w-8 object-contain"
+          onError={() => setFailed(true)}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.35)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.35)_1px,transparent_1px)] [background-size:56px_56px]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.08),rgba(0,0,0,0)_55%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0)_40%,rgba(0,0,0,0.85)_100%)]" />
+    <div
+      className="h-10 w-10 shrink-0 rounded-xl flex items-center justify-center font-black text-base select-none"
+      style={{
+        background: `linear-gradient(135deg, rgba(${accentRgb},0.28), rgba(${accentRgb},0.10))`,
+        border: `1px solid rgba(${accentRgb},0.45)`,
+        color: `rgba(${accentRgb},1)`,
+        boxShadow: `0 0 16px rgba(${accentRgb},0.28), inset 0 1px 0 rgba(255,255,255,0.08)`,
+      }}
+    >
+      {initial}
     </div>
   );
 }
 
-function toSafeExperienceItems(input: unknown): ExperienceItem[] {
-  if (!Array.isArray(input)) return [];
+// ─── Orbital ring decorations ─────────────────────────────────────────────────
 
-  return input
-    .map((raw: any) => {
-      const title = typeof raw?.title === "string" ? raw.title : "";
-      const company = typeof raw?.company === "string" ? raw.company : "";
-      const location =
-        typeof raw?.location === "string" && raw.location.trim()
-          ? raw.location
-          : undefined;
-      const period = typeof raw?.period === "string" ? raw.period : "";
-
-      const tags = Array.isArray(raw?.tags)
-        ? raw.tags.filter((t: any) => typeof t === "string" && t.trim())
-        : [];
-
-      const bullets = Array.isArray(raw?.bullets)
-        ? raw.bullets.filter((b: any) => typeof b === "string" && b.trim())
-        : [];
-
-      if (!title || !company || !period) return null;
-
-      return { title, company, location, period, tags, bullets } as ExperienceItem;
-    })
-    .filter(Boolean) as ExperienceItem[];
+function OrbitalRings() {
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+      style={{ perspective: "1100px", perspectiveOrigin: "70% 45%" }}
+    >
+      {/* Large violet ring — top right */}
+      <div
+        className="exp-orbit-ring ring-violet"
+        style={{ left: "72%", top: "22%", width: 560, height: 560, marginLeft: -280, marginTop: -280 }}
+      />
+      {/* Medium blue ring — bottom left */}
+      <div
+        className="exp-orbit-ring ring-blue"
+        style={{ left: "14%", top: "68%", width: 360, height: 360, marginLeft: -180, marginTop: -180 }}
+      />
+      {/* Small pink ring — mid right */}
+      <div
+        className="exp-orbit-ring ring-pink"
+        style={{ left: "85%", top: "58%", width: 220, height: 220, marginLeft: -110, marginTop: -110 }}
+      />
+    </div>
+  );
 }
 
-function HoloCard({
-  item,
-  idx,
-  glow,
+// ─── Floating cosmic orbs ─────────────────────────────────────────────────────
+
+function CosmicOrbs() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className="exp-cosmic-orb orb-1" />
+      <div className="exp-cosmic-orb orb-2" />
+      <div className="exp-cosmic-orb orb-3" />
+    </div>
+  );
+}
+
+// ─── Card ─────────────────────────────────────────────────────────────────────
+
+function ExperienceCard({
+  item, idx, total,
 }: {
-  item: ExperienceItem;
-  idx: number;
-  glow: any;
+  item: ExperienceItem; idx: number; total: number;
 }) {
-  const wrapRef = useRef<HTMLDivElement | null>(null);
-  const cardRef = useRef<HTMLDivElement | null>(null);
-  const inView = useInView(wrapRef, { once: true, margin: "-6% 0px" });
+  const wrapRef  = useRef<HTMLDivElement>(null);
+  const cardRef  = useRef<HTMLDivElement>(null);
+  const inView   = useInView(wrapRef, { once: true, margin: "-4% 0px" });
+  const [scanKey, setScanKey] = useState(0);
+  const [hovered, setHovered] = useState(false);
 
-  const y = useTransform(glow, (v: number) => (idx % 2 === 0 ? -1 : 1) * v * 8);
-  const borderColor = useTransform(glow, (v: number) => `rgba(255,255,255,${0.1 + v * 0.22})`);
-  const backgroundColor = useTransform(glow, (v: number) => `rgba(255,255,255,${0.05 + v * 0.09})`);
-
-  // Hover tilt
   const tiltX = useMotionValue(0);
   const tiltY = useMotionValue(0);
-  const tiltSpringX = useSpring(tiltX, { stiffness: 200, damping: 22 });
-  const tiltSpringY = useSpring(tiltY, { stiffness: 200, damping: 22 });
-  const cardRotateX = useTransform(tiltSpringY, [-0.5, 0.5], [5, -5]);
-  const cardRotateY = useTransform(tiltSpringX, [-0.5, 0.5], [-7, 7]);
-  const shimmerX = useTransform(tiltSpringX, [-0.5, 0.5], ["20%", "80%"]);
-  const shimmerY = useTransform(tiltSpringY, [-0.5, 0.5], ["20%", "80%"]);
+  const tSX   = useSpring(tiltX, { stiffness: 140, damping: 16 });
+  const tSY   = useSpring(tiltY, { stiffness: 140, damping: 16 });
+  const rotX  = useTransform(tSY, [-0.5, 0.5], [12, -12]);
+  const rotY  = useTransform(tSX, [-0.5, 0.5], [-16, 16]);
+  const shimX = useTransform(tSX, [-0.5, 0.5], ["10%", "90%"]);
+  const shimY = useTransform(tSY, [-0.5, 0.5], ["10%", "90%"]);
 
   const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const el = cardRef.current;
     if (!el) return;
     const { left, top, width, height } = el.getBoundingClientRect();
-    tiltX.set((e.clientX - left) / width - 0.5);
-    tiltY.set((e.clientY - top) / height - 0.5);
+    tiltX.set((e.clientX - left) / width  - 0.5);
+    tiltY.set((e.clientY - top)  / height - 0.5);
   };
-  const onMouseLeave = () => {
-    tiltX.set(0);
-    tiltY.set(0);
-  };
+  const onMouseLeave = () => { tiltX.set(0); tiltY.set(0); setHovered(false); };
+  const onMouseEnter = () => { setHovered(true); setScanKey((k) => k + 1); };
 
-  // Even cards flip from left, odd from right
-  const flipFrom = idx % 2 === 0 ? -90 : 90;
-  const staggerDelay = (idx % 3) * 0.11;
+  const a = ACCENTS[idx % ACCENTS.length];
+  const entranceDelay = (idx % 4) * 0.12;
+  const rotYFrom = idx % 2 === 0 ? -165 : 165;
+  const floatCls = ["exp-float-0", "exp-float-1", "exp-float-2"][idx % 3];
 
   return (
-    <motion.div ref={wrapRef} style={{ y }} className="relative">
-      {/* perspective wrapper — required for child rotateY to look 3D */}
-      <div style={{ perspective: "1100px" }}>
+    <div ref={wrapRef} style={{ perspective: "2200px" }}>
+      <div
+        className={inView ? floatCls : ""}
+        style={{ animationDelay: `${entranceDelay + 1.8}s`, animationFillMode: "both" }}
+      >
+        {/* ── Deep-space 3D entrance ── */}
         <motion.div
-          initial={{ rotateY: flipFrom, scale: 0.78, opacity: 0, y: 30 }}
-          animate={inView ? { rotateY: 0, scale: 1, opacity: 1, y: 0 } : {}}
+          initial={{ rotateY: rotYFrom, scale: 0.14, opacity: 0, y: 90, filter: "blur(32px)" }}
+          animate={inView
+            ? { rotateY: 0, scale: 1, opacity: 1, y: 0, filter: "blur(0px)" }
+            : {}}
           transition={{
-            rotateY: { type: "spring", stiffness: 58, damping: 13, delay: staggerDelay },
-            scale: { type: "spring", stiffness: 80, damping: 16, delay: staggerDelay },
-            y: { type: "spring", stiffness: 80, damping: 16, delay: staggerDelay },
-            opacity: { duration: 0.28, delay: staggerDelay },
+            rotateY: { type: "spring", stiffness: 28, damping: 9,  delay: entranceDelay },
+            scale:   { type: "spring", stiffness: 36, damping: 11, delay: entranceDelay },
+            y:       { type: "spring", stiffness: 36, damping: 11, delay: entranceDelay },
+            opacity: { duration: 0.32, delay: entranceDelay },
+            filter:  { duration: 0.65, delay: entranceDelay },
           }}
           style={{ transformStyle: "preserve-3d" }}
-          className="relative"
         >
-          {/* Outer glow blob */}
+          {/* Nebula glow on hover */}
           <motion.div
             aria-hidden
-            style={{ opacity: glow }}
-            className="pointer-events-none absolute -inset-6 rounded-[28px] bg-[radial-gradient(circle_at_30%_20%,rgba(120,200,255,0.18),transparent_55%),radial-gradient(circle_at_70%_70%,rgba(255,120,220,0.12),transparent_60%)] blur-2xl"
+            className="pointer-events-none absolute -inset-12 rounded-[48px] blur-3xl"
+            animate={{ opacity: hovered ? 0.7 : 0.15 }}
+            transition={{ duration: 0.45 }}
+            style={{
+              background: `radial-gradient(ellipse at 40% 35%, rgba(${a.rgb},0.4) 0%, transparent 60%)`,
+            }}
           />
 
-          {/* Tiltable card surface */}
+          {/* ── Tiltable card surface ── */}
           <motion.div
             ref={cardRef}
-            style={{
-              borderColor,
-              backgroundColor,
-              rotateX: cardRotateX,
-              rotateY: cardRotateY,
-              transformStyle: "preserve-3d",
-            }}
+            style={{ rotateX: rotX, rotateY: rotY, transformStyle: "preserve-3d" }}
             onMouseMove={onMouseMove}
             onMouseLeave={onMouseLeave}
-            className={cn(
-              "relative overflow-hidden rounded-2xl border",
-              "backdrop-blur-2xl",
-              "shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_30px_80px_rgba(0,0,0,0.65)]",
-              "px-6 py-6 sm:px-7"
-            )}
+            onMouseEnter={onMouseEnter}
+            animate={{
+              boxShadow: hovered
+                ? `0 0 0 1px rgba(${a.rgb},0.55), 0 40px 100px rgba(0,0,0,0.92), 0 0 70px rgba(${a.rgb},0.22)`
+                : `0 0 0 1px rgba(255,255,255,0.07), 0 28px 75px rgba(0,0,0,0.8)`,
+              y: hovered ? -6 : 0,
+            }}
+            transition={{ duration: 0.28 }}
+            className="relative overflow-hidden rounded-2xl"
           >
-            {/* Mouse-tracking shimmer */}
+            {/* Card body */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(145deg, #0f0f20 0%, #09091a 55%, #060610 100%)",
+              }}
+            />
+
+            {/* Left accent stripe */}
+            <div
+              className="absolute left-0 top-0 bottom-0 w-[3px]"
+              style={{
+                background: `linear-gradient(to bottom, ${a.hex}, rgba(${a.rgb},0.25))`,
+                boxShadow: `2px 0 18px rgba(${a.rgb},0.35)`,
+              }}
+            />
+
+            {/* Top edge glow */}
+            <div
+              className="absolute top-0 inset-x-0 h-px"
+              style={{
+                background: `linear-gradient(90deg, ${a.hex}, rgba(${a.rgb},0.2) 50%, transparent 80%)`,
+              }}
+            />
+
+            {/* Large watermark number */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute top-2 right-4 select-none font-black leading-none"
+              style={{ fontSize: "7.5rem", color: `rgba(${a.rgb},0.05)` }}
+            >
+              {String(idx + 1).padStart(2, "0")}
+            </div>
+
+            {/* Scan line on hover */}
+            {hovered && <div key={scanKey} className="exp-scan" />}
+
+            {/* Specular glass highlight */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background:
+                  "radial-gradient(ellipse at 22% 0%, rgba(255,255,255,0.07), transparent 52%)",
+              }}
+            />
+
+            {/* Mouse spotlight */}
             <motion.div
               aria-hidden
               className="pointer-events-none absolute inset-0 rounded-2xl"
               style={{
                 background: useTransform(
-                  [shimmerX, shimmerY],
-                  ([sx, sy]) =>
-                    `radial-gradient(circle 180px at ${sx} ${sy}, rgba(255,255,255,0.07), transparent 70%)`
+                  [shimX, shimY],
+                  ([x, y]) =>
+                    `radial-gradient(circle 260px at ${x} ${y}, rgba(${a.rgb},0.10), transparent 65%)`
                 ),
               }}
             />
 
-            {/* Glass surface highlights */}
+            {/* ── Content ── */}
+            <div className="relative pl-7 pr-6 pt-5 pb-6 sm:pl-9 sm:pr-8 sm:pt-6 sm:pb-7">
+
+              {/* Mission indicator + company logo row */}
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-block h-1.5 w-1.5 rounded-full shrink-0"
+                    style={{
+                      background: a.hex,
+                      boxShadow: `0 0 7px ${a.hex}, 0 0 14px rgba(${a.rgb},0.5)`,
+                    }}
+                  />
+                  <span className="font-mono text-[10px] tracking-[0.28em] text-white/40 uppercase">
+                    Mission {String(idx + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
+                  </span>
+                </div>
+                <LogoAvatar company={item.company} domain={item.domain} accentRgb={a.rgb} />
+              </div>
+
+              {/* Role title */}
+              <h3 className="mb-1 text-xl font-bold leading-snug text-white sm:text-2xl">
+                {item.title}
+              </h3>
+
+              {/* Company · period row */}
+              <div className="mb-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                <p className="text-base text-white/80">
+                  {item.company}
+                  {item.location && (
+                    <span className="text-white/40"> · {item.location}</span>
+                  )}
+                </p>
+                <span
+                  className="shrink-0 font-mono text-sm font-medium"
+                  style={{ color: `rgba(${a.rgb},0.95)` }}
+                >
+                  {item.period}
+                </span>
+              </div>
+
+              {/* Divider */}
+              <div
+                className="mb-4 h-px"
+                style={{
+                  background: `linear-gradient(90deg, rgba(${a.rgb},0.4), rgba(255,255,255,0.05) 55%, transparent)`,
+                }}
+              />
+
+              {/* Tags — fixed padding */}
+              {item.tags.length > 0 && (
+                <div className="mb-5 flex flex-wrap gap-2">
+                  {item.tags.map((t) => (
+                    <span
+                      key={t}
+                      className="rounded-md px-2.5 py-1 text-xs font-semibold"
+                      style={{
+                        background: `rgba(${a.rgb},0.14)`,
+                        color: `rgba(${a.rgb},1)`,
+                        border: `1px solid rgba(${a.rgb},0.25)`,
+                      }}
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Bullets */}
+              {item.bullets.length > 0 && (
+                <ul className="space-y-2.5">
+                  {item.bullets.map((b, i) => (
+                    <li key={i} className="flex gap-3 text-sm leading-relaxed text-white/80">
+                      <span
+                        className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
+                        style={{ background: `rgba(${a.rgb},0.75)` }}
+                      />
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Bottom beam */}
             <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,0.22),transparent_40%),radial-gradient(circle_at_80%_0%,rgba(255,255,255,0.10),transparent_45%),linear-gradient(135deg,rgba(255,255,255,0.10),rgba(255,255,255,0.03)_40%,rgba(0,0,0,0)_70%)] opacity-70"
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 rounded-2xl shadow-[inset_0_0_0_1px_rgba(255,255,255,0.10),inset_0_1px_0_rgba(255,255,255,0.10)]"
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 opacity-[0.12] mix-blend-overlay"
+              className="absolute inset-x-0 bottom-0 h-px transition-opacity duration-300"
               style={{
-                backgroundImage:
-                  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.45'/%3E%3C/svg%3E\")",
+                background: `linear-gradient(90deg, transparent, rgba(${a.rgb},0.5) 50%, transparent)`,
+                opacity: hovered ? 1 : 0.2,
               }}
             />
-
-            {/* Card content */}
-            <div className="relative">
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <div className="text-[11px] tracking-[0.28em] text-white/55 font-mono">
-                      MISSION LOG {String(idx + 1).padStart(2, "0")}
-                    </div>
-                    <div className="mt-2 text-xl font-semibold text-white">
-                      {item.title}
-                    </div>
-                    <div className="mt-1 text-sm text-white/70">
-                      {item.company}
-                      {item.location ? (
-                        <span className="text-white/45"> • {item.location}</span>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-white/10 bg-black/25 px-3 py-2 backdrop-blur">
-                    <div className="text-[11px] tracking-[0.22em] text-white/55 font-mono">
-                      STARDATE
-                    </div>
-                    <div className="mt-1 text-sm text-white/80">{item.period}</div>
-                  </div>
-                </div>
-
-                {item.tags.length ? (
-                  <div className="flex flex-wrap gap-2">
-                    {item.tags.map((t) => (
-                      <span
-                        key={t}
-                        className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70"
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                ) : null}
-
-                {item.bullets.length ? (
-                  <ul className="space-y-2 text-sm leading-relaxed text-white/75">
-                    {item.bullets.map((b, i) => (
-                      <li key={i} className="flex gap-2">
-                        <span className="mt-[6px] h-1.5 w-1.5 shrink-0 rounded-full bg-white/40" />
-                        <span>{b}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            </div>
           </motion.div>
         </motion.div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
+// ─── Section ──────────────────────────────────────────────────────────────────
+
 export default function ExperienceSection() {
-  const reduced = usePrefersReducedMotion();
-  const sectionRef = useRef<HTMLElement | null>(null);
+  const reduced    = usePrefersReducedMotion();
+  const sectionRef = useRef<HTMLElement>(null);
+  const headRef    = useRef<HTMLDivElement>(null);
+  const headInView = useInView(headRef, { once: true, margin: "-8% 0px" });
 
   const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"],
+    target: sectionRef, offset: ["start end", "end start"],
   });
 
-  const glow = useTransform(scrollYProgress, [0, 0.35, 0.7, 1], [0, 1, 1, 0]);
-  const headY = useTransform(scrollYProgress, [0, 1], [24, -24]);
-  const headOpacity = useTransform(scrollYProgress, [0, 0.12, 0.9, 1], [0, 1, 1, 0]);
-  const railFill = useTransform(scrollYProgress, [0.08, 0.92], [0, 1]);
+  const railScale   = useTransform(scrollYProgress, [0.05, 0.92], [0, 1]);
+  const railOpacity = useTransform(scrollYProgress, [0, 0.08, 0.88, 1], [0, 1, 1, 0]);
 
-  const items: ExperienceItem[] = useMemo(() => {
-    return toSafeExperienceItems(experienceJson as any);
-  }, []);
-
-  if (!items.length) {
-    return (
-      <section
-        ref={sectionRef as any}
-        id="experience"
-        className="relative z-20 mx-auto px-6 py-24 text-white"
-      >
-        <div className="absolute inset-0 -z-10">
-          <GlowGrid />
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-          <div className="text-xs font-mono tracking-[0.35em] text-white/55">
-            FLIGHT RECORDER
-          </div>
-          <div className="mt-3 text-sm text-white/70">
-            No experience entries found. Your JSON import path or JSON schema is wrong.
-          </div>
-        </div>
-      </section>
-    );
-  }
+  const items = useMemo(() => toSafeItems(experienceJson as any), []);
+  if (!items.length) return null;
 
   return (
     <section
-      ref={sectionRef as any}
+      ref={sectionRef}
       id="experience"
-      className="relative z-20 mx-auto px-6 py-24 text-white"
+      className="relative z-20 px-4 py-24 text-white overflow-hidden sm:px-6"
     >
-      <div className="absolute inset-0 -z-10">
-        <GlowGrid />
-        {!reduced ? (
-          <motion.div
-            style={{ opacity: glow }}
-            className="pointer-events-none absolute left-0 right-0 top-0 h-px bg-white/25"
-          />
-        ) : null}
-      </div>
+      {/* Faint grid */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.028]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.7) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.7) 1px,transparent 1px)",
+          backgroundSize: "64px 64px",
+        }}
+      />
 
+      {/* 3D orbital rings */}
+      {!reduced && <OrbitalRings />}
+
+      {/* Floating cosmic orbs */}
+      {!reduced && <CosmicOrbs />}
+
+      {/* ── Section header ── */}
       <motion.div
-        style={{ y: reduced ? 0 : headY, opacity: reduced ? 1 : headOpacity }}
-        className="sticky top-16 z-10 mb-10"
+        ref={headRef}
+        initial={{ opacity: 0, scale: 0.55, filter: "blur(18px)" }}
+        animate={headInView ? { opacity: 1, scale: 1, filter: "blur(0px)" } : {}}
+        transition={{ duration: 0.95, ease: [0.22, 1, 0.36, 1] as [number,number,number,number] }}
+        className="mb-16 text-center relative z-10"
       >
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-          <div className="text-xs font-mono tracking-[0.35em] text-white/55">
-            FLIGHT RECORDER
-          </div>
-          <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-                Experience
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/70">
-                A clean timeline of execution: roles, systems shipped, and impact.
-              </p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
-              <div className="text-[11px] font-mono tracking-[0.25em] text-white/55">
-                SIGNAL
-              </div>
-              <motion.div
-                style={{ opacity: glow }}
-                className="mt-1 text-sm text-white/80"
-              >
-                LOCKED
-              </motion.div>
-            </div>
-          </div>
+        <div className="mb-4 inline-flex items-center gap-3">
+          <div className="h-px w-12 bg-gradient-to-r from-transparent to-violet-500/70" />
+          <span className="font-mono text-[10px] tracking-[0.38em] text-white/35 uppercase">
+            Flight Recorder
+          </span>
+          <div className="h-px w-12 bg-gradient-to-l from-transparent to-violet-500/70" />
         </div>
+        <h2
+          className="text-3xl font-bold tracking-tight sm:text-4xl"
+          style={{
+            background:
+              "linear-gradient(135deg, #ffffff 0%, #a78bfa 50%, #818cf8 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
+          Experience
+        </h2>
+        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/45">
+          Eight missions across three continents — roles, systems shipped, and
+          meaningful impact.
+        </p>
       </motion.div>
 
-      <div className="relative grid grid-cols-1 gap-10 lg:grid-cols-[64px_1fr]">
-        <div className="relative hidden lg:block">
-          <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-white/10" />
-          <motion.div
-            style={{ scaleY: railFill, transformOrigin: "top", opacity: glow }}
-            className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-white/35"
-          />
-          <div className="absolute left-1/2 top-0 -translate-x-1/2 space-y-10">
-            {items.map((_, i) => (
-              <div key={i} className="relative h-[240px]">
-                <div className="absolute left-1/2 top-8 h-3 w-3 -translate-x-1/2 rounded-full border border-white/25 bg-black/60 shadow-[0_0_24px_rgba(255,255,255,0.15)]" />
-              </div>
+      {/* ── Layout: left rail + cards ── */}
+      <div className="relative mx-auto max-w-3xl z-10">
+
+        {/* Plasma rail — hidden on mobile */}
+        {!reduced && (
+          <div className="absolute -left-8 top-0 bottom-0 hidden w-px lg:block">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/6 to-transparent" />
+            <motion.div
+              className="absolute top-0 left-0 right-0 origin-top"
+              style={{
+                scaleY: railScale,
+                opacity: railOpacity,
+                background:
+                  "linear-gradient(to bottom, #7c3aed, #2563eb, #db2777)",
+                boxShadow: "0 0 8px rgba(124,58,237,0.5)",
+                bottom: 0,
+              }}
+            />
+            {[0, 0.9, 1.8, 2.7].map((d, i) => (
+              <div
+                key={i}
+                className="plasma-particle"
+                style={{ animationDelay: `${d}s` }}
+              />
             ))}
           </div>
-        </div>
+        )}
 
-        <div className="space-y-10">
+        {/* Cards */}
+        <div className="space-y-8">
           {items.map((item, idx) => (
-            <HoloCard
-              key={`${item.company}-${item.title}-${idx}`}
+            <ExperienceCard
+              key={`${item.company}-${idx}`}
               item={item}
               idx={idx}
-              glow={glow}
+              total={items.length}
             />
           ))}
         </div>

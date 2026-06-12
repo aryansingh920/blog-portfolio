@@ -216,6 +216,65 @@
   padding: 2%;
 }
 
+/* ── Experience section animations ──────────────────────────────────────────── */
+
+@keyframes expFloat0 {
+  0%, 100% { transform: translateY(0px);  }
+  50%      { transform: translateY(-10px); }
+}
+@keyframes expFloat1 {
+  0%, 100% { transform: translateY(0px);  }
+  50%      { transform: translateY(-13px); }
+}
+@keyframes expFloat2 {
+  0%, 100% { transform: translateY(0px);  }
+  50%      { transform: translateY(-7px);  }
+}
+.exp-float-0 { animation: expFloat0 5.8s ease-in-out infinite; }
+.exp-float-1 { animation: expFloat1 6.5s ease-in-out infinite; }
+.exp-float-2 { animation: expFloat2 5.0s ease-in-out infinite; }
+
+@keyframes expScan {
+  0%   { top: -2px; opacity: 0; }
+  4%   { opacity: 1; }
+  96%  { opacity: 0.7; }
+  100% { top: 100%; opacity: 0; }
+}
+.exp-scan {
+  position: absolute;
+  inset-inline: 0;
+  height: 2px;
+  top: 0;
+  background: linear-gradient(90deg, transparent, rgba(167,139,250,0.8) 25%, rgba(255,255,255,0.95) 50%, rgba(99,102,241,0.8) 75%, transparent);
+  box-shadow: 0 0 14px rgba(139,92,246,0.6), 0 0 28px rgba(99,102,241,0.2);
+  animation: expScan 0.72s ease-out forwards;
+  pointer-events: none;
+  z-index: 20;
+}
+
+@keyframes plasmaFlow {
+  0%   { top: -6px;   opacity: 0; }
+  6%   { opacity: 1;              }
+  88%  { opacity: 0.8;            }
+  100% { top: 100%;   opacity: 0; }
+}
+.plasma-particle {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(167,139,250,1) 0%, rgba(99,102,241,0) 100%);
+  box-shadow: 0 0 10px rgba(167,139,250,0.9), 0 0 4px rgba(167,139,250,0.6);
+  animation: plasmaFlow 3.2s ease-in-out infinite;
+}
+
+@keyframes nodeRing {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0.5), 0 0 10px rgba(139,92,246,0.2); }
+  50%      { box-shadow: 0 0 0 7px rgba(139,92,246,0), 0 0 22px rgba(139,92,246,0.4); }
+}
+.timeline-node-pulse { animation: nodeRing 2.6s ease-in-out infinite; }
+
 /* ── Space nebula section glow ─────────────────────────────────────────────── */
 
 @keyframes nebulaShift1 {
@@ -283,3 +342,114 @@
   filter: blur(80px);
   animation: nebulaShift3 22s ease-in-out infinite;
 }
+
+/* ── Experience section: orbital rings ─────────────────────────────────────── */
+
+@keyframes orbitRing1 {
+  from { transform: rotateX(72deg) rotateZ(0deg);    }
+  to   { transform: rotateX(72deg) rotateZ(360deg);  }
+}
+@keyframes orbitRing2 {
+  from { transform: rotateX(65deg) rotateZ(0deg);    }
+  to   { transform: rotateX(65deg) rotateZ(-360deg); }
+}
+@keyframes orbitRing3 {
+  from { transform: rotateX(60deg) rotateZ(0deg);    }
+  to   { transform: rotateX(60deg) rotateZ(360deg);  }
+}
+
+.exp-orbit-ring {
+  position: absolute;
+  border-radius: 50%;
+}
+.exp-orbit-ring.ring-violet {
+  border: 1.5px solid rgba(124,58,237,0.18);
+  box-shadow: 0 0 40px rgba(124,58,237,0.06), inset 0 0 40px rgba(124,58,237,0.03);
+  animation: orbitRing1 38s linear infinite;
+}
+.exp-orbit-ring.ring-blue {
+  border: 1px solid rgba(37,99,235,0.14);
+  box-shadow: 0 0 28px rgba(37,99,235,0.05);
+  animation: orbitRing2 24s linear infinite;
+}
+.exp-orbit-ring.ring-pink {
+  border: 1px solid rgba(219,39,119,0.13);
+  box-shadow: 0 0 20px rgba(219,39,119,0.05);
+  animation: orbitRing3 16s linear infinite;
+}
+
+/* ── Experience section: floating cosmic orbs ──────────────────────────────── */
+
+@keyframes cosmicOrbFloat1 {
+  0%,100% { transform: translate(0,0) scale(1); opacity: 0.35; }
+  40%     { transform: translate(20px,-35px) scale(1.08); opacity: 0.55; }
+  70%     { transform: translate(-14px,18px) scale(0.93); opacity: 0.22; }
+}
+@keyframes cosmicOrbFloat2 {
+  0%,100% { transform: translate(0,0) scale(1); opacity: 0.28; }
+  50%     { transform: translate(-25px,28px) scale(1.12); opacity: 0.48; }
+}
+@keyframes cosmicOrbFloat3 {
+  0%,100% { transform: translate(0,0) scale(1); opacity: 0.20; }
+  45%     { transform: translate(18px,-22px) scale(1.06); opacity: 0.38; }
+}
+
+.exp-cosmic-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.exp-cosmic-orb.orb-1 {
+  width: 340px; height: 340px;
+  right: -60px; top: 8%;
+  background: radial-gradient(circle, rgba(124,58,237,0.22) 0%, transparent 70%);
+  filter: blur(55px);
+  animation: cosmicOrbFloat1 18s ease-in-out infinite;
+}
+.exp-cosmic-orb.orb-2 {
+  width: 260px; height: 260px;
+  left: -40px; top: 45%;
+  background: radial-gradient(circle, rgba(37,99,235,0.18) 0%, transparent 70%);
+  filter: blur(50px);
+  animation: cosmicOrbFloat2 22s ease-in-out infinite;
+}
+.exp-cosmic-orb.orb-3 {
+  width: 200px; height: 200px;
+  right: 5%; bottom: 10%;
+  background: radial-gradient(circle, rgba(219,39,119,0.16) 0%, transparent 70%);
+  filter: blur(45px);
+  animation: cosmicOrbFloat3 14s ease-in-out infinite;
+}
+
+/* ── Between-section space divider ────────────────────────────────────────── */
+
+@keyframes asteroidDrift {
+  0%   { transform: translateX(0) translateY(0) rotate(0deg); opacity: 0; }
+  8%   { opacity: 1; }
+  92%  { opacity: 0.7; }
+  100% { transform: translateX(var(--dx, 120px)) translateY(var(--dy, 40px)) rotate(var(--rot, 180deg)); opacity: 0; }
+}
+.space-divider {
+  position: relative;
+  height: 80px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.space-divider::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(124,58,237,0.06) 40%,
+    rgba(37,99,235,0.06) 60%,
+    transparent 100%);
+}
+.asteroid {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.5);
+  animation: asteroidDrift var(--dur,8s) ease-in-out infinite;
+  animation-delay: var(--delay,0s);
+}
+
