@@ -207,15 +207,79 @@
 
 
 .glassEffect{
-  /* From https://css.glass */
-  /* From https://css.glass */
-/* From https://css.glass */
-
   background: rgba(62, 62, 62, 0.29);
   border-radius: 16px;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(10.2px);
   -webkit-backdrop-filter: blur(10.2px);
   border: 1px solid rgba(62, 62, 62, 0.58);
-    padding: 2%;
+  padding: 2%;
+}
+
+/* ── Space nebula section glow ─────────────────────────────────────────────── */
+
+@keyframes nebulaShift1 {
+  0%,100% { transform: translate(0,0) scale(1); opacity: 0.18; }
+  35%     { transform: translate(40px,-25px) scale(1.12); opacity: 0.26; }
+  70%     { transform: translate(-28px,18px) scale(0.91); opacity: 0.12; }
+}
+@keyframes nebulaShift2 {
+  0%,100% { transform: translate(0,0) scale(1); opacity: 0.14; }
+  40%     { transform: translate(-35px,28px) scale(1.15); opacity: 0.22; }
+  75%     { transform: translate(22px,-14px) scale(0.88); opacity: 0.08; }
+}
+@keyframes nebulaShift3 {
+  0%,100% { transform: translate(0,0) scale(1); opacity: 0.10; }
+  50%     { transform: translate(20px,30px) scale(1.08); opacity: 0.18; }
+}
+
+.section-nebula {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+.section-nebula::before {
+  content: "";
+  position: absolute;
+  width: 55%;
+  height: 70%;
+  top: -10%;
+  left: -5%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99,50,200,0.22) 0%, rgba(60,20,160,0.08) 50%, transparent 75%);
+  filter: blur(60px);
+  animation: nebulaShift1 28s ease-in-out infinite;
+}
+.section-nebula::after {
+  content: "";
+  position: absolute;
+  width: 50%;
+  height: 65%;
+  bottom: -15%;
+  right: -5%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(20,80,200,0.20) 0%, rgba(10,50,160,0.07) 55%, transparent 78%);
+  filter: blur(70px);
+  animation: nebulaShift2 34s ease-in-out infinite;
+}
+.section-nebula-accent {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+.section-nebula-accent::before {
+  content: "";
+  position: absolute;
+  width: 35%;
+  height: 50%;
+  top: 30%;
+  left: 55%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(200,30,120,0.12) 0%, rgba(150,20,80,0.05) 55%, transparent 78%);
+  filter: blur(80px);
+  animation: nebulaShift3 22s ease-in-out infinite;
 }
