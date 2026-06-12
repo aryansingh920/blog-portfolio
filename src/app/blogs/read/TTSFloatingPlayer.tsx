@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { createPortal } from "react-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type Props = {
@@ -12,56 +13,37 @@ type Props = {
 };
 
 // ─── Text preprocessing ───────────────────────────────────────────────────────
-// Makes speech sound natural by removing artifacts before it reaches the synth.
 
 function preprocessForSpeech(raw: string): string {
   let t = raw;
-
-  // Strip fenced code blocks entirely – reading code character-by-character is terrible
   t = t.replace(/```[\s\S]*?```/gm, " ");
-  // Inline code: drop backticks, keep the word
   t = t.replace(/`([^`\n]{1,80})`/g, "$1");
-
-  // Strip URLs
   t = t.replace(/https?:\/\/\S+/g, "");
-
-  // Markdown formatting
-  t = t.replace(/#{1,6}\s+/g, "");                          // headings
-  t = t.replace(/[*_~]{1,3}([^*_~\n]+)[*_~]{1,3}/g, "$1"); // bold/italic
-  t = t.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");            // [text](url)
-  t = t.replace(/!\[[^\]]*\]\([^)]+\)/g, "");               // images
-
-  // Common abbreviations that trip up synthesis
+  t = t.replace(/#{1,6}\s+/g, "");
+  t = t.replace(/[*_~]{1,3}([^*_~\n]+)[*_~]{1,3}/g, "$1");
+  t = t.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+  t = t.replace(/!\[[^\]]*\]\([^)]+\)/g, "");
   t = t.replace(/\be\.g\./gi, "for example");
   t = t.replace(/\bi\.e\./gi, "that is");
   t = t.replace(/\betc\./gi, "and so on");
   t = t.replace(/\bvs\./gi, "versus");
   t = t.replace(/\bapprox\./gi, "approximately");
   t = t.replace(/\bFig\./gi, "Figure");
-
-  // Numbers / units
   t = t.replace(/(\d[\d,]*)%/g, "$1 percent");
   t = t.replace(/\$(\d)/g, "$1 dollars");
   t = t.replace(/(\d+)x\b/g, "$1 times");
   t = t.replace(/(\d+)k\b/g, "$1 thousand");
   t = t.replace(/(\d+)M\b/g, "$1 million");
-
-  // Special punctuation that confuses synths
   t = t.replace(/—|–/g, ", ");
   t = t.replace(/[""]/g, '"');
   t = t.replace(/['']/g, "'");
   t = t.replace(/\.\.\./g, ", ");
-
-  // Collapse whitespace / blank lines
   t = t.replace(/[ \t]+/g, " ");
   t = t.replace(/\n{3,}/g, "\n\n");
-
   return t.trim();
 }
 
 // ─── Chunking ─────────────────────────────────────────────────────────────────
-// Chunk by paragraph, not sentence — far fewer gaps, much more natural flow.
-// Paragraphs larger than maxWords are split at sentence boundaries.
 
 function chunkByParagraph(text: string, maxWords = 110): string[] {
   const paragraphs = text.split(/\n\n+/).map((p) => p.replace(/\n/g, " ").trim()).filter(Boolean);
@@ -69,24 +51,14 @@ function chunkByParagraph(text: string, maxWords = 110): string[] {
 
   for (const para of paragraphs) {
     const words = para.split(/\s+/);
-    if (words.length <= maxWords) {
-      out.push(para);
-      continue;
-    }
-    // Split large paragraph at sentence endings
+    if (words.length <= maxWords) { out.push(para); continue; }
     const sentences = para.match(/[^.!?]+[.!?]+\s*/g) ?? [para];
     let buf = "";
     let wc = 0;
     for (const s of sentences) {
       const sw = s.split(/\s+/).length;
-      if (wc + sw > maxWords && buf) {
-        out.push(buf.trim());
-        buf = s;
-        wc = sw;
-      } else {
-        buf += s;
-        wc += sw;
-      }
+      if (wc + sw > maxWords && buf) { out.push(buf.trim()); buf = s; wc = sw; }
+      else { buf += s; wc += sw; }
     }
     if (buf.trim()) out.push(buf.trim());
   }
@@ -98,37 +70,16 @@ function chunkByParagraph(text: string, maxWords = 110): string[] {
 
 function getBestVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
   if (!voices.length) return null;
-
-  // Quality tiers: neural / enhanced voices first
   const tiers = [
-    // macOS / iOS Siri neural voices
-    /^Siri\b/i,
-    /\bNeural\b/i,
-    /\bEnhanced\b/i,
-    // Named good voices
-    /samantha/i,
-    /ava/i,
-    /allison/i,
-    /fiona/i,
-    /karen/i,
-    /victoria/i,
-    // Windows neural
-    /^Microsoft Aria/i,
-    /^Microsoft Jenny/i,
-    /^Microsoft Zira/i,
-    // Google
-    /^Google UK English Female/i,
-    /^Google US English/i,
+    /^Siri\b/i, /\bNeural\b/i, /\bEnhanced\b/i,
+    /samantha/i, /ava/i, /allison/i, /fiona/i, /karen/i, /victoria/i,
+    /^Microsoft Aria/i, /^Microsoft Jenny/i, /^Microsoft Zira/i,
+    /^Google UK English Female/i, /^Google US English/i,
   ];
-
   for (const pattern of tiers) {
-    const v = voices.find(
-      (v) => pattern.test(v.name) && v.lang.toLowerCase().startsWith("en")
-    );
+    const v = voices.find((v) => pattern.test(v.name) && v.lang.toLowerCase().startsWith("en"));
     if (v) return v;
   }
-
-  // Fallback: any English voice
   return voices.find((v) => v.lang.toLowerCase().startsWith("en")) ?? voices[0] ?? null;
 }
 
@@ -138,7 +89,7 @@ export default function TTSFloatingPlayer({
   targetId,
   motionKey,
   title,
-  rate = 0.92,   // slower = more natural, 0.9-0.95 is the sweet spot
+  rate = 0.92,
   pitch = 1.0,
 }: Props) {
   const [mounted, setMounted] = useState(false);
@@ -148,22 +99,26 @@ export default function TTSFloatingPlayer({
   const [speaking, setSpeaking] = useState(false);
   const [paused, setPaused] = useState(false);
   const [voicesLoaded, setVoicesLoaded] = useState(false);
-  const [chunkProgress, setChunkProgress] = useState(0); // 0–1
+  const [chunkProgress, setChunkProgress] = useState(0);
+
+  // Portal target — the slot injected into BottomToolsBar
+  const [slotEl, setSlotEl] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!mounted) return;
+    const el = document.getElementById("tts-toolbar-slot");
+    setSlotEl(el);
+  }, [mounted]);
 
   const runIdRef = useRef(0);
   const idxRef = useRef(0);
   const chunksRef = useRef<string[]>([]);
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
 
-  // Load voices
   useEffect(() => {
     if (!supported) return;
     const load = () => {
       const voices = window.speechSynthesis.getVoices();
-      if (voices.length > 0) {
-        voiceRef.current = getBestVoice(voices);
-        setVoicesLoaded(true);
-      }
+      if (voices.length > 0) { voiceRef.current = getBestVoice(voices); setVoicesLoaded(true); }
     };
     load();
     const prev = window.speechSynthesis.onvoiceschanged;
@@ -187,35 +142,19 @@ export default function TTSFloatingPlayer({
       if (runId !== runIdRef.current) return;
       const chunks = chunksRef.current;
       const i = idxRef.current;
-
-      if (i >= chunks.length) {
-        setSpeaking(false);
-        setPaused(false);
-        setChunkProgress(1);
-        return;
-      }
-
+      if (i >= chunks.length) { setSpeaking(false); setPaused(false); setChunkProgress(1); return; }
       setChunkProgress(i / Math.max(1, chunks.length));
-
       const u = new SpeechSynthesisUtterance(chunks[i]);
       if (voiceRef.current) u.voice = voiceRef.current;
       u.rate = rate;
       u.pitch = pitch;
       u.volume = 1;
-
-      u.onend = () => {
-        if (runId !== runIdRef.current) return;
-        idxRef.current += 1;
-        speakNext(runId);
-      };
+      u.onend = () => { if (runId !== runIdRef.current) return; idxRef.current += 1; speakNext(runId); };
       u.onerror = (e) => {
-        // "interrupted" fires when we cancel intentionally — ignore it
         if (e.error === "interrupted") return;
         if (runId !== runIdRef.current) return;
-        setSpeaking(false);
-        setPaused(false);
+        setSpeaking(false); setPaused(false);
       };
-
       try { window.speechSynthesis.speak(u); } catch { stop(); }
     },
     [pitch, rate, supported, stop]
@@ -229,9 +168,7 @@ export default function TTSFloatingPlayer({
       return ((el as HTMLElement).innerText || "").replace(/\s+/g, " ").trim();
     })();
     if (!raw) return;
-
     try { window.speechSynthesis.cancel(); } catch {}
-
     chunksRef.current = chunkByParagraph(preprocessForSpeech(raw));
     idxRef.current = 0;
     runIdRef.current += 1;
@@ -245,18 +182,12 @@ export default function TTSFloatingPlayer({
     if (!supported || !voicesLoaded) return;
     if (!speaking) { start(); return; }
     try {
-      if (paused) {
-        window.speechSynthesis.resume();
-        setPaused(false);
-      } else {
-        window.speechSynthesis.pause();
-        setPaused(true);
-      }
+      if (paused) { window.speechSynthesis.resume(); setPaused(false); }
+      else { window.speechSynthesis.pause(); setPaused(true); }
     } catch { stop(); }
   }, [paused, speaking, start, supported, voicesLoaded, stop]);
 
-  // Chrome bug: speechSynthesis silently stops after ~15 seconds.
-  // Fix: nudge it with pause/resume every 12 seconds while playing.
+  // Chrome bug: nudge speech every 12s to prevent silent stopping
   useEffect(() => {
     if (!speaking || paused) return;
     const id = setInterval(() => {
@@ -267,46 +198,61 @@ export default function TTSFloatingPlayer({
     return () => clearInterval(id);
   }, [speaking, paused]);
 
-  // Stop on article change
-  useEffect(() => { if (mounted) stop(); }, [mounted, motionKey, stop]); // eslint-disable-line react-hooks/exhaustive-deps
-  // Stop on unmount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (mounted) stop(); }, [mounted, motionKey]);
   useEffect(() => stop, [stop]);
 
   const canUse = supported && voicesLoaded;
 
+  // ── Listen pill — portalled into BottomToolsBar slot ─────────────────────
+  const listenPill = canUse && !speaking && slotEl
+    ? createPortal(
+        <button
+          type="button"
+          onClick={start}
+          className={[
+            "group relative shrink-0 rounded-xl px-4 py-2",
+            "border border-indigo-400/30",
+            "bg-gradient-to-b from-indigo-500/15 to-indigo-500/8",
+            "hover:from-indigo-500/22 hover:to-indigo-500/12",
+            "active:from-indigo-500/18 active:to-indigo-500/10",
+            "transition shadow-[0_10px_30px_rgba(0,0,0,0.35)]",
+            "flex items-center gap-1.5",
+            "text-[12px] text-indigo-300 group-hover:text-indigo-200",
+          ].join(" ")}
+          aria-label="Listen to article"
+        >
+          <span className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition shadow-[0_0_20px_rgba(99,102,241,0.25)]" />
+          <span className="relative flex items-center gap-1.5">
+            <SpeakerIcon />
+            <span className="whitespace-nowrap">Listen</span>
+          </span>
+        </button>,
+        slotEl
+      )
+    : null;
+
+  // ── Mini-player — floats above the BottomToolsBar while speaking ──────────
+  // BottomToolsBar is ~88px tall + 12px bottom margin = ~100px from bottom.
+  // We add 8px breathing room → position at 108px from bottom.
+  const miniPlayerBottom = "calc(max(12px, env(safe-area-inset-bottom)) + 100px)";
+
   return (
     <>
-      {/* Listen trigger — shown when idle */}
-      <AnimatePresence>
-        {canUse && !speaking && (
-          <motion.button
-            key="listen-btn"
-            type="button"
-            onClick={start}
-            className="fixed bottom-28 right-4 z-40 flex items-center gap-2 rounded-full bg-white/10 hover:bg-white/18 border border-white/15 backdrop-blur-md px-4 py-2.5 text-sm font-medium text-white shadow-lg transition-colors duration-200 active:scale-95"
-            initial={{ opacity: 0, y: 8, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
-          >
-            <SpeakerIcon />
-            Listen
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {listenPill}
 
-      {/* Floating mini-player — shown only while speaking */}
       <AnimatePresence>
         {speaking && (
           <motion.div
             key="tts-player"
-            className="fixed bottom-20 left-4 right-4 z-50 mx-auto max-w-sm"
+            className="fixed left-3 right-3 z-[10000] mx-auto max-w-md"
+            style={{ bottom: miniPlayerBottom }}
             initial={{ opacity: 0, y: 32, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 420, damping: 32, mass: 0.8 }}
           >
-            <div className="relative overflow-hidden rounded-2xl bg-zinc-900/92 border border-white/10 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.05)]">
+            <div className="relative overflow-hidden rounded-2xl bg-zinc-900/95 border border-white/10 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.05)]">
               {/* Progress track */}
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/8">
                 <motion.div
@@ -330,12 +276,7 @@ export default function TTSFloatingPlayer({
                           : {
                               height: [3, 14 + i * 2, 5, 18, 3],
                               opacity: 1,
-                              transition: {
-                                duration: 1.1,
-                                repeat: Infinity,
-                                ease: "easeInOut",
-                                delay: i * 0.13,
-                              },
+                              transition: { duration: 1.1, repeat: Infinity, ease: "easeInOut", delay: i * 0.13 },
                             }
                       }
                       style={{ height: 3 }}
@@ -383,7 +324,7 @@ export default function TTSFloatingPlayer({
 
 function SpeakerIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path d="M11 5L6 9H3v6h3l5 4V5z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
       <path d="M15.5 8.5a4.5 4.5 0 010 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>

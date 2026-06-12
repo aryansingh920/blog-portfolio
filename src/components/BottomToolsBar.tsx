@@ -228,6 +228,8 @@ export default function BottomToolsBar({
                       No tools configured
                     </div>
                   )}
+                  {/* Portal target — TTSFloatingPlayer injects the Listen pill here */}
+                  <div id="tts-toolbar-slot" className="contents" />
                 </div>
 
                 {/* Social icons: visible on desktop only (hidden below sm) */}
