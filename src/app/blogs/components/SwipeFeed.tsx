@@ -57,25 +57,25 @@ function useCardMotion() {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
-  const rotateY = useTransform(x, [-260, 0, 260], [-11, 0, 11]);
-  const rotateX = useTransform(y, [-260, 0, 260], [11, 0, -11]);
-  const rotateZ = useTransform(x, [-300, 0, 300], [-3, 0, 3]);
+  const rotateY = useTransform(x, [-260, 0, 260], [-18, 0, 18]);
+  const rotateX = useTransform(y, [-260, 0, 260], [18, 0, -18]);
+  const rotateZ = useTransform(x, [-300, 0, 300], [-4, 0, 4]);
 
   const liftX = useTransform(x, (v) => Math.abs(v));
   const liftY = useTransform(y, (v) => Math.abs(v));
   const lift = useTransform([liftX, liftY], (v) => {
     const [lx, ly] = v as [number, number];
-    return Math.min(1, (lx + ly) / 420);
+    return Math.min(1, (lx + ly) / 400);
   });
 
-  const cardScale = useTransform(lift, [0, 1], [1, 0.985]);
-  const shadow = useTransform(
-    lift,
-    [0, 1],
-    ["0px 14px 26px rgba(0,0,0,0.22)", "0px 28px 52px rgba(0,0,0,0.42)"]
-  );
+  const cardScale = useTransform(lift, [0, 1], [1, 0.978]);
+  const translateZ = useTransform(lift, [0, 1], [0, 40]);
+  const shadow = useTransform(lift, [0, 1], [
+    "0px 14px 30px rgba(0,0,0,0.28), 0px 0px 0px 0px rgba(120,120,255,0)",
+    "0px 50px 100px rgba(0,0,0,0.7), 0px 0px 60px rgba(100,100,200,0.12)",
+  ]);
 
-  return { x, y, rotateX, rotateY, rotateZ, cardScale, shadow };
+  return { x, y, rotateX, rotateY, rotateZ, cardScale, translateZ, shadow };
 }
 
 export function SwipeFeed({
@@ -160,7 +160,7 @@ export function SwipeFeed({
   );
 
   // motion
-  const { x, y, rotateX, rotateY, rotateZ, cardScale, shadow } =
+  const { x, y, rotateX, rotateY, rotateZ, cardScale, translateZ, shadow } =
     useCardMotion();
 
   // under stack transforms
@@ -523,7 +523,32 @@ export function SwipeFeed({
         onSectionChange={onSectionChange}
       />
 
-      <main className="min-h-screen relative perspective-distant">
+      <main className="min-h-screen relative" style={{ perspective: "1200px" }}>
+        {/* Ambient animated background */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div
+            className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full opacity-[0.07]"
+            style={{
+              background: "radial-gradient(circle, #6366f1, transparent 70%)",
+              animation: "ambientPulse1 8s ease-in-out infinite",
+            }}
+          />
+          <div
+            className="absolute -bottom-40 -right-40 w-[500px] h-[500px] rounded-full opacity-[0.07]"
+            style={{
+              background: "radial-gradient(circle, #8b5cf6, transparent 70%)",
+              animation: "ambientPulse2 10s ease-in-out infinite",
+            }}
+          />
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full opacity-[0.04]"
+            style={{
+              background: "radial-gradient(circle, #a78bfa, transparent 70%)",
+              animation: "ambientPulse1 12s ease-in-out infinite reverse",
+            }}
+          />
+        </div>
+
         {/* Under stack */}
         <div className="absolute inset-0 pointer-events-none">
           {prev2Post && (
@@ -531,7 +556,7 @@ export function SwipeFeed({
               className="absolute inset-0"
               style={{ opacity: prev2Opacity, scale: prev2Scale, y: prev2Y }}
             >
-              <BlogCard post={prev2Post} />
+              <BlogCard post={prev2Post} isActive={false} />
             </motion.div>
           )}
           {next2Post && (
@@ -539,7 +564,7 @@ export function SwipeFeed({
               className="absolute inset-0"
               style={{ opacity: next2Opacity, scale: next2Scale, y: next2Y }}
             >
-              <BlogCard post={next2Post} />
+              <BlogCard post={next2Post} isActive={false} />
             </motion.div>
           )}
 
@@ -548,7 +573,7 @@ export function SwipeFeed({
               className="absolute inset-0"
               style={{ opacity: prevOpacity, scale: prevScale, y: prevY }}
             >
-              <BlogCard post={prevPost} />
+              <BlogCard post={prevPost} isActive={false} />
             </motion.div>
           )}
           {nextPost && (
@@ -556,7 +581,7 @@ export function SwipeFeed({
               className="absolute inset-0"
               style={{ opacity: nextOpacity, scale: nextScale, y: nextY }}
             >
-              <BlogCard post={nextPost} />
+              <BlogCard post={nextPost} isActive={false} />
             </motion.div>
           )}
         </div>
@@ -578,22 +603,23 @@ export function SwipeFeed({
               rotateY,
               rotateZ,
               scale: cardScale,
+              z: translateZ,
               boxShadow: shadow,
               transformStyle: "preserve-3d",
               touchAction: "none",
             }}
-            initial={{ opacity: 0, scale: 0.99 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.99 }}
+            initial={{ opacity: 0, scale: 0.96, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96 }}
             transition={{
               type: "spring",
-              stiffness: 260,
-              damping: 24,
-              mass: 0.9,
+              stiffness: 280,
+              damping: 26,
+              mass: 0.85,
             }}
           >
             <div className="relative h-full w-full rounded-[28px] overflow-hidden ring-1 ring-white/10 bg-black">
-              <BlogCard post={current} />
+              <BlogCard post={current} isActive={true} />
               <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-white/7 via-transparent to-transparent" />
             </div>
           </motion.div>

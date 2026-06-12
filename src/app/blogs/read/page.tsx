@@ -7,7 +7,9 @@ import styles from "./ReadPage.module.css";
 import SwipeReaderNav from "./SwipeReaderNav";
 import ReaderMotionShell from "./ReaderMotionShell";
 import ReaderOnboardingOverlay from "./ReaderOnboardingOverlay";
-import ReaderTTSButton from "./ReaderTTSButton";
+import ReadingProgressBar from "./ReadingProgressBar";
+import ArticleReveal from "./ArticleReveal";
+import TTSFloatingPlayer from "./TTSFloatingPlayer";
 
 export const revalidate = 86400;
 
@@ -66,6 +68,8 @@ export default async function ReadPage({ searchParams }: ReadPageProps) {
 
   return (
     <div className={styles.spaceBg}>
+      <ReadingProgressBar />
+
       <div className={styles.starsLayer}>
         <ShootingStars />
         <StarsBackground />
@@ -78,8 +82,8 @@ export default async function ReadPage({ searchParams }: ReadPageProps) {
 
       {/* Card-like transition wrapper */}
       <ReaderMotionShell motionKey={String(id)} dir={dir}>
-        <div className={styles.contentLayer}>
-          <div className="relative h-[40vh] w-full overflow-hidden rounded-b-3xl">
+        <div className={styles.contentLayer} data-scroll-container>
+          <div className="relative h-[42vh] w-full overflow-hidden rounded-b-3xl">
             <picture className="absolute inset-0">
               {post.imageDesktop && (
                 <source media="(min-width: 768px)" srcSet={post.imageDesktop} />
@@ -87,63 +91,65 @@ export default async function ReadPage({ searchParams }: ReadPageProps) {
               <img
                 src={post.imageMobile || post.imageDesktop || ""}
                 alt={post.title}
-                className="absolute inset-0 h-full w-full object-cover opacity-60"
+                className="absolute inset-0 h-full w-full object-cover"
+                style={{ opacity: 0.55, transform: "scale(1.04)" }}
               />
             </picture>
 
-            <div className="absolute inset-0 bg-linear-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/50 to-zinc-950/10" />
+            <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/30 via-transparent to-transparent" />
 
             <div className="relative z-20 flex h-full flex-col justify-end p-6 md:p-10">
               <p className="flex flex-wrap items-center gap-2 text-sm">
                 <Link
                   href="/blogs?i=0"
-                  className="font-medium text-blue-400 hover:text-blue-300 transition"
+                  className="font-medium text-indigo-400 hover:text-indigo-300 transition"
                 >
                   All
                 </Link>
-
-                <span className="text-gray-500">/</span>
-
+                <span className="text-gray-600">/</span>
                 <Link
-                  href={`/blogs?i=0&section=${encodeURIComponent(
-                    sectionLabel,
-                  )}`}
-                  className="font-medium text-blue-400 hover:text-blue-300 transition"
+                  href={`/blogs?i=0&section=${encodeURIComponent(sectionLabel)}`}
+                  className="font-medium text-indigo-400 hover:text-indigo-300 transition"
                 >
                   {sectionLabel}
                 </Link>
               </p>
 
-              <h1 className="text-3xl text-white font-bold tracking-tight md:text-5xl">
+              <h1 className="mt-2 text-3xl text-white font-bold tracking-tight md:text-5xl leading-tight">
                 {post.title}
               </h1>
 
-              <div className="mt-4 flex items-center gap-2 text-sm text-zinc-400">
-                <span>{post.author}</span>
-                <span>•</span>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-zinc-400">
+                <span className="font-medium text-zinc-300">{post.author}</span>
+                <span className="text-zinc-600">·</span>
                 <span>{post.date}</span>
-                <span>•</span>
-                <span>{readTime}</span>
+                <span className="text-zinc-600">·</span>
+                <span className="px-2 py-0.5 rounded-full bg-white/8 border border-white/10 text-xs font-medium text-zinc-300">
+                  {readTime} read
+                </span>
               </div>
-
-              <br />
-
-              <ReaderTTSButton
-                targetId="blog-article-text"
-                motionKey={String(id)}
-              />
             </div>
           </div>
 
           <article className="prose prose-invert prose-zinc mx-auto px-6 py-12">
-            <div
-              id="blog-article-text"
-              className={`${styles.articleHtml} [&>p]:mb-6 [&>h2]:mb-4 [&>h2]:mt-10 [&>h2]:text-2xl [&>h2]:font-bold`}
-              dangerouslySetInnerHTML={{ __html: html }}
-            />
+            <ArticleReveal>
+              <div
+                id="blog-article-text"
+                className={`${styles.articleHtml} [&>p]:mb-6 [&>h2]:mb-4 [&>h2]:mt-10 [&>h2]:text-2xl [&>h2]:font-bold`}
+                dangerouslySetInnerHTML={{ __html: html }}
+              />
+            </ArticleReveal>
           </article>
         </div>
       </ReaderMotionShell>
+
+      {/* Floating TTS player — only visible while audio is playing */}
+      <TTSFloatingPlayer
+        targetId="blog-article-text"
+        motionKey={String(id)}
+        title={post.title}
+      />
     </div>
   );
 }
