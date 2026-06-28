@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import { sendPortfolioRequest } from "@/api/sendPortfolioRequest";
 import { Github, Linkedin, Mail } from "lucide-react";
 import Link from "next/link";
+import SingularityField from "./SingularityField";
 
 type FormState = {
   name: string;
@@ -20,6 +21,9 @@ export default function ContactPage() {
     phone: "",
     inquiry: "",
   });
+
+  // Lets the particle field disperse on send-success.
+  const burstRef = useRef<(() => void) | null>(null);
 
   const [status, setStatus] = React.useState<
     | { state: "idle" }
@@ -83,9 +87,11 @@ export default function ContactPage() {
 
       setStatus({
         state: "success",
-        message: "Sent. I’ll get back to you.",
+        message: "Sent. I'll get back to you.",
       });
       setForm({ name: "", email: "", phone: "", inquiry: "" });
+      // Trigger particle dispersal on success.
+      burstRef.current?.();
     } catch (err: any) {
       if (err?.name === "AbortError") return;
 
@@ -113,18 +119,24 @@ export default function ContactPage() {
         : "border-white/10 bg-white/5 text-white/60";
 
   return (
-    <div className="min-h-screen bg-neutral-950 relative overflow-hidden">
-      {/* subtle background */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-white/[0.06] blur-3xl" />
-        <div className="absolute bottom-[-280px] right-[-220px] h-[520px] w-[520px] rounded-full bg-white/[0.04] blur-3xl" />
-        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.05] via-transparent to-transparent" />
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* GPGPU-style particle field — cursor leaves glowing trails;
+          dispersal shockwave triggers on send. */}
+      <SingularityField burstRef={burstRef} />
+
+      {/* subtle background overlays sit ABOVE the field */}
+      <div className="pointer-events-none absolute inset-0 z-0">
+        <div className="absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-violet-500/[0.05] blur-3xl" />
+        <div className="absolute bottom-[-280px] right-[-220px] h-[520px] w-[520px] rounded-full bg-cyan-500/[0.04] blur-3xl" />
       </div>
 
-      <div className="relative max-w-5xl mx-auto p-4 md:p-6 flex flex-col items-center">
-        <h1 className="text-3xl md:text-5xl lg:text-7xl bg-clip-text text-transparent bg-gradient-to-b from-neutral-200 to-neutral-600 text-center font-sans font-bold mt-10 md:mt-16 lg:mt-24">
-          Connect With me Here!
+      <div className="relative z-10 max-w-5xl mx-auto p-4 md:p-6 flex flex-col items-center">
+        <h1 className="text-flow-aurora text-3xl md:text-5xl lg:text-7xl text-center font-sans font-bold mt-10 md:mt-16 lg:mt-24">
+          Message to the Universe
         </h1>
+        <p className="mt-3 text-sm text-white/55 text-center max-w-md">
+          Drag your cursor — the dust will follow. Then write what you came to say.
+        </p>
 
         <div className="w-full mt-8 md:mt-10 mb-14">
           <div className="mx-auto max-w-4xl">

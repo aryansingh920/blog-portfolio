@@ -244,111 +244,111 @@ export default function AboutMe() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
         {/* Identity */}
-        <Spaghettify max={2.4} glow="rgba(139,92,246,0.55)">
-        <TiltCard
-          entrance="zoom-depth"
-          delay={0}
-          accent="rgba(139,92,246,"
-          glowColor="rgba(139,92,246,0.14)"
-        >
-          <SectionLabel>Identity</SectionLabel>
-          <h3 className="mb-3 text-base font-semibold text-white/90">
-            Innovator at the Intersection
-          </h3>
-          <p className="text-sm leading-relaxed text-white/55">
-            Passionate and versatile builder at the crossroads of technology,
-            data, and strategy. Driven by creative depth, technical rigour, and
-            an insatiable appetite for unsolved problems — from quantum circuits
-            to distributed systems.
-          </p>
-        </TiltCard>
+        <Spaghettify max={2.0} glow="rgba(139,92,246,0.45)">
+          <TiltCard
+            entrance="zoom-depth"
+            delay={0}
+            accent="rgba(139,92,246,"
+            glowColor="rgba(139,92,246,0.14)"
+          >
+            <SectionLabel>Identity</SectionLabel>
+            <h3 className="mb-3 text-base font-semibold text-white/90">
+              Innovator at the Intersection
+            </h3>
+            <p className="text-sm leading-relaxed text-white/55">
+              Passionate and versatile builder at the crossroads of technology,
+              data, and strategy. Driven by creative depth, technical rigour, and
+              an insatiable appetite for unsolved problems — from quantum circuits
+              to distributed systems.
+            </p>
+          </TiltCard>
         </Spaghettify>
 
         {/* Career */}
-        <Spaghettify max={2.4} glow="rgba(99,102,241,0.55)">
-        <TiltCard
-          entrance="flip-right"
-          delay={0.06}
-          accent="rgba(99,102,241,"
-          glowColor="rgba(99,102,241,0.14)"
-        >
-          <SectionLabel>Career</SectionLabel>
-          <h3 className="mb-3 text-base font-semibold text-white/90">
-            Professional Background
-          </h3>
-          <p className="text-sm leading-relaxed text-white/55">
-            Roles spanning Apple, Novade, Samsung PRISM, Chennai Metro,
-            Infosys, NuCash, and Edue — covering full-stack, iOS, cloud,
-            and DevOps. CTO &amp; Co-Founder of Canverro, bridging technology
-            gaps with meaningful impact.
-          </p>
-        </TiltCard>
+        <Spaghettify max={2.0} glow="rgba(99,102,241,0.45)">
+          <TiltCard
+            entrance="flip-right"
+            delay={0.06}
+            accent="rgba(99,102,241,"
+            glowColor="rgba(99,102,241,0.14)"
+          >
+            <SectionLabel>Career</SectionLabel>
+            <h3 className="mb-3 text-base font-semibold text-white/90">
+              Professional Background
+            </h3>
+            <p className="text-sm leading-relaxed text-white/55">
+              Roles spanning Apple, Novade, Samsung PRISM, Chennai Metro,
+              Infosys, NuCash, and Edue — covering full-stack, iOS, cloud,
+              and DevOps. CTO &amp; Co-Founder of Canverro, bridging technology
+              gaps with meaningful impact.
+            </p>
+          </TiltCard>
         </Spaghettify>
 
         {/* Research */}
-        <Spaghettify max={2.4} glow="rgba(236,72,153,0.55)">
-        <TiltCard
-          entrance="flip-left"
-          delay={0.1}
-          accent="rgba(236,72,153,"
-          glowColor="rgba(236,72,153,0.12)"
-        >
-          <SectionLabel>Research</SectionLabel>
-          <h3 className="mb-3 text-base font-semibold text-white/90">
-            Research &amp; Innovations
-          </h3>
-          <p className="text-sm leading-relaxed text-white/55">
-            Dissertation in Quantum Machine Learning for financial modelling.
-            Devised a method using qudits and Grover&apos;s algorithm to break
-            hash functions in linear time — applying quantum theory to real
-            computational limits.
-          </p>
-        </TiltCard>
+        <Spaghettify max={2.0} glow="rgba(236,72,153,0.45)">
+          <TiltCard
+            entrance="flip-left"
+            delay={0.1}
+            accent="rgba(236,72,153,"
+            glowColor="rgba(236,72,153,0.12)"
+          >
+            <SectionLabel>Research</SectionLabel>
+            <h3 className="mb-3 text-base font-semibold text-white/90">
+              Research &amp; Innovations
+            </h3>
+            <p className="text-sm leading-relaxed text-white/55">
+              Dissertation in Quantum Machine Learning for financial modelling.
+              Devised a method using qudits and Grover&apos;s algorithm to break
+              hash functions in linear time — applying quantum theory to real
+              computational limits.
+            </p>
+          </TiltCard>
         </Spaghettify>
 
         {/* Finance */}
-        <Spaghettify max={2.4} glow="rgba(16,185,129,0.55)">
-        <TiltCard
-          entrance="flip-top"
-          delay={0.07}
-          accent="rgba(16,185,129,"
-          glowColor="rgba(16,185,129,0.11)"
-        >
-          <SectionLabel>Finance</SectionLabel>
-          <h3 className="mb-3 text-base font-semibold text-white/90">
-            Investment Insights
-          </h3>
-          <p className="text-sm leading-relaxed text-white/55">
-            Deep focus on quantitative investment strategy. Analysed U.S.
-            equities like ServiceNow and Paycom via P/E ratios and revenue
-            growth signals. Identifying alpha in small-cap companies with
-            asymmetric upside potential.
-          </p>
-        </TiltCard>
+        <Spaghettify max={2.0} glow="rgba(16,185,129,0.45)">
+          <TiltCard
+            entrance="flip-top"
+            delay={0.07}
+            accent="rgba(16,185,129,"
+            glowColor="rgba(16,185,129,0.11)"
+          >
+            <SectionLabel>Finance</SectionLabel>
+            <h3 className="mb-3 text-base font-semibold text-white/90">
+              Investment Insights
+            </h3>
+            <p className="text-sm leading-relaxed text-white/55">
+              Deep focus on quantitative investment strategy. Analysed U.S.
+              equities like ServiceNow and Paycom via P/E ratios and revenue
+              growth signals. Identifying alpha in small-cap companies with
+              asymmetric upside potential.
+            </p>
+          </TiltCard>
         </Spaghettify>
 
         {/* Beyond Work — full width */}
-        <Spaghettify max={2.6} className="md:col-span-2" glow="rgba(139,92,246,0.55)">
-        <TiltCard
-          entrance="spin-scale"
-          delay={0.13}
-          accent="rgba(139,92,246,"
-          glowColor="rgba(139,92,246,0.10)"
-        >
-          <SectionLabel>Beyond Work</SectionLabel>
-          <h3 className="mb-3 text-base font-semibold text-white/90">
-            Beyond the Professional Sphere
-          </h3>
-          <p className="text-sm leading-relaxed text-white/55">
-            Immersed in the profound mysteries of existence — evolution,
-            space, quantum mechanics, philosophy, history. The interplay
-            between an infinite cosmos and quantum-scale reality shapes how
-            I approach every system I build. Space captivates as
-            humanity&apos;s next frontier; philosophy grounds abstract
-            science in human experience. These aren&apos;t separate from my
-            work — they are the lens through which I pursue it.
-          </p>
-        </TiltCard>
+        <Spaghettify max={2.2} className="md:col-span-2" glow="rgba(139,92,246,0.45)">
+          <TiltCard
+            entrance="spin-scale"
+            delay={0.13}
+            accent="rgba(139,92,246,"
+            glowColor="rgba(139,92,246,0.10)"
+          >
+            <SectionLabel>Beyond Work</SectionLabel>
+            <h3 className="mb-3 text-base font-semibold text-white/90">
+              Beyond the Professional Sphere
+            </h3>
+            <p className="text-sm leading-relaxed text-white/55">
+              Immersed in the profound mysteries of existence — evolution,
+              space, quantum mechanics, philosophy, history. The interplay
+              between an infinite cosmos and quantum-scale reality shapes how
+              I approach every system I build. Space captivates as
+              humanity&apos;s next frontier; philosophy grounds abstract
+              science in human experience. These aren&apos;t separate from my
+              work — they are the lens through which I pursue it.
+            </p>
+          </TiltCard>
         </Spaghettify>
 
       </div>

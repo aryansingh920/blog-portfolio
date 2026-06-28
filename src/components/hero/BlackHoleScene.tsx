@@ -3,7 +3,7 @@
 "use client";
 
 import * as THREE from "three";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   Billboard, Environment, OrbitControls, Preload, Text, useGLTF,
 } from "@react-three/drei";
@@ -11,7 +11,7 @@ import {
   Bloom, ChromaticAberration, EffectComposer, Vignette,
 } from "@react-three/postprocessing";
 import { BlendFunction } from "postprocessing";
-import React, { Suspense, useMemo, useRef } from "react";
+import React, { Suspense, useEffect, useMemo, useRef } from "react";
 
 export type BlackHoleSceneProps = {
   progress: number;
@@ -51,6 +51,8 @@ attribute float a_omega;
 attribute float a_sz;
 attribute float a_bright;
 uniform float u_t;
+uniform vec3 u_cursor;
+uniform float u_cursorR;
 varying vec3 v_col;
 varying float v_a;
 
@@ -58,6 +60,20 @@ void main() {
   float theta = a_theta0 + a_omega * u_t;
   float warp = sin(theta * 3.0 + a_r * 1.8) * 0.05 * max(0.0, 1.0 - (a_r - 1.5) / 5.5);
   vec3 pos = vec3(a_r * cos(theta), warp, a_r * sin(theta));
+
+  // Push into world space so the cursor (world-space vec3) repels in the
+  // right frame even though the disk is tilted.
+  vec3 worldPos = (modelMatrix * vec4(pos, 1.0)).xyz;
+
+  if (u_cursorR > 0.0) {
+    vec3 toCursor = worldPos - u_cursor;
+    float dist = length(toCursor);
+    if (dist < u_cursorR && dist > 0.001) {
+      float strength = 1.0 - dist / u_cursorR;
+      strength *= strength;             // sharper falloff
+      worldPos += normalize(toCursor) * strength * 0.95;
+    }
+  }
 
   float t = clamp((a_r - 1.5) / 5.5, 0.0, 1.0);
   vec3 c0 = vec3(1.00, 0.92, 0.78);
@@ -72,7 +88,8 @@ void main() {
   v_col = col;
   v_a   = a_bright * (1.0 - t * 0.6);
 
-  vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
+  // We already moved into world space above; skip modelView and use view.
+  vec4 mvPos = viewMatrix * vec4(worldPos, 1.0);
   gl_PointSize = a_sz * (220.0 / -mvPos.z);
   gl_Position  = projectionMatrix * mvPos;
 }`;
@@ -202,10 +219,61 @@ void main() {
   gl_FragColor = vec4(col, rim * 0.7 * pulse * u_intensity);
 }`;
 
+// ─── Photon-ring shader (around the event horizon) ────────────────────────────
+//
+// Approximates Doppler-beamed light bending around the BH. Combined with the
+// AccretionDisk and a small lensing torus, this stack reads as a "real"
+// gravitational-lens visual without doing a true GPU ray-march.
+
+const PHOTON_VERT = /* glsl */ `
+varying vec3 vNormalW;
+varying vec3 vViewDir;
+varying vec3 vWorldPos;
+
+void main() {
+  vec4 wp = modelMatrix * vec4(position, 1.0);
+  vWorldPos = wp.xyz;
+  vNormalW  = normalize(mat3(modelMatrix) * normal);
+  vViewDir  = normalize(cameraPosition - wp.xyz);
+  gl_Position = projectionMatrix * viewMatrix * wp;
+}`;
+
+const PHOTON_FRAG = /* glsl */ `
+varying vec3 vNormalW;
+varying vec3 vViewDir;
+varying vec3 vWorldPos;
+uniform float u_time;
+uniform float u_intensity;
+
+void main() {
+  float rim = 1.0 - max(dot(vNormalW, vViewDir), 0.0);
+  rim = pow(rim, 1.6);
+
+  // Doppler beam: the side rotating toward camera is brighter & bluer.
+  float ang = atan(vWorldPos.y, vWorldPos.x);
+  float beam = 0.5 + 0.5 * cos(ang - u_time * 0.35);
+
+  vec3 hot  = vec3(1.0, 0.92, 0.78);
+  vec3 cool = vec3(0.55, 0.78, 1.0);
+  vec3 warm = vec3(1.0, 0.42, 0.10);
+  vec3 col  = mix(warm, hot, beam);
+  col       = mix(col, cool, smoothstep(0.55, 0.95, rim) * beam * 0.4);
+
+  // Concentrate brightness into a thin photon-ring band.
+  float band = smoothstep(0.45, 0.78, rim);
+  col *= 1.0 + band * 2.4;
+
+  float a = rim * 0.85 * u_intensity;
+  gl_FragColor = vec4(col, a);
+}`;
+
 // ─── Accretion Disk ───────────────────────────────────────────────────────────
 
-function AccretionDisk({ innerR = 1.9, outerR = 6.6, count = 5500 }: {
+function AccretionDisk({
+  innerR = 1.9, outerR = 6.6, count = 5500, mouseWorldRef,
+}: {
   innerR?: number; outerR?: number; count?: number;
+  mouseWorldRef?: React.MutableRefObject<THREE.Vector3>;
 }) {
   const { geometry, material } = useMemo(() => {
     const rng = mulberry32(hashSeed("accretion-v3"));
@@ -235,17 +303,24 @@ function AccretionDisk({ innerR = 1.9, outerR = 6.6, count = 5500 }: {
     const m = new THREE.ShaderMaterial({
       vertexShader:   DISK_VERT,
       fragmentShader: DISK_FRAG,
-      uniforms: { u_t: { value: 0 } },
+      uniforms: {
+        u_t:       { value: 0 },
+        u_cursor:  { value: new THREE.Vector3(999, 999, 999) },
+        u_cursorR: { value: mouseWorldRef ? 2.4 : 0 },
+      },
       transparent: true,
       depthWrite:  false,
       blending:    THREE.AdditiveBlending,
     });
 
     return { geometry: g, material: m };
-  }, [innerR, outerR, count]);
+  }, [innerR, outerR, count, mouseWorldRef]);
 
   useFrame(({ clock }) => {
     material.uniforms.u_t.value = clock.getElapsedTime();
+    if (mouseWorldRef) {
+      material.uniforms.u_cursor.value.copy(mouseWorldRef.current);
+    }
   });
 
   return (
@@ -487,7 +562,82 @@ function EventHorizonGlow({
   );
 }
 
-// ─── Black Hole Model ─────────────────────────────────────────────────────────
+// ─── Procedural Black Hole — replaces the GLB with shader-driven layers ─────
+//
+// Three meshes stacked: an absolute-black event horizon sphere, a thin
+// photon-ring sphere with Doppler-beamed shader, and a tilted lensing torus
+// that suggests bent light wrapping around the horizon.
+
+function RayMarchedBlackHole({
+  radius = 1.7,
+  progressRef,
+}: {
+  radius?: number;
+  progressRef: React.MutableRefObject<number>;
+}) {
+  const spin = useRef<THREE.Group>(null);
+
+  const eventHorizonMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: 0x000000,
+    side: THREE.FrontSide,
+    depthWrite: true,
+  }), []);
+
+  const photonMat = useMemo(() => new THREE.ShaderMaterial({
+    vertexShader:   PHOTON_VERT,
+    fragmentShader: PHOTON_FRAG,
+    uniforms: {
+      u_time:      { value: 0 },
+      u_intensity: { value: 1.0 },
+    },
+    transparent: true,
+    depthWrite:  false,
+    side:        THREE.FrontSide,
+    blending:    THREE.AdditiveBlending,
+  }), []);
+
+  const lensingMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: 0xffba66,
+    transparent: true,
+    opacity: 0.65,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  }), []);
+
+  useFrame((_, dt) => {
+    photonMat.uniforms.u_time.value += dt;
+    // Photon ring brightens as we descend toward the singularity.
+    photonMat.uniforms.u_intensity.value = 1.0 + progressRef.current * 1.4;
+    if (spin.current) {
+      spin.current.rotation.y += dt * 0.18;
+      spin.current.rotation.z += dt * 0.05;
+    }
+  });
+
+  return (
+    <group ref={spin}>
+      {/* Event horizon — pure black core */}
+      <mesh material={eventHorizonMat} renderOrder={-2}>
+        <sphereGeometry args={[radius, 48, 48]} />
+      </mesh>
+
+      {/* Photon ring — additive outer shell */}
+      <mesh material={photonMat} renderOrder={-1}>
+        <sphereGeometry args={[radius * 1.18, 64, 64]} />
+      </mesh>
+
+      {/* Lensing photon orbit — thin tilted torus */}
+      <mesh rotation={[Math.PI / 2.4, 0.1, 0]} material={lensingMat}>
+        <torusGeometry args={[radius * 1.55, 0.025, 16, 128]} />
+      </mesh>
+      <mesh rotation={[Math.PI / 2.6, -0.15, 0.2]} material={lensingMat}>
+        <torusGeometry args={[radius * 1.72, 0.015, 16, 128]} />
+      </mesh>
+    </group>
+  );
+}
+
+// ─── Black Hole Model (legacy GLB loader — kept for fallback) ────────────────
 
 function BlackHoleModel({ url }: { url: string }) {
   const spin = useRef<THREE.Group>(null);
@@ -594,6 +744,208 @@ function PhotonSphere({ progressRef }: { progressRef: React.MutableRefObject<num
   );
 }
 
+// ─── Interactive Photon Sphere — labels physically react to the cursor ───────
+//
+// Each label has its own orbital target and a current position that lerps
+// toward target + a repulsion vector when the cursor's world-space point
+// gets close. Looks like the cursor is parting a cloud of debris.
+
+function InteractivePhotonSphere({
+  progressRef, mouseWorldRef,
+}: {
+  progressRef: React.MutableRefObject<number>;
+  mouseWorldRef: React.MutableRefObject<THREE.Vector3>;
+}) {
+  const groupRef = useRef<THREE.Group>(null);
+
+  const placements = useMemo(() => {
+    const rng = mulberry32(hashSeed("photon-labels-v2-interactive"));
+    return TECH_LABELS.map((label, i) => {
+      const angle0 = (i / TECH_LABELS.length) * Math.PI * 2;
+      const r = 7.2 + (rng() - 0.5) * 0.9;
+      const y = (rng() - 0.5) * 3.2;
+      const palette = ["#c4b5fd", "#a78bfa", "#818cf8", "#f0abfc", "#67e8f9", "#fbbf24"];
+      const color = palette[i % palette.length];
+      const scale = 0.85 + rng() * 0.5;
+      return {
+        label, angle0, r, y, color, scale,
+        // Live body — mutated in useFrame and copied to the billboard each frame.
+        current: new THREE.Vector3(Math.cos(angle0) * r, y, Math.sin(angle0) * r),
+      };
+    });
+  }, []);
+
+  const targetVec = useMemo(() => new THREE.Vector3(), []);
+  const pushVec   = useMemo(() => new THREE.Vector3(), []);
+
+  useFrame(({ clock }, dt) => {
+    const g = groupRef.current;
+    if (!g) return;
+    const t = clock.getElapsedTime();
+    const orbitAng = t * 0.045;            // slow global orbit
+    const cursor   = mouseWorldRef.current;
+
+    // Visibility across scroll story (same gating as static PhotonSphere).
+    const p = progressRef.current;
+    const visible =
+      p < 0.10 ? 0 :
+      p < 0.22 ? (p - 0.10) / 0.12 :
+      p > 0.82 ? Math.max(0, 1 - (p - 0.82) / 0.12) :
+      1;
+    const alpha = visible * 0.92;
+
+    const PUSH_R = 2.6;
+
+    g.children.forEach((child, i) => {
+      const b = placements[i];
+      if (!b) return;
+
+      // Target orbital position (rotates around BH)
+      const a = b.angle0 + orbitAng;
+      targetVec.set(Math.cos(a) * b.r, b.y, Math.sin(a) * b.r);
+
+      // Cursor repulsion in world space.
+      pushVec.subVectors(targetVec, cursor);
+      const d = pushVec.length();
+      if (d < PUSH_R && d > 0.001) {
+        const strength = 1 - d / PUSH_R;
+        // Quadratic falloff + bigger push the closer the cursor gets.
+        pushVec.normalize().multiplyScalar(strength * strength * 2.4);
+        targetVec.add(pushVec);
+      }
+
+      // Lerp current → target so labels feel weighty, not snappy.
+      const k = 1 - Math.pow(0.0007, dt);
+      b.current.lerp(targetVec, k);
+      child.position.copy(b.current);
+
+      // Visibility — set on whatever Text material this Billboard holds.
+      child.traverse((obj: any) => {
+        const m = obj.material;
+        if (m && "opacity" in m) m.opacity = alpha;
+      });
+    });
+  });
+
+  return (
+    <group ref={groupRef}>
+      {placements.map(({ label, color, scale, current }) => (
+        <Billboard key={label} position={[current.x, current.y, current.z]}>
+          <Text
+            fontSize={0.32 * scale}
+            color={color}
+            anchorX="center"
+            anchorY="middle"
+            outlineWidth={0.012}
+            outlineColor="#0a0420"
+            material-transparent
+            material-depthWrite={false}
+            material-toneMapped={false}
+          >
+            {label}
+          </Text>
+        </Billboard>
+      ))}
+    </group>
+  );
+}
+
+// ─── Mouse → 3D world projector ──────────────────────────────────────────────
+//
+// Projects the normalized-device-coord mouse onto a plane in world space
+// (perpendicular to the camera's forward axis, at a configurable depth) so
+// the rest of the scene can treat the cursor as a real 3D point.
+
+function MouseProjector({
+  mouseScreenRef, mouseWorldRef, mouseVelRef, planeDepth = 2.0,
+}: {
+  mouseScreenRef: React.MutableRefObject<{ x: number; y: number }>;
+  mouseWorldRef:  React.MutableRefObject<THREE.Vector3>;
+  mouseVelRef:    React.MutableRefObject<number>;
+  planeDepth?: number;
+}) {
+  const { camera } = useThree();
+  const raycaster = useMemo(() => new THREE.Raycaster(), []);
+  const plane     = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 0, 1), -planeDepth), [planeDepth]);
+  const ndc       = useMemo(() => new THREE.Vector2(), []);
+  const target    = useMemo(() => new THREE.Vector3(), []);
+  const prev      = useMemo(() => new THREE.Vector3(99, 99, 99), []);
+
+  useFrame((_, dt) => {
+    ndc.set(
+      mouseScreenRef.current.x * 2 - 1,
+      -(mouseScreenRef.current.y * 2 - 1),
+    );
+    raycaster.setFromCamera(ndc, camera);
+    if (raycaster.ray.intersectPlane(plane, target)) {
+      const speed = target.distanceTo(prev) / Math.max(dt, 0.001);
+      mouseVelRef.current = mouseVelRef.current * 0.82 + speed * 0.18;
+      prev.copy(target);
+      // Smooth follow so disk/labels don't jitter on every pixel of mouse move.
+      mouseWorldRef.current.lerp(target, 0.28);
+    }
+  });
+
+  return null;
+}
+
+// ─── Cursor Orb — visible 3D indicator that pulses with mouse velocity ───────
+
+function CursorOrb({
+  mouseWorldRef, mouseVelRef, mouseDownRef,
+}: {
+  mouseWorldRef: React.MutableRefObject<THREE.Vector3>;
+  mouseVelRef:   React.MutableRefObject<number>;
+  mouseDownRef:  React.MutableRefObject<boolean>;
+}) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const ringRef = useRef<THREE.Mesh>(null);
+  const coreMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: 0xc4b5fd, transparent: true, opacity: 0.55,
+    depthWrite: false, blending: THREE.AdditiveBlending,
+  }), []);
+  const ringMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: 0xa78bfa, transparent: true, opacity: 0.30,
+    depthWrite: false, blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,
+  }), []);
+
+  useFrame((_, dt) => {
+    if (!meshRef.current || !ringRef.current) return;
+    const p = mouseWorldRef.current;
+    meshRef.current.position.copy(p);
+    ringRef.current.position.copy(p);
+
+    const velBoost = Math.min(2.5, mouseVelRef.current * 0.45);
+    const downBoost = mouseDownRef.current ? 1.0 : 0;
+    const scale = 0.20 + velBoost * 0.12 + downBoost * 0.25;
+    meshRef.current.scale.setScalar(scale);
+
+    // Ring pulses outward continuously, faster when moving.
+    const t = performance.now() * 0.001;
+    const ringScale = 0.35 + (Math.sin(t * 2.0 + velBoost * 3) * 0.5 + 0.5) * (0.6 + velBoost * 0.4);
+    ringRef.current.scale.setScalar(ringScale);
+    coreMat.opacity = 0.4 + velBoost * 0.18 + downBoost * 0.3;
+    ringMat.opacity = Math.max(0, 0.32 - (ringScale - 0.35) * 0.35);
+
+    // Always face camera
+    if (ringRef.current) {
+      ringRef.current.lookAt(0, 0, 1e6);
+    }
+  });
+
+  return (
+    <group>
+      <mesh ref={meshRef} material={coreMat}>
+        <sphereGeometry args={[1, 12, 12]} />
+      </mesh>
+      <mesh ref={ringRef} material={ringMat}>
+        <ringGeometry args={[0.78, 1.0, 32]} />
+      </mesh>
+    </group>
+  );
+}
+
 // ─── Camera Rig ───────────────────────────────────────────────────────────────
 //
 // Multi-phase Bezier-ish path that descends toward the singularity as the
@@ -601,30 +953,52 @@ function PhotonSphere({ progressRef }: { progressRef: React.MutableRefObject<num
 // presents a different angle at each phase — gives the story visual variety.
 
 function ScrollRig({
-  progress, progressRef,
+  progress, progressRef, mouseScreenRef, clickShakeRef, mouseVelRef,
 }: {
   progress: number;
   progressRef: React.MutableRefObject<number>;
+  mouseScreenRef?: React.MutableRefObject<{ x: number; y: number }>;
+  clickShakeRef?:  React.MutableRefObject<number>;
+  mouseVelRef?:    React.MutableRefObject<number>;
 }) {
   const smooth = useRef(0);
   const target = useMemo(() => new THREE.Vector3(0, 0, 0), []);
 
-  useFrame(({ camera }, dt) => {
-    const SMOOTH = 1 - Math.pow(0.0004, dt);   // tighter smoothing → cinematic feel
+  useFrame(({ camera, clock }, dt) => {
+    const SMOOTH = 1 - Math.pow(0.0004, dt);
     smooth.current = THREE.MathUtils.lerp(smooth.current, progress, SMOOTH);
     progressRef.current = smooth.current;
 
     const p = smooth.current;
     const eased = p * p * (3 - 2 * p);
 
-    // Path keyframes (z descends from far → near event horizon)
     const z = THREE.MathUtils.lerp(11.0, 1.85, eased);
-
-    // Slight orbital sweep — keeps the view dynamic across the story
     const orbitAng = eased * Math.PI * 1.15;
     const orbitR = THREE.MathUtils.lerp(0.4, 1.6, eased);
-    const x = Math.sin(orbitAng) * orbitR;
-    const y = 0.55 - eased * 1.65 + Math.sin(eased * Math.PI) * 0.45;
+    let x = Math.sin(orbitAng) * orbitR;
+    let y = 0.55 - eased * 1.65 + Math.sin(eased * Math.PI) * 0.45;
+
+    // Mouse-driven head-turn — slight parallax that makes you feel embodied.
+    if (mouseScreenRef) {
+      const mx = (mouseScreenRef.current.x - 0.5) * 0.65;
+      const my = (mouseScreenRef.current.y - 0.5) * 0.40;
+      x += mx;
+      y -= my;
+    }
+
+    // Velocity heaviness — fast mouse swings nudge the camera in the same axis.
+    if (mouseVelRef && mouseVelRef.current > 0.05) {
+      const wob = Math.sin(clock.getElapsedTime() * 9.0) * Math.min(0.05, mouseVelRef.current * 0.008);
+      x += wob;
+    }
+
+    // Click shake — quick exponential decay
+    if (clickShakeRef && clickShakeRef.current > 0.01) {
+      const s = clickShakeRef.current;
+      x += (Math.random() - 0.5) * s * 0.20;
+      y += (Math.random() - 0.5) * s * 0.20;
+      clickShakeRef.current = s * 0.84;
+    }
 
     camera.position.set(x, y, z);
     if (camera instanceof THREE.PerspectiveCamera) {
@@ -668,14 +1042,48 @@ export default function BlackHoleScene({
   modelUrl = "/models/blackhole.glb",
   interactive = false,
 }: BlackHoleSceneProps) {
-  if (!enabled) return null;
-
+  // All hooks must run on every render — never return before this block, or
+  // hook counts diverge between renders and React throws
+  // "Expected static flag was missing".
   const lowEnd  = isLowEnd();
   const starSeed = useMemo(() => hashSeed("blackhole-starfield-v2"), []);
 
-  // Shared smoothed-progress ref — written by ScrollRig, read by other systems
-  // (EventHorizonGlow, PhotonSphere, EnhancedStarTunnel).
+  // Shared smoothed-progress ref — written by ScrollRig, read by other systems.
   const progressRef = useRef(0);
+
+  // Mouse interaction refs — read/written across the scene graph.
+  //   • mouseScreenRef → normalized (0-1) viewport coords from window events
+  //   • mouseWorldRef  → projected 3D world position (set by MouseProjector)
+  //   • mouseVelRef    → smoothed scalar speed of the world-projected point
+  //   • mouseDownRef   → primary button held
+  //   • clickShakeRef  → impulse value (0-1) that decays each frame
+  const mouseScreenRef = useRef({ x: 0.5, y: 0.5 });
+  const mouseWorldRef  = useRef(new THREE.Vector3(8, 4, 4));
+  const mouseVelRef    = useRef(0);
+  const mouseDownRef   = useRef(false);
+  const clickShakeRef  = useRef(0);
+
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      mouseScreenRef.current.x = e.clientX / window.innerWidth;
+      mouseScreenRef.current.y = e.clientY / window.innerHeight;
+    };
+    const onDown = () => {
+      mouseDownRef.current = true;
+      clickShakeRef.current = 1;
+    };
+    const onUp = () => { mouseDownRef.current = false; };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerdown", onDown, { passive: true });
+    window.addEventListener("pointerup",   onUp,   { passive: true });
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointerup",   onUp);
+    };
+  }, []);
+
+  if (!enabled) return null;
 
   return (
     <div className="fixed inset-0 z-0 pointer-events-none">
@@ -708,17 +1116,44 @@ export default function BlackHoleScene({
             innerR={1.9}
             outerR={6.6}
             count={lowEnd ? 2000 : 5500}
+            mouseWorldRef={mouseWorldRef}
           />
 
           {!lowEnd ? <PolarJets count={700} /> : null}
 
           <EventHorizonGlow radius={2.55} progressRef={progressRef} />
 
-          {!lowEnd ? <PhotonSphere progressRef={progressRef} /> : null}
+          {!lowEnd ? (
+            <InteractivePhotonSphere
+              progressRef={progressRef}
+              mouseWorldRef={mouseWorldRef}
+            />
+          ) : null}
 
-          <BlackHoleModel url={modelUrl} />
+          <RayMarchedBlackHole radius={1.75} progressRef={progressRef} />
 
-          <ScrollRig progress={progress} progressRef={progressRef} />
+          <MouseProjector
+            mouseScreenRef={mouseScreenRef}
+            mouseWorldRef={mouseWorldRef}
+            mouseVelRef={mouseVelRef}
+            planeDepth={2.0}
+          />
+
+          {!lowEnd ? (
+            <CursorOrb
+              mouseWorldRef={mouseWorldRef}
+              mouseVelRef={mouseVelRef}
+              mouseDownRef={mouseDownRef}
+            />
+          ) : null}
+
+          <ScrollRig
+            progress={progress}
+            progressRef={progressRef}
+            mouseScreenRef={mouseScreenRef}
+            mouseVelRef={mouseVelRef}
+            clickShakeRef={clickShakeRef}
+          />
 
           {!lowEnd ? (
             <EffectComposer multisampling={0}>

@@ -7,6 +7,7 @@ import {
   useSpring, useTransform,
 } from "framer-motion";
 import experienceJson from "@/../public/data/expreience.json";
+import TimelineDial from "./TimelineDial";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -192,7 +193,7 @@ function ExperienceCard({
   const floatCls = ["exp-float-0", "exp-float-1", "exp-float-2"][idx % 3];
 
   return (
-    <div ref={wrapRef} style={{ perspective: "2200px" }}>
+    <div ref={wrapRef} id={`exp-card-${idx}`} data-card-id={idx} style={{ perspective: "2200px" }}>
       <div
         className={inView ? floatCls : ""}
         style={{ animationDelay: `${entranceDelay + 1.8}s`, animationFillMode: "both" }}
@@ -415,6 +416,16 @@ export default function ExperienceSection() {
   const railScale   = useTransform(scrollYProgress, [0.05, 0.92], [0, 1]);
   const railOpacity = useTransform(scrollYProgress, [0, 0.08, 0.88, 1], [0, 1, 1, 0]);
 
+  // Show the Time Dial whenever any meaningful portion of this section is
+  // in the viewport (between 5% in and 95% out).
+  const [dialActive, setDialActive] = useState(false);
+  useEffect(() => {
+    const u = scrollYProgress.on("change", (v) => {
+      setDialActive(v > 0.04 && v < 0.96);
+    });
+    return u;
+  }, [scrollYProgress]);
+
   const items = useMemo(() => toSafeItems(experienceJson as any), []);
   if (!items.length) return null;
 
@@ -422,7 +433,7 @@ export default function ExperienceSection() {
     <section
       ref={sectionRef}
       id="experience"
-      className="relative z-20 px-4 py-24 text-white overflow-hidden sm:px-6"
+      className="relative z-20 px-4 py-24 text-white sm:px-6"
     >
       {/* Faint grid */}
       <div
@@ -465,7 +476,7 @@ export default function ExperienceSection() {
         </p>
       </motion.div>
 
-      {/* ── Layout: left rail + cards ── */}
+      {/* ── Vertical card timeline with 3D entrance + plasma rail ── */}
       <div className="relative mx-auto max-w-3xl z-10">
 
         {/* Plasma rail — lg+ only */}
@@ -505,6 +516,16 @@ export default function ExperienceSection() {
           ))}
         </div>
       </div>
+
+      {/* Time Dial — overlay scrubber, visible while the section is in view */}
+      <TimelineDial
+        active={dialActive}
+        notches={items.map((it, i) => ({
+          // Use the short year/period label (e.g. "05/2026" or "09/2023")
+          label: (it.period.split(/\s*[-–—]\s*/)[0] || it.period).trim(),
+          cardSelector: `#exp-card-${i}`,
+        }))}
+      />
     </section>
   );
 }

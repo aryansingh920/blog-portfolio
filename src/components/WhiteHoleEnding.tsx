@@ -202,8 +202,10 @@ export default function WhiteHoleEnding() {
         >
           {Array.from({ length: 12 }).map((_, i) => {
             const angle = (i / 12) * Math.PI * 2;
-            const x2 = 50 + Math.cos(angle) * 60;
-            const y2 = 50 + Math.sin(angle) * 60;
+            // Round to 3 decimals — keeps SSR and client serialization identical
+            // (otherwise raw Math.cos drift causes a hydration mismatch).
+            const x2 = (50 + Math.cos(angle) * 60).toFixed(3);
+            const y2 = (50 + Math.sin(angle) * 60).toFixed(3);
             return (
               <motion.line
                 key={i}
