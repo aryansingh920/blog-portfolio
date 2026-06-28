@@ -16,6 +16,7 @@ import type { BlogPost } from "../types";
 import { useSearchParams } from "next/navigation";
 import { BlogsHeader } from "./BlogsHeader";
 import { BlogCard } from "./BlogCard";
+import BlogCosmicBackdrop from "./BlogCosmicBackdrop";
 
 const V_OFFSET = 120;
 const H_OFFSET = 120;
@@ -524,30 +525,8 @@ export function SwipeFeed({
       />
 
       <main className="min-h-screen relative" style={{ perspective: "1200px" }}>
-        {/* Ambient animated background */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div
-            className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full opacity-[0.07]"
-            style={{
-              background: "radial-gradient(circle, #6366f1, transparent 70%)",
-              animation: "ambientPulse1 8s ease-in-out infinite",
-            }}
-          />
-          <div
-            className="absolute -bottom-40 -right-40 w-[500px] h-[500px] rounded-full opacity-[0.07]"
-            style={{
-              background: "radial-gradient(circle, #8b5cf6, transparent 70%)",
-              animation: "ambientPulse2 10s ease-in-out infinite",
-            }}
-          />
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full opacity-[0.04]"
-            style={{
-              background: "radial-gradient(circle, #a78bfa, transparent 70%)",
-              animation: "ambientPulse1 12s ease-in-out infinite reverse",
-            }}
-          />
-        </div>
+        {/* Flowing cosmic backdrop — replaces the static ambient blobs */}
+        <BlogCosmicBackdrop />
 
         {/* Under stack */}
         <div className="absolute inset-0 pointer-events-none">

@@ -12,6 +12,8 @@ import {
   useTransform,
 } from "framer-motion";
 import type { BlackHoleSceneProps } from "@/components/hero/BlackHoleScene";
+import QuantumReconstruction from "@/components/hero/QuantumReconstruction";
+import HeroHUD from "@/components/hero/HeroHUD";
 
 const BlackHoleScene = dynamic<BlackHoleSceneProps>(
   () => import("@/components/hero/BlackHoleScene"),
@@ -136,113 +138,6 @@ function ParticlesOverlay({ density = 70 }: { density?: number }) {
       ref={ref}
       className="absolute inset-0 z-10 h-full w-full pointer-events-none"
     />
-  );
-}
-
-// ─── Boot terminal ────────────────────────────────────────────────────────────
-
-const BOOT_LINES = [
-  { text: "INITIALIZING NEURAL CORE", ms: 0 },
-  { text: "LOADING MISSION PARAMETERS........  [OK]", ms: 420 },
-  { text: "SECURING UPLINK CHANNEL...........  [OK]", ms: 380 },
-  { text: "CALIBRATING SENSORS...............  [OK]", ms: 340 },
-  { text: "COMPILING IDENTITY MATRIX.........  [OK]", ms: 400 },
-  { text: "MISSION STATUS: ACTIVE", ms: 320 },
-];
-
-function TypeLine({ text }: { text: string }) {
-  const [shown, setShown] = useState("");
-  useEffect(() => {
-    let i = 0;
-    setShown("");
-    const id = setInterval(() => {
-      i++;
-      setShown(text.slice(0, i));
-      if (i >= text.length) clearInterval(id);
-    }, 18);
-    return () => clearInterval(id);
-  }, [text]);
-  return <>{shown}</>;
-}
-
-function BootOverlay({ onDone }: { onDone: () => void }) {
-  const [visibleLines, setVisibleLines] = useState<number[]>([]);
-  const [scanning, setScanning] = useState(false);
-  const [fading, setFading] = useState(false);
-
-  useEffect(() => {
-    let alive = true;
-    let elapsed = 200;
-    BOOT_LINES.forEach((line, idx) => {
-      elapsed += line.ms;
-      setTimeout(() => {
-        if (!alive) return;
-        setVisibleLines((p) => [...p, idx]);
-      }, elapsed);
-    });
-    const totalMs = elapsed;
-    setTimeout(() => { if (alive) setScanning(true); }, totalMs + 60);
-    setTimeout(() => { if (alive) setFading(true); }, totalMs + 480);
-    setTimeout(() => { if (alive) onDone(); }, totalMs + 980);
-    return () => { alive = false; };
-  }, [onDone]);
-
-  return (
-    <motion.div
-      className="absolute inset-0 z-40 flex items-center justify-center bg-black"
-      animate={{ opacity: fading ? 0 : 1 }}
-      transition={{ duration: 0.5, ease: "easeInOut" }}
-      style={{ pointerEvents: fading ? "none" : "auto" }}
-    >
-      {scanning && (
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="hero-scan-line" />
-        </div>
-      )}
-
-      <div className="w-[min(540px,92vw)] rounded-2xl border border-white/8 bg-white/[0.03] p-7 backdrop-blur-sm">
-        {/* Traffic-light dots */}
-        <div className="mb-5 flex items-center gap-2">
-          <div className="h-3 w-3 rounded-full bg-red-500/60" />
-          <div className="h-3 w-3 rounded-full bg-yellow-500/60" />
-          <div className="h-3 w-3 rounded-full bg-green-500/60" />
-          <span className="ml-3 font-mono text-[10px] tracking-[0.3em] text-white/25">
-            TERMINAL — v2.0
-          </span>
-        </div>
-
-        <div className="space-y-2 font-mono text-xs">
-          {BOOT_LINES.map((line, idx) => (
-            <motion.div
-              key={idx}
-              className={`flex gap-2 ${visibleLines.includes(idx) ? "opacity-100" : "opacity-0"}`}
-              initial={false}
-            >
-              <span className="text-white/20 shrink-0">›</span>
-              <span
-                className={
-                  idx === BOOT_LINES.length - 1
-                    ? "text-green-400"
-                    : "text-green-400/75"
-                }
-              >
-                {visibleLines.includes(idx) && (
-                  <TypeLine text={line.text} />
-                )}
-              </span>
-            </motion.div>
-          ))}
-          {visibleLines.length > 0 &&
-            visibleLines.length < BOOT_LINES.length && (
-              <motion.span
-                className="ml-4 inline-block h-3.5 w-[7px] bg-green-400/80"
-                animate={{ opacity: [1, 0, 1] }}
-                transition={{ duration: 0.9, repeat: Infinity }}
-              />
-            )}
-        </div>
-      </div>
-    </motion.div>
   );
 }
 
@@ -394,8 +289,11 @@ export default function Hero() {
   const [contentReady, setContentReady] = useState(false);
   const progress = usePageScrollProgress();
 
-  // Disable 3D scene on mobile or reduced-motion — saves GPU/RAM
-  const use3D = !reducedMotion && !isMobile;
+  // The 3D scene now runs on mobile too — BlackHoleScene's internal
+  // isLowEnd() flags small viewports and downshifts particle counts, drops
+  // the HDRI, and lowers DPR so it stays smooth. We only disable for users
+  // who explicitly request reduced motion.
+  const use3D = !reducedMotion;
 
   // Mouse tracking for 3D tilt + blob chase
   const rawX = useMotionValue(0.5);
@@ -499,8 +397,11 @@ export default function Hero() {
         <ParticlesOverlay density={isMobile ? 30 : reducedMotion ? 40 : 70} />
       </div>
 
-      {/* ── BOOT OVERLAY ── */}
-      {!bootDone && <BootOverlay onDone={() => setBootDone(true)} />}
+      {/* ── QUANTUM RECONSTRUCTION LOADER ── */}
+      {!bootDone && <QuantumReconstruction onDone={() => setBootDone(true)} />}
+
+      {/* ── HUD overlay — gives the page a probe-cockpit feel (desktop only) ── */}
+      {use3D && !isMobile && bootDone && <HeroHUD springX={springX} springY={springY} />}
 
       {/* ── FOREGROUND ── */}
       <motion.div
@@ -519,12 +420,12 @@ export default function Hero() {
         >
           {/* Status badge */}
           <motion.div variants={itemVariants}>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 backdrop-blur-sm">
+            <div className="chip-readable inline-flex items-center gap-2 rounded-full px-3 py-1.5">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-green-400" />
               </span>
-              <span className="font-mono text-[10px] tracking-[0.28em] text-white/45 uppercase">
+              <span className="font-mono text-[10px] tracking-[0.28em] text-white/55 uppercase">
                 Ireland · India &nbsp;·&nbsp; Web / AI / Quant
               </span>
             </div>
@@ -532,21 +433,12 @@ export default function Hero() {
 
           {/* Name — scramble reveal */}
           <motion.div variants={itemVariants} className="mt-7">
-            <h1 className="font-bold leading-[0.95] tracking-tight text-white"
+            <h1 className="font-bold leading-[0.95] tracking-tight"
               style={{ fontSize: "clamp(3rem, 10vw, 5.5rem)" }}>
-              <span className="block">
+              <span className="block text-flow-white">
                 <ScrambleName text="ARYAN" started={contentReady} delay={0} />
               </span>
-              <span
-                className="block"
-                style={{
-                  background:
-                    "linear-gradient(135deg, #fff 0%, rgba(167,139,250,0.9) 50%, rgba(99,102,241,0.7) 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
+              <span className="block text-flow-aurora">
                 <ScrambleName text="SINGH" started={contentReady} delay={160} />
               </span>
             </h1>
@@ -579,7 +471,7 @@ export default function Hero() {
           >
             <Link
               href="/blogs"
-              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-white px-5 py-3 text-sm font-bold text-black shadow-lg shadow-black/30 hover:bg-white/90 active:scale-[0.97] transition-all duration-150"
+              className="btn-glass-light group relative inline-flex items-center gap-2 overflow-hidden rounded-xl px-5 py-3 text-sm font-bold text-black active:scale-[0.97] transition-transform duration-150"
             >
               View Blogs
               <svg
@@ -598,7 +490,7 @@ export default function Hero() {
             </Link>
             <Link
               href="/contact"
-              className="group inline-flex items-center gap-2 rounded-xl border border-white/12 bg-white/8 px-5 py-3 text-sm font-medium text-white/75 backdrop-blur-sm hover:bg-white/14 hover:text-white active:scale-[0.97] transition-all duration-150"
+              className="btn-glass-dark group inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-medium text-white/85 hover:text-white active:scale-[0.97] transition-transform duration-150"
             >
               Contact Me
             </Link>

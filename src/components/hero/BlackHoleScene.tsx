@@ -4,8 +4,13 @@
 
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Environment, OrbitControls, Preload, useGLTF } from "@react-three/drei";
-import { EffectComposer, Bloom } from "@react-three/postprocessing";
+import {
+  Billboard, Environment, OrbitControls, Preload, Text, useGLTF,
+} from "@react-three/drei";
+import {
+  Bloom, ChromaticAberration, EffectComposer, Vignette,
+} from "@react-three/postprocessing";
+import { BlendFunction } from "postprocessing";
 import React, { Suspense, useMemo, useRef } from "react";
 
 export type BlackHoleSceneProps = {
@@ -39,7 +44,6 @@ function hashSeed(str: string) {
 
 // ─── Shaders ──────────────────────────────────────────────────────────────────
 
-// Accretion disk: particles orbit via Keplerian motion computed entirely in GPU
 const DISK_VERT = /* glsl */ `
 attribute float a_r;
 attribute float a_theta0;
@@ -52,12 +56,9 @@ varying float v_a;
 
 void main() {
   float theta = a_theta0 + a_omega * u_t;
-
-  // Slight disk thickness — warps to simulate magnetic field lines
   float warp = sin(theta * 3.0 + a_r * 1.8) * 0.05 * max(0.0, 1.0 - (a_r - 1.5) / 5.5);
   vec3 pos = vec3(a_r * cos(theta), warp, a_r * sin(theta));
 
-  // Temperature gradient: inner = white-hot, mid = orange, outer = dark red
   float t = clamp((a_r - 1.5) / 5.5, 0.0, 1.0);
   vec3 c0 = vec3(1.00, 0.92, 0.78);
   vec3 c1 = vec3(1.00, 0.48, 0.06);
@@ -89,7 +90,6 @@ void main() {
   gl_FragColor = vec4(v_col, a);
 }`;
 
-// Polar jets: relativistic plasma cones along ±Y axis
 const JET_VERT = /* glsl */ `
 attribute float a_t;
 attribute float a_phi;
@@ -127,7 +127,6 @@ void main() {
   gl_FragColor = vec4(v_col, a);
 }`;
 
-// Nebula cloud: colored particle puff with soft falloff
 const NEBULA_VERT = /* glsl */ `
 attribute vec3 a_col;
 attribute float a_sz;
@@ -155,7 +154,6 @@ void main() {
   gl_FragColor = vec4(v_col, a);
 }`;
 
-// Colored star tunnel with size variation
 const STAR_VERT = /* glsl */ `
 attribute vec3 a_col;
 attribute float a_sz;
@@ -179,7 +177,6 @@ void main() {
   gl_FragColor = vec4(v_col, a * 0.92);
 }`;
 
-// Event horizon rim glow
 const EH_VERT = /* glsl */ `
 varying vec3 vNormal;
 varying vec3 vViewDir;
@@ -195,13 +192,14 @@ const EH_FRAG = /* glsl */ `
 varying vec3 vNormal;
 varying vec3 vViewDir;
 uniform float u_time;
+uniform float u_intensity;
 
 void main() {
   float rim   = 1.0 - max(dot(vNormal, vViewDir), 0.0);
   rim         = pow(rim, 2.2);
   float pulse = 0.82 + 0.18 * sin(u_time * 0.9);
   vec3 col    = mix(vec3(1.0, 0.38, 0.04), vec3(1.0, 0.78, 0.28), rim * rim);
-  gl_FragColor = vec4(col, rim * 0.7 * pulse);
+  gl_FragColor = vec4(col, rim * 0.7 * pulse * u_intensity);
 }`;
 
 // ─── Accretion Disk ───────────────────────────────────────────────────────────
@@ -218,11 +216,9 @@ function AccretionDisk({ innerR = 1.9, outerR = 6.6, count = 5500 }: {
     const bright = new Float32Array(count);
 
     for (let i = 0; i < count; i++) {
-      // Bias density toward inner edge (hotter, denser region)
       const ri = innerR + Math.pow(rng(), 0.6) * (outerR - innerR);
       r[i]      = ri;
       theta0[i] = rng() * Math.PI * 2;
-      // Keplerian angular velocity ∝ r^(-3/2)
       omega[i]  = (0.38 / Math.pow(ri, 1.5)) * (0.9 + rng() * 0.2);
       sz[i]     = Math.max(0.4, 1.2 + rng() * 2.8 - (ri / outerR) * 1.2);
       bright[i] = 0.45 + rng() * 0.55;
@@ -234,7 +230,6 @@ function AccretionDisk({ innerR = 1.9, outerR = 6.6, count = 5500 }: {
     g.setAttribute("a_omega",  new THREE.BufferAttribute(omega,  1));
     g.setAttribute("a_sz",     new THREE.BufferAttribute(sz,     1));
     g.setAttribute("a_bright", new THREE.BufferAttribute(bright, 1));
-    // Dummy position buffer — actual positions computed in vertex shader
     g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(count * 3), 3));
 
     const m = new THREE.ShaderMaterial({
@@ -253,7 +248,6 @@ function AccretionDisk({ innerR = 1.9, outerR = 6.6, count = 5500 }: {
     material.uniforms.u_t.value = clock.getElapsedTime();
   });
 
-  // Tilted ~23° so we see disk as an asymmetric ellipse — the classic Interstellar look
   return (
     <points geometry={geometry} material={material}
       rotation={[0.40, 0.18, 0.06]}
@@ -335,7 +329,6 @@ function CosmicNebulae({ perCloud = 280 }: { perCloud?: number }) {
       const alpha = new Float32Array(n);
 
       for (let i = 0; i < n; i++) {
-        // Ellipsoidal distribution (flattened in Y)
         const phi   = Math.acos(2 * rng() - 1);
         const theta = rng() * Math.PI * 2;
         const r     = Math.pow(rng(), 0.35) * def.spread;
@@ -370,7 +363,6 @@ function CosmicNebulae({ perCloud = 280 }: { perCloud?: number }) {
     });
   }, [perCloud]);
 
-  // Very slow ambient drift
   useFrame(({ clock }) => {
     const grp = groupRef.current;
     if (!grp) return;
@@ -388,27 +380,27 @@ function CosmicNebulae({ perCloud = 280 }: { perCloud?: number }) {
   );
 }
 
-// ─── Enhanced Star Tunnel (with color & size variation) ───────────────────────
+// ─── Star Tunnel ──────────────────────────────────────────────────────────────
 
 const STAR_COLORS_POOL: [number, number, number][] = [
-  [1.00, 1.00, 1.00], [1.00, 1.00, 1.00], [1.00, 1.00, 1.00], // 45% pure white
-  [0.75, 0.88, 1.00], [0.75, 0.88, 1.00],                      // 25% blue-white
-  [1.00, 0.95, 0.72], [1.00, 0.95, 0.72],                      // 20% yellow
-  [1.00, 0.70, 0.50],                                           //  7% orange giant
-  [0.88, 0.60, 1.00],                                           //  3% purple giant
+  [1.00, 1.00, 1.00], [1.00, 1.00, 1.00], [1.00, 1.00, 1.00],
+  [0.75, 0.88, 1.00], [0.75, 0.88, 1.00],
+  [1.00, 0.95, 0.72], [1.00, 0.95, 0.72],
+  [1.00, 0.70, 0.50],
+  [0.88, 0.60, 1.00],
 ];
 
 function EnhancedStarTunnel({
-  progress,
+  progressRef,
   count = 2400,
   radius = 13,
   depth = 200,
   seed = 1337,
 }: {
-  progress: number; count?: number; radius?: number; depth?: number; seed?: number;
+  progressRef: React.MutableRefObject<number>;
+  count?: number; radius?: number; depth?: number; seed?: number;
 }) {
-  const smooth = useRef(0);
-  const prev   = useRef(0);
+  const prev = useRef(0);
 
   const { geometry, material } = useMemo(() => {
     const rng = mulberry32(seed);
@@ -426,7 +418,6 @@ function EnhancedStarTunnel({
       const c = STAR_COLORS_POOL[Math.floor(rng() * STAR_COLORS_POOL.length)];
       col[i*3+0] = c[0]; col[i*3+1] = c[1]; col[i*3+2] = c[2];
 
-      // Most stars are small; 3% are "bright beacon" stars
       sz[i] = rng() > 0.97 ? 3.5 + rng() * 2.0 : 0.5 + rng() * 1.5;
     }
 
@@ -447,10 +438,7 @@ function EnhancedStarTunnel({
   }, [count, radius, depth, seed]);
 
   useFrame((_, dt) => {
-    const SMOOTH = 1 - Math.pow(0.0008, dt);
-    smooth.current = THREE.MathUtils.lerp(smooth.current, progress, SMOOTH);
-
-    const cur = smooth.current;
+    const cur = progressRef.current;
     const dp  = cur - prev.current;
     prev.current = cur;
 
@@ -471,20 +459,26 @@ function EnhancedStarTunnel({
   return <points geometry={geometry} material={material} frustumCulled={false} />;
 }
 
-// ─── Event Horizon Glow (rim-lit photon ring) ─────────────────────────────────
+// ─── Event Horizon Glow ───────────────────────────────────────────────────────
 
-function EventHorizonGlow({ radius = 2.5 }: { radius?: number }) {
+function EventHorizonGlow({
+  radius = 2.5, progressRef,
+}: { radius?: number; progressRef: React.MutableRefObject<number> }) {
   const material = useMemo(() => new THREE.ShaderMaterial({
     vertexShader:   EH_VERT,
     fragmentShader: EH_FRAG,
-    uniforms: { u_time: { value: 0 } },
+    uniforms: { u_time: { value: 0 }, u_intensity: { value: 1 } },
     transparent: true,
     depthWrite:  false,
     side:        THREE.FrontSide,
     blending:    THREE.AdditiveBlending,
   }), []);
 
-  useFrame(({ clock }) => { material.uniforms.u_time.value = clock.getElapsedTime(); });
+  useFrame(({ clock }) => {
+    material.uniforms.u_time.value = clock.getElapsedTime();
+    // Rim glow brightens as we descend — feels like approaching the singularity
+    material.uniforms.u_intensity.value = 1.0 + progressRef.current * 1.8;
+  });
 
   return (
     <mesh material={material} scale={radius} renderOrder={-1}>
@@ -530,36 +524,140 @@ function BlackHoleModel({ url }: { url: string }) {
   );
 }
 
-// ─── Camera Rig ───────────────────────────────────────────────────────────────
+// ─── Photon Sphere — orbiting tech labels (the user's "skills ring") ──────────
 
-function ScrollRig({ progress }: { progress: number }) {
+const TECH_LABELS = [
+  "React",      "TypeScript", "Next.js",     "Three.js",   "GLSL",
+  "Python",     "Go",         "Rust",        "Swift",      "Node.js",
+  "AWS",        "Kubernetes", "Docker",      "FastAPI",    "GraphQL",
+  "Postgres",   "Redis",      "Tailwind",    "Quantum ML", "WebGL",
+];
+
+function PhotonSphere({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
+  const groupRef = useRef<THREE.Group>(null);
+
+  const placements = useMemo(() => {
+    const rng = mulberry32(hashSeed("photon-labels-v1"));
+    return TECH_LABELS.map((label, i) => {
+      const angle = (i / TECH_LABELS.length) * Math.PI * 2;
+      const r = 7.2 + (rng() - 0.5) * 0.9;
+      const y = (rng() - 0.5) * 3.2;
+      // Each label gets a unique colour drawn from a violet-blue-pink palette
+      const palette = ["#c4b5fd", "#a78bfa", "#818cf8", "#f0abfc", "#67e8f9", "#fbbf24"];
+      const color = palette[i % palette.length];
+      return { label, angle, r, y, color, scale: 0.85 + rng() * 0.5 };
+    });
+  }, []);
+
+  useFrame((_, dt) => {
+    const g = groupRef.current;
+    if (!g) return;
+    g.rotation.y += dt * 0.045;        // slow orbit
+
+    // Labels appear during mid-scroll (when the user is reading Experience/About).
+    const p = progressRef.current;
+    const visible =
+      p < 0.10 ? 0 :
+      p < 0.22 ? (p - 0.10) / 0.12 :
+      p > 0.82 ? Math.max(0, 1 - (p - 0.82) / 0.12) :
+      1;
+
+    g.traverse((obj: any) => {
+      const m = obj.material;
+      if (m && "opacity" in m) m.opacity = visible * 0.92;
+    });
+  });
+
+  return (
+    <group ref={groupRef}>
+      {placements.map(({ label, angle, r, y, color, scale }) => (
+        <Billboard
+          key={label}
+          position={[Math.cos(angle) * r, y, Math.sin(angle) * r]}
+        >
+          <Text
+            fontSize={0.32 * scale}
+            color={color}
+            anchorX="center"
+            anchorY="middle"
+            outlineWidth={0.012}
+            outlineColor="#0a0420"
+            material-transparent
+            material-depthWrite={false}
+            material-toneMapped={false}
+          >
+            {label}
+          </Text>
+        </Billboard>
+      ))}
+    </group>
+  );
+}
+
+// ─── Camera Rig ───────────────────────────────────────────────────────────────
+//
+// Multi-phase Bezier-ish path that descends toward the singularity as the
+// user scrolls. The camera also gently orbits (sin/cos in x/z) so the disk
+// presents a different angle at each phase — gives the story visual variety.
+
+function ScrollRig({
+  progress, progressRef,
+}: {
+  progress: number;
+  progressRef: React.MutableRefObject<number>;
+}) {
   const smooth = useRef(0);
+  const target = useMemo(() => new THREE.Vector3(0, 0, 0), []);
 
   useFrame(({ camera }, dt) => {
-    const SMOOTH = 1 - Math.pow(0.0008, dt);
+    const SMOOTH = 1 - Math.pow(0.0004, dt);   // tighter smoothing → cinematic feel
     smooth.current = THREE.MathUtils.lerp(smooth.current, progress, SMOOTH);
+    progressRef.current = smooth.current;
+
     const p = smooth.current;
     const eased = p * p * (3 - 2 * p);
-    camera.position.set(
-      0.15 * (1 - eased),
-      0.05 * (1 - eased),
-      THREE.MathUtils.lerp(9.5, 3.2, eased)
-    );
+
+    // Path keyframes (z descends from far → near event horizon)
+    const z = THREE.MathUtils.lerp(11.0, 1.85, eased);
+
+    // Slight orbital sweep — keeps the view dynamic across the story
+    const orbitAng = eased * Math.PI * 1.15;
+    const orbitR = THREE.MathUtils.lerp(0.4, 1.6, eased);
+    const x = Math.sin(orbitAng) * orbitR;
+    const y = 0.55 - eased * 1.65 + Math.sin(eased * Math.PI) * 0.45;
+
+    camera.position.set(x, y, z);
     if (camera instanceof THREE.PerspectiveCamera) {
-      camera.fov = THREE.MathUtils.lerp(42, 28, eased);
+      camera.fov = THREE.MathUtils.lerp(48, 22, eased);
     }
     camera.updateProjectionMatrix();
-    camera.lookAt(0, 0, 0);
+    camera.lookAt(target);
   });
 
   return null;
 }
 
+// ─── Post-processing ──────────────────────────────────────────────────────────
+//
+// Bloom + Chromatic Aberration + Vignette use static values. We avoid React
+// refs on the effect instances because @react-three/postprocessing exposes
+// internal classes (KawaseBlurPass / Resolution) that hold circular references,
+// which break Next 16/React 19's dev-mode serialization when refs are tracked.
+//
+// The cinematic intensity ramp now lives entirely in the camera path + the
+// EventHorizonGlow uniform (which is shader-side and safe).
+
 function isLowEnd() {
   if (typeof navigator === "undefined") return false;
   const mem   = (navigator as any).deviceMemory ?? 4;
   const cores = navigator.hardwareConcurrency ?? 4;
-  return mem <= 4 || cores <= 4;
+  // Treat mobile / narrow viewports as low-end too — keeps the scene smooth
+  // on phones by trimming particle counts, skipping the HDRI, and lowering DPR.
+  const mobile = typeof window !== "undefined" && (
+    window.innerWidth < 768 ||
+    /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+  );
+  return mobile || mem <= 4 || cores <= 4;
 }
 
 // ─── Scene root ───────────────────────────────────────────────────────────────
@@ -568,12 +666,16 @@ export default function BlackHoleScene({
   progress,
   enabled,
   modelUrl = "/models/blackhole.glb",
-  interactive = true,
+  interactive = false,
 }: BlackHoleSceneProps) {
   if (!enabled) return null;
 
   const lowEnd  = isLowEnd();
   const starSeed = useMemo(() => hashSeed("blackhole-starfield-v2"), []);
+
+  // Shared smoothed-progress ref — written by ScrollRig, read by other systems
+  // (EventHorizonGlow, PhotonSphere, EnhancedStarTunnel).
+  const progressRef = useRef(0);
 
   return (
     <div className="fixed inset-0 z-0 pointer-events-none">
@@ -587,11 +689,9 @@ export default function BlackHoleScene({
           toneMapping:      THREE.ACESFilmicToneMapping,
           toneMappingExposure: 1.3,
         }}
-        camera={{ position: [0.15, 0.05, 9.5], fov: 42, near: 0.1, far: 300 }}
+        camera={{ position: [0.4, 0.55, 11.0], fov: 48, near: 0.1, far: 300 }}
       >
         <color attach="background" args={["#000005"]} />
-
-        {/* Very subtle deep-space fog */}
         <fogExp2 attach="fog" args={["#010008", 0.004]} />
 
         <ambientLight intensity={0.3} />
@@ -600,42 +700,49 @@ export default function BlackHoleScene({
         <Suspense fallback={null}>
           {!lowEnd ? <Environment preset="night" /> : null}
 
-          {/* Star tunnel — outermost layer */}
-          <EnhancedStarTunnel progress={progress} count={2400} seed={starSeed} />
+          <EnhancedStarTunnel progressRef={progressRef} count={lowEnd ? 1400 : 2400} seed={starSeed} />
 
-          {/* Volumetric nebulae in the background */}
           {!lowEnd ? <CosmicNebulae perCloud={280} /> : null}
 
-          {/* Accretion disk orbiting the black hole */}
           <AccretionDisk
             innerR={1.9}
             outerR={6.6}
             count={lowEnd ? 2000 : 5500}
           />
 
-          {/* Polar relativistic jets */}
           {!lowEnd ? <PolarJets count={700} /> : null}
 
-          {/* Event horizon photon-ring rim glow */}
-          <EventHorizonGlow radius={2.55} />
+          <EventHorizonGlow radius={2.55} progressRef={progressRef} />
 
-          {/* The black hole model itself */}
+          {!lowEnd ? <PhotonSphere progressRef={progressRef} /> : null}
+
           <BlackHoleModel url={modelUrl} />
 
-          <ScrollRig progress={progress} />
+          <ScrollRig progress={progress} progressRef={progressRef} />
 
           {!lowEnd ? (
             <EffectComposer multisampling={0}>
               <Bloom
-                intensity={1.4}
-                luminanceThreshold={0.08}
+                intensity={1.8}
+                luminanceThreshold={0.10}
                 luminanceSmoothing={0.5}
-                mipmapBlur
+              />
+              <ChromaticAberration
+                blendFunction={BlendFunction.NORMAL}
+                offset={[0.0018, 0.0018]}
+                radialModulation={false}
+                modulationOffset={0}
+              />
+              <Vignette
+                eskil={false}
+                offset={0.18}
+                darkness={0.52}
               />
             </EffectComposer>
           ) : (
             <EffectComposer multisampling={0}>
-              <Bloom intensity={0.6} luminanceThreshold={0.3} luminanceSmoothing={0.2} />
+              <Bloom intensity={0.85} luminanceThreshold={0.3} luminanceSmoothing={0.2} />
+              <Vignette eskil={false} offset={0.2} darkness={0.45} />
             </EffectComposer>
           )}
 
@@ -646,7 +753,7 @@ export default function BlackHoleScene({
               dampingFactor={0.08}
               rotateSpeed={0.35}
               zoomSpeed={0.6}
-              minDistance={3.0}
+              minDistance={1.8}
               maxDistance={18.0}
               target={[0, 0, 0]}
             />

@@ -12,6 +12,7 @@ import experienceJson from "@/../public/data/expreience.json";
 
 type ExperienceItem = {
   title: string; company: string; location?: string; domain?: string;
+  logo?: string;
   period: string; tags: string[]; bullets: string[];
 };
 
@@ -40,9 +41,10 @@ function toSafeItems(input: unknown): ExperienceItem[] {
     if (!title || !company || !period) return [];
     const location = typeof raw?.location === "string" && raw.location.trim() ? raw.location : undefined;
     const domain   = typeof raw?.domain   === "string" && raw.domain.trim()   ? raw.domain   : undefined;
+    const logo     = typeof raw?.logo     === "string" && raw.logo.trim()     ? raw.logo     : undefined;
     const tags     = Array.isArray(raw?.tags)    ? raw.tags.filter((t: any) => typeof t === "string") : [];
     const bullets  = Array.isArray(raw?.bullets) ? raw.bullets.filter((b: any) => typeof b === "string") : [];
-    return [{ title, company, location, domain, period, tags, bullets }];
+    return [{ title, company, location, domain, logo, period, tags, bullets }];
   });
 }
 
@@ -62,21 +64,28 @@ const ACCENTS = [
 // ─── Company Logo ─────────────────────────────────────────────────────────────
 
 function LogoAvatar({
-  company, domain, accentRgb,
+  company, domain, logo, accentRgb,
 }: {
-  company: string; domain?: string; accentRgb: string;
+  company: string; domain?: string; logo?: string; accentRgb: string;
 }) {
   const [imgState, setImgState] = useState<"idle" | "loaded" | "failed">("idle");
   const initial = company.charAt(0).toUpperCase();
-  const showLogo = domain && imgState === "loaded";
+
+  // Prefer a locally shipped logo. Fall back to clearbit if a domain is provided.
+  const src = logo ?? (domain ? `https://logo.clearbit.com/${domain}` : undefined);
+
+  // We treat "we have a src and it hasn't failed" as "show the logo card".
+  // Browsers render the img incrementally — no need to gate on a `loaded`
+  // event. If the file truly 404s, onError flips us back to the initial.
+  const showLogo = !!src && imgState !== "failed";
 
   return (
     <div
       className="h-10 w-10 shrink-0 rounded-xl flex items-center justify-center font-black text-base select-none relative overflow-hidden"
       style={showLogo ? {
-        background: "rgba(255,255,255,0.94)",
-        border: `1px solid rgba(${accentRgb},0.35)`,
-        boxShadow: `0 0 14px rgba(${accentRgb},0.22)`,
+        background: "rgba(255,255,255,0.96)",
+        border: `1px solid rgba(${accentRgb},0.40)`,
+        boxShadow: `0 0 16px rgba(${accentRgb},0.28), 0 2px 8px rgba(0,0,0,0.4)`,
       } : {
         background: `linear-gradient(135deg, rgba(${accentRgb},0.30), rgba(${accentRgb},0.12))`,
         border: `1px solid rgba(${accentRgb},0.50)`,
@@ -85,23 +94,20 @@ function LogoAvatar({
         textShadow: `0 0 12px rgba(${accentRgb},0.6)`,
       }}
     >
-      {/* Initial letter — visible until logo loads successfully */}
       {!showLogo && (
         <span className="relative z-10 leading-none">{initial}</span>
       )}
 
-      {/* Logo image loads silently in background; appears only on success */}
-      {domain && imgState !== "failed" && (
+      {src && (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={`https://logo.clearbit.com/${domain}`}
+          src={src}
           alt={company}
-          className={[
-            "absolute inset-0 h-full w-full object-contain p-1.5",
-            "transition-opacity duration-300",
-            imgState === "loaded" ? "opacity-100" : "opacity-0 pointer-events-none",
-          ].join(" ")}
+          className="absolute inset-0 h-full w-full object-contain p-1"
           onLoad={() => setImgState("loaded")}
           onError={() => setImgState("failed")}
+          loading="lazy"
+          decoding="async"
         />
       )}
     </div>
@@ -311,7 +317,7 @@ function ExperienceCard({
                     Mission {String(idx + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
                   </span>
                 </div>
-                <LogoAvatar company={item.company} domain={item.domain} accentRgb={a.rgb} />
+                <LogoAvatar company={item.company} domain={item.domain} logo={item.logo} accentRgb={a.rgb} />
               </div>
 
               {/* Role title */}
@@ -450,16 +456,7 @@ export default function ExperienceSection() {
           </span>
           <div className="h-px w-12 bg-gradient-to-l from-transparent to-violet-500/70" />
         </div>
-        <h2
-          className="text-3xl font-bold tracking-tight sm:text-4xl"
-          style={{
-            background:
-              "linear-gradient(135deg, #ffffff 0%, #a78bfa 50%, #818cf8 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-          }}
-        >
+        <h2 className="text-flow-aurora text-3xl font-bold tracking-tight sm:text-4xl">
           Experience
         </h2>
         <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/45">

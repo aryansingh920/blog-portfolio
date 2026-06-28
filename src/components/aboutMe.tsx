@@ -5,6 +5,7 @@ import {
   motion, useInView, useMotionValue, useSpring, useTransform,
   type TargetAndTransition, type Transition,
 } from "framer-motion";
+import Spaghettify from "@/components/Spaghettify";
 
 // ─── CountUp ──────────────────────────────────────────────────────────────────
 
@@ -196,13 +197,7 @@ function StatsRow() {
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(139,92,246,0.12),transparent_60%)]" />
           <div className="relative">
             <div
-              className="text-3xl font-bold tracking-tight"
-              style={{
-                background: "linear-gradient(135deg,#fff 0%,rgba(139,92,246,0.9) 60%,rgba(99,102,241,0.8) 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
+              className="text-flow-violet text-3xl font-bold tracking-tight"
             >
               <CountUp to={s.value} suffix={s.suffix} />
             </div>
@@ -238,14 +233,8 @@ export default function AboutMe() {
           <div className="h-px w-8 bg-gradient-to-l from-transparent to-violet-400/60" />
         </div>
         <h2
-          className="mt-3 font-bold tracking-tight leading-tight"
-          style={{
-            fontSize: "clamp(2rem, 5vw, 3rem)",
-            background: "linear-gradient(135deg,#fff 0%,rgba(139,92,246,0.85) 60%,rgba(99,102,241,0.7) 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-          }}
+          className="text-flow-aurora mt-3 font-bold tracking-tight leading-tight"
+          style={{ fontSize: "clamp(2rem, 5vw, 3rem)" }}
         >
           Who I Am
         </h2>
@@ -255,6 +244,7 @@ export default function AboutMe() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
         {/* Identity */}
+        <Spaghettify max={2.4} glow="rgba(139,92,246,0.55)">
         <TiltCard
           entrance="zoom-depth"
           delay={0}
@@ -272,8 +262,10 @@ export default function AboutMe() {
             to distributed systems.
           </p>
         </TiltCard>
+        </Spaghettify>
 
         {/* Career */}
+        <Spaghettify max={2.4} glow="rgba(99,102,241,0.55)">
         <TiltCard
           entrance="flip-right"
           delay={0.06}
@@ -291,8 +283,10 @@ export default function AboutMe() {
             gaps with meaningful impact.
           </p>
         </TiltCard>
+        </Spaghettify>
 
         {/* Research */}
+        <Spaghettify max={2.4} glow="rgba(236,72,153,0.55)">
         <TiltCard
           entrance="flip-left"
           delay={0.1}
@@ -310,8 +304,10 @@ export default function AboutMe() {
             computational limits.
           </p>
         </TiltCard>
+        </Spaghettify>
 
         {/* Finance */}
+        <Spaghettify max={2.4} glow="rgba(16,185,129,0.55)">
         <TiltCard
           entrance="flip-top"
           delay={0.07}
@@ -329,10 +325,11 @@ export default function AboutMe() {
             asymmetric upside potential.
           </p>
         </TiltCard>
+        </Spaghettify>
 
         {/* Beyond Work — full width */}
+        <Spaghettify max={2.6} className="md:col-span-2" glow="rgba(139,92,246,0.55)">
         <TiltCard
-          wrapperClass="md:col-span-2"
           entrance="spin-scale"
           delay={0.13}
           accent="rgba(139,92,246,"
@@ -352,6 +349,7 @@ export default function AboutMe() {
             work — they are the lens through which I pursue it.
           </p>
         </TiltCard>
+        </Spaghettify>
 
       </div>
 

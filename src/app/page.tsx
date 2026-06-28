@@ -1,7 +1,7 @@
 import Hero from "@/components/hero/Hero";
 import ExperienceSection from "@/components/experience/ExperienceSection";
 import AboutMe from "@/components/aboutMe";
-import SpacePageBackgroundLoader from "@/components/SpacePageBackgroundLoader";
+import WhiteHoleEnding from "@/components/WhiteHoleEnding";
 
 function SpaceDivider() {
   const asteroids = [
@@ -39,10 +39,10 @@ function SpaceDivider() {
 export default function Page() {
   return (
     <main className="relative bg-black">
-      <SpacePageBackgroundLoader />
+      {/* The Hero mounts the persistent BlackHoleScene as a fixed 3D backdrop
+          that drives the scroll story across every section below. */}
       <Hero />
 
-      {/* Experience — wrapped with nebula glow */}
       <div className="relative">
         <div className="section-nebula" />
         <div className="section-nebula-accent" />
@@ -51,7 +51,6 @@ export default function Page() {
 
       <SpaceDivider />
 
-      {/* About Me — second nebula layer */}
       <div className="relative">
         <div className="section-nebula" style={{ transform: "scaleX(-1)" }} />
         <section
@@ -61,6 +60,12 @@ export default function Page() {
           <AboutMe />
         </section>
       </div>
+
+      {/* The White Hole — final climax. As the user scrolls in, a brilliant
+          point of light explodes into a generative nebula, marking emergence
+          on the other side of the singularity. Includes a "transmit" CTA. */}
+      <WhiteHoleEnding />
     </main>
   );
 }
+
